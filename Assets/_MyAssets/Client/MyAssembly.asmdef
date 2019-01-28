@@ -1,0 +1,11 @@
+{
+    "name": "MyAssembly",
+    "references": [
+        "UniRx",
+        "LeanDll"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false
+}
