@@ -17,7 +17,8 @@ public class BindingAttribute : Attribute
     public string[] Tags { get; set; }
     
     public int[] Layers { get; set; }
-    public BindingAttribute(Type typeToResolve, 
+    
+    internal BindingAttribute(Type typeToResolve, 
         LifeCycle lifeCycle = LifeCycle.Default, 
         Type[] injectInto = null, 
         Type[] containComponents = null, 

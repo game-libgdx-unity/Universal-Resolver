@@ -15,7 +15,7 @@ public class ContextTests
     public void ZalClientTestRunnerSimplePasses()
     {
         _context = new Context();
-        _context.Initialize(this);
+        _context.Initialize(typeof(Context));
 
         Debug.Log("Setup test for " + GetType());
     }

@@ -4,6 +4,7 @@ using SimpleIoc;
 using UnityEngine;
 using UnityEngine.TestTools;
 
+
 public class ContainerTests
 {
     private GameObject gameObject;
@@ -14,7 +15,7 @@ public class ContainerTests
     {
         gameObject = new GameObject();
         context = new Context();
-        context.Initialize(this);
+        context.Initialize(typeof(Context));
     }
 
     [Test]

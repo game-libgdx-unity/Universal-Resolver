@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace SimpleIoc
 {
@@ -49,9 +50,42 @@ namespace SimpleIoc
             if (this.Instance == null || objectLifeCycle == LifeCycle.Transient ||
                 objectLifeCycle == LifeCycle.Default)
             {
-                var instance = TypeToResolve.IsSubclassOf(typeof(MonoBehaviour))
-                    ? new GameObject().AddComponent(ConcreteType)
-                    : Activator.CreateInstance(ConcreteType, args);
+                object instance;
+                if (TypeToResolve.IsSubclassOf(typeof(MonoBehaviour)))
+                {
+                    //search for templates from resources path folders
+                    var prefab = MyResources.Load<GameObject>(string.Format("prefabs/scenes/{0}", ConcreteType));
+                    if (!prefab) prefab = MyResources.Load<GameObject>(string.Format("scenes/{0}", ConcreteType));
+                    if (!prefab) prefab = MyResources.Load<GameObject>(string.Format("prefabs/{0}", ConcreteType));
+                    if (!prefab) prefab = MyResources.Load<GameObject>(ConcreteType.ToString());
+
+                    if (prefab)
+                    {
+                        Debug.LogFormat("Found prefab for {0} .......", ConcreteType);
+                        var prefabInstance = Object.Instantiate(prefab);
+
+                        if (prefabInstance.GetComponent(ConcreteType) == null)
+                        {
+                            Debug.LogFormat("Found component {0} in prefab children", ConcreteType);
+                            instance = prefabInstance.GetComponentInChildren(ConcreteType);
+                        }
+                        else
+                        {
+                            Debug.LogFormat("Found component {0} in the prefab", ConcreteType);
+                            instance = prefabInstance.GetComponent(ConcreteType);
+                        }
+                    }
+                    else
+                    {
+                        Debug.LogFormat("FNot found prefab for {0} in the prefab, created a new game object",
+                            ConcreteType);
+                        instance = new GameObject().AddComponent(ConcreteType);
+                    }
+                }
+                else
+                {
+                    instance = Activator.CreateInstance(ConcreteType, args);
+                }
 
                 context.ProcessInjectAttribute(instance);
 

@@ -11,11 +11,11 @@ public class MultitionContextTests
         var  multiContext = Singleton<Multiton<byte, Context>>.Instance;
         
         var _context = new Context();
-        _context.Initialize(this);
+        _context.Initialize(typeof(Context));
         multiContext[0] = _context;
         
         _context = new Context();
-        _context.Initialize(this);
+        _context.Initialize(typeof(Context));
         multiContext[1] = _context;
         
     }

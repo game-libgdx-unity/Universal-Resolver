@@ -1,6 +1,7 @@
 {
-    "name": "MyAssembly",
+    "name": "GameDll",
     "references": [
+        "MyAssembly",
         "UniRx"
     ],
     "optionalUnityReferences": [],

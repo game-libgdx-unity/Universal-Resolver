@@ -11,8 +11,8 @@ namespace SimpleIoc
     {
         private class DefaultContainer : IContainer
         {
-            private readonly HashSet<Type> registeredTypes = new HashSet<Type>();
-            private readonly IList<RegisteredObject> registeredObjects = new List<RegisteredObject>();
+            private HashSet<Type> registeredTypes = new HashSet<Type>();
+            private IList<RegisteredObject> registeredObjects = new List<RegisteredObject>();
 
             private Context context;
             private Type injectInto;
@@ -23,10 +23,11 @@ namespace SimpleIoc
                 this.injectInto = injectInto;
             }
 
-            public void Dispose()
+            public void Unload()
             {
-                registeredTypes.Clear();
-                registeredObjects.Clear();
+                Debug.Log("Disposing container...");
+                registeredTypes = new HashSet<Type>();
+                registeredObjects = new List<RegisteredObject>();
             }
 
             public void Bind<TTypeToResolve, TConcrete>()
@@ -97,6 +98,7 @@ namespace SimpleIoc
                         Debug.Log("  register type: " + typeToResolve);
                         registeredTypes.Add(typeToResolve);
                     }
+
                     registeredObjects.Add(new RegisteredObject(typeToResolve, instance, context.Binding));
                 }
                 catch (Exception ex)
@@ -159,6 +161,12 @@ namespace SimpleIoc
                         Debug.LogFormat(
                             "The type {0} has not been registered", typeToResolve.Name);
 
+                        //if the typeToResolve is abstract, then we cannot resolve it, throw exceptions
+                        if (typeToResolve.IsAbstract || typeToResolve.IsInterface)
+                        {
+                            throw new InvalidOperationException("Cannot resolve the typeToResolve which is abstract");
+                        }
+                        
                         Debug.LogFormat("trying to register {0} ", typeToResolve);
 
                         registeredObject = new RegisteredObject(typeToResolve, typeToResolve, context.Binding,
@@ -178,7 +186,8 @@ namespace SimpleIoc
                     var binding = registeredObject.BindingAttribute;
                     if (binding == null)
                     {
-                        Debug.LogError("You need binding attribute to resolve a type with multiply implements");
+                        Debug.LogError("You need binding attribute to resolve a type with multiply implements of " +
+                                       registeredObject.ConcreteType);
                         return null;
                     }
 
@@ -187,8 +196,7 @@ namespace SimpleIoc
                         continue;
                     }
 
-                    if (binding.InjectInto.FirstOrDefault(t => t == typeInjectInto) !=
-                        null)
+                    if (binding.InjectInto.FirstOrDefault(t => t == typeInjectInto) != null)
                     {
                         return GetInstance(registeredObject, preferredLifeCycle, parameters);
                     }
@@ -236,7 +244,15 @@ namespace SimpleIoc
 
             private IEnumerable<object> ResolveConstructorParameters(RegisteredObject registeredObject)
             {
-                ConstructorInfo constructorInfo = registeredObject.ConcreteType.GetConstructors().First();
+                ConstructorInfo constructorInfo = registeredObject.ConcreteType.GetConstructors().FirstOrDefault();
+
+                if (constructorInfo == null)
+                {
+                    Debug.LogFormat(
+                        "No constructor to resolve object of {0} found, using default constructor",
+                        registeredObject.ConcreteType);
+                    yield break;
+                }
 
                 foreach (var parameter in constructorInfo.GetParameters())
                 {

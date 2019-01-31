@@ -2,7 +2,7 @@
 
 namespace SimpleIoc
 {
-    public interface IContainer : IDisposable
+    public interface IContainer
     {
         void Bind(Type typeToResolve, object instance);     
         void Bind<TTypeToResolve, TConcrete>(LifeCycle lifeCycle);     
@@ -12,6 +12,8 @@ namespace SimpleIoc
         object ResolveObject(Type typeToResolve, object injectInto = null,
             LifeCycle preferredLifeCycle = LifeCycle.Default,
             params object[] parameters);
+
+        void Unload();
     }
 }
 

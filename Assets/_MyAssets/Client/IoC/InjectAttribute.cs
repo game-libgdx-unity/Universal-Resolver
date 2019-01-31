@@ -23,3 +23,18 @@ public class InjectAttribute : Attribute
 
     public LifeCycle LifeCycle { get; set; }
 }
+
+public class SingletonAttribute : InjectAttribute
+{
+    public SingletonAttribute()
+        : base(LifeCycle.Singleton)
+    {
+    }
+}
+public class TransientAttribute : InjectAttribute
+{
+    public TransientAttribute()
+        : base(LifeCycle.Transient)
+    {
+    }
+}

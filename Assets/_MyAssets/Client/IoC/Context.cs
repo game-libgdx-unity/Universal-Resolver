@@ -12,30 +12,39 @@ using Object = UnityEngine.Object;
 
 namespace SimpleIoc
 {
-    public partial class Context : IDisposable
+    public partial class Context
     {
         #region Variables & Constants
 
         public bool loadDefaultSetting;
         public bool requirePreRegistered = true;
 
-        public string assemblyName = "MyAssembly";
         public ImplementClass implementClasses;
 
         public BindingAttribute Binding { get; set; }
         public InjectAttribute Inject { get; set; }
-        public object InjectInto { get; set; }
+        
+        public Type TargetType { get; set; }
 
         #endregion
 
         #region Private members
 
+        public Context(Type target)
+        {
+            Initialize(target);
+        }
+        public Context()
+        {
+            Initialize(typeof(Context));
+        }
+        
         private IContainer container;
 
-        public void Initialize(object injectInto)
+        public void Initialize(Type target)
         {
-            InjectInto = injectInto;
-            container = new DefaultContainer(this, injectInto.GetType());
+            TargetType = target;
+            container = new DefaultContainer(this, TargetType);
 
             InitialProcess();
         }
@@ -85,18 +94,18 @@ namespace SimpleIoc
             }
         }
 
-        public void Dispose()
+        public void Unload()
         {
             if (container != null)
             {
-                container.Dispose();
+                container.Unload();
             }
         }
 
         private void ProcessBindingAttribute()
         {
 
-            var myAssembly = Assembly.GetExecutingAssembly();
+            var myAssembly = TargetType.Assembly;
             foreach (Type concreteType in myAssembly.GetTypes())
             {
                 var bindingAttributes = concreteType.GetCustomAttributes(
@@ -202,7 +211,7 @@ namespace SimpleIoc
 
             foreach (var property in properties)
             {
-                var method = property.GetSetMethod();
+                var method = property.GetSetMethod(true);
                 var inject =
                     property.GetCustomAttributes(typeof(InjectAttribute), true).FirstOrDefault() as InjectAttribute;
 
