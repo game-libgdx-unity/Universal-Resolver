@@ -1,4 +1,4 @@
-﻿namespace SimpleIoc
+﻿namespace UnityIoC
 {
     public enum LifeCycle
     {

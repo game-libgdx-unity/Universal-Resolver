@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UniRx;
-using SimpleIoc;
+using UnityIoC;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 

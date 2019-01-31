@@ -1,6 +1,6 @@
 using ABank;
 
-namespace Zal._MyAssets.Client
+namespace UnityIoC
 {
 
     public class MyPayment

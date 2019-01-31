@@ -1,6 +1,6 @@
 using System.Linq;
 using NUnit.Framework;
-using SimpleIoc;
+using UnityIoC;
 using UnityEngine;
 
 public class MultitionContextTests

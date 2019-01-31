@@ -1,6 +1,6 @@
 using System.Collections;
 using NUnit.Framework;
-using SimpleIoc;
+using UnityIoC;
 using UnityEngine;
 using UnityEngine.TestTools;
 

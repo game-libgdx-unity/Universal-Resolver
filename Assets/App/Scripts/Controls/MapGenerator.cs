@@ -6,7 +6,7 @@ using UniRx;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using SimpleIoc;
+using UnityIoC;
 
 
 public class MapGenerator : MonoBehaviour

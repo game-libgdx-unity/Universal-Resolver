@@ -4,59 +4,22 @@ using UnityEngine.TestTools;
 using NUnit.Framework;
 using System.Collections;
 using System.Collections.Generic;
-using SimpleIoc;
+using UnityIoC;
 using UniRx;
 
-public class ContextTests
+public class ContextPlayModeTests
 {
     private Context _context;
 
     [SetUp]
-    public void ZalClientTestRunnerSimplePasses()
+    public void Setup()
     {
         _context = new Context();
         _context.Initialize(typeof(Context));
 
         Debug.Log("Setup test for " + GetType());
     }
-
-    [Test]
-    public void t01_Create_Object_Instance()
-    {
-        //arrange: do setup context obj for this test
-
-        _context.loadDefaultSetting = false;
-
-
-        var r = new FirebaseManager.SendFriendRequest {created = 1};
-
-        _context.Bind<FirebaseManager.SendFriendRequest>(r);
-
-        //act: try to resolve
-        var obj = _context.Resolve<FirebaseManager.SendFriendRequest>(LifeCycle.Singleton);
-
-        //assert
-        Assert.AreEqual(obj.created, 1);
-    }
-
-    [Test]
-    public void t02_Create_Object_Transient()
-    {
-        //arrange: do setup context obj for this test
-
-        _context.loadDefaultSetting = false;
-
-
-        _context.Bind<FirebaseManager.SendFriendRequest>(LifeCycle.Transient);
-
-        //act: try to resolve
-        var obj = _context.Resolve<FirebaseManager.SendFriendRequest>();
-
-        //assert
-        Assert.IsNotNull(obj);
-    }
-
-
+    
     [UnityTest]
     public IEnumerator t03_Create_Monobehavior_Instance()
     {
@@ -484,17 +447,5 @@ public class ContextTests
         var obj4 = _context.Resolve<TestClass>(LifeCycle.Transient);
         Assert.AreEqual(5, obj4.SingletonDependency.SomeIntProperty);
         Assert.AreEqual(0, obj4.PropertyAsInterface.SomeIntProperty);
-    }
-    
-    [Test]
-    public void t21_InjectInto()
-    {
-        var obj = _context.Resolve<TestClass>(LifeCycle.Transient);
-        Assert.IsInstanceOf(typeof(Dependency), obj.PropertyAsInterface);
-        Assert.IsInstanceOf(typeof(Dependency), obj.SingletonAsInterface);
-        
-        var obj2 = _context.Resolve<TestComponent>(LifeCycle.Transient);
-        Assert.IsInstanceOf(typeof(AnotherDependency), obj2.PropertyAsInterface);
-        Assert.IsInstanceOf(typeof(AnotherDependency), obj2.SingletonAsInterface);
     }
 }

@@ -5,7 +5,7 @@ using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
 
-namespace SimpleIoc
+namespace UnityIoC
 {
     public partial class Context
     {

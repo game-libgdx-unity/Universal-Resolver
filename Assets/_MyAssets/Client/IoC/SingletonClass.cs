@@ -1,17 +1,22 @@
 #if UNITY_EDITOR
 
 
-using SimpleIoc;
+using UnityIoC;
 using UnityEngine;
-
 
 
 [Binding(LifeCycle.Singleton)]
 public class SingletonComponent : MonoBehaviour
 {
-    [Inject] public ISomeInterface PropertyAsInterface { get; set; }
-    
-    [Inject(LifeCycle.Singleton)] public ISomeInterface SingletonAsInterface { get; set; }
+    [Transient] public ISomeInterface PropertyAsInterface { get; set; }
+    [Singleton] public TestComponent SingletonTestComponent { get; set; }
+    [Singleton] public ISomeInterface SingletonAsInterface { get; set; }
+}
+public class ComponentAttributeTest : MonoBehaviour
+{
+    [Component] public TestComponent ComponentTest { get; set; }
+    [Transient] public TestComponent TransientComponentTest { get; set; }
+    [Singleton] public TestComponent SingletonComponentTest { get; set; }
 }
 
 [Binding(LifeCycle.Singleton)]

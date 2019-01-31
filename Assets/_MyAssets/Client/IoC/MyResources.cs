@@ -1,9 +1,17 @@
 using UnityEngine;
 
-public class MyResources
+namespace UnityIoC
 {
-    public static T Load<T>(string path) where T : Object
+    public class MyResources
     {
-        return Resources.Load<T>(path);
+        public static T Load<T>(string path) where T : Object
+        {
+            return Resources.Load<T>(path);
+        }
+    }
+
+    public class MyDebug
+    {
+        
     }
 }

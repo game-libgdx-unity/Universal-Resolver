@@ -2,7 +2,7 @@
 using UnityEngine.TestTools;
 using NUnit.Framework;
 using System.Collections;
-using SimpleIoc;
+using UnityIoC;
 using UniRx;
 
 public class ZalClientTestRunner

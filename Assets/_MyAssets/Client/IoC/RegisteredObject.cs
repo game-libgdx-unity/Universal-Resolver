@@ -1,8 +1,9 @@
 ﻿using System;
 using UnityEngine;
+using UnityIoC;
 using Object = UnityEngine.Object;
 
-namespace SimpleIoc
+namespace UnityIoC
 {
     public class RegisteredObject
     {

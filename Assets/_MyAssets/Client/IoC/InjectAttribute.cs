@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using SimpleIoc;
+using UnityIoC;
 using UnityEngine;
 
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Constructor |
@@ -21,6 +21,10 @@ public class InjectAttribute : Attribute
         this.LifeCycle = lifeCycle;
     }
 
+    public InjectAttribute():this(LifeCycle.Default)
+    {
+    }
+
     public LifeCycle LifeCycle { get; set; }
 }
 
@@ -37,4 +41,40 @@ public class TransientAttribute : InjectAttribute
         : base(LifeCycle.Transient)
     {
     }
+}
+public class ComponentAttribute : InjectAttribute
+{
+    public ComponentAttribute()
+        : base()
+    {
+    }
+}
+public class FindObjectOfTypeAttribute : InjectAttribute
+{
+    public FindObjectOfTypeAttribute()
+        : base()
+    {
+    }
+}
+public class FindGameObjectByNameAttribute : InjectAttribute
+{
+    
+    public FindGameObjectByNameAttribute(string name)
+        : base()
+    {
+        Name = name;
+    }
+
+    public string Name { get; set; }
+}
+public class FindGameObjectsByTagAttribute : InjectAttribute
+{
+    
+    public FindGameObjectsByTagAttribute(string name)
+        : base()
+    {
+        Name = name;
+    }
+
+    public string Name { get; set; }
 }

@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UniRx;
 using UnityEngine;
-using SimpleIoc;
+using UnityIoC;
 
 namespace App.Scripts.Boards
 {

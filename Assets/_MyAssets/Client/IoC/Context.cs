@@ -4,13 +4,13 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using SimpleIoc;
+using UnityIoC;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Debug = UnityEngine.Debug;
 using Object = UnityEngine.Object;
 
-namespace SimpleIoc
+namespace UnityIoC
 {
     public partial class Context
     {
@@ -23,7 +23,7 @@ namespace SimpleIoc
 
         public BindingAttribute Binding { get; set; }
         public InjectAttribute Inject { get; set; }
-        
+
         public Type TargetType { get; set; }
 
         #endregion
@@ -34,11 +34,12 @@ namespace SimpleIoc
         {
             Initialize(target);
         }
+
         public Context()
         {
             Initialize(typeof(Context));
         }
-        
+
         private IContainer container;
 
         public void Initialize(Type target)
@@ -104,7 +105,6 @@ namespace SimpleIoc
 
         private void ProcessBindingAttribute()
         {
-
             var myAssembly = TargetType.Assembly;
             foreach (Type concreteType in myAssembly.GetTypes())
             {
@@ -171,8 +171,9 @@ namespace SimpleIoc
                 .Where(method => method.IsDefined(typeof(InjectAttribute), true))
                 .ToArray();
 
-            if (methods.Length > 0)
-                Debug.Log(string.Format("Found {0} method to process", methods.Length));
+            if (methods.Length <= 0) return;
+
+            Debug.Log(string.Format("Found {0} method to process", methods.Length));
 
             foreach (var method in methods)
             {
@@ -188,7 +189,6 @@ namespace SimpleIoc
             }
 
             var parameters = method.GetParameters();
-
             var paramObjects = Array.ConvertAll(parameters, p =>
             {
                 Debug.Log("Para: " + p.Name + " " + p.ParameterType);
@@ -206,15 +206,26 @@ namespace SimpleIoc
                 .Where(property => property.IsDefined(typeof(InjectAttribute), false))
                 .ToArray();
 
-            if (properties.Length > 0)
-                Debug.Log(string.Format("Found {0} property to process", properties.Length));
+            if (properties.Length <= 0) return;
+
+            Debug.Log(string.Format("Found {0} property to process", properties.Length));
 
             foreach (var property in properties)
             {
                 var method = property.GetSetMethod(true);
-                var inject =
-                    property.GetCustomAttributes(typeof(InjectAttribute), true).FirstOrDefault() as InjectAttribute;
+                var inject = property
+                    .GetCustomAttributes(typeof(InjectAttribute), true)
+                    .FirstOrDefault() as InjectAttribute;
 
+                //try to resolve as monoBehaviour first
+                var component = GetComponentFromGameObject(mono, property.PropertyType, inject);
+                if (component)
+                {
+                    property.SetValue(mono, component, null);
+                    continue;
+                }
+
+                //default object resolve method 
                 ProcessMethodInfo(mono, method, inject);
             }
         }
@@ -234,10 +245,95 @@ namespace SimpleIoc
             {
                 var inject =
                     field.GetCustomAttributes(typeof(InjectAttribute), true).FirstOrDefault() as InjectAttribute;
+
+                //try to resolve as monoBehaviour first
+                var component = GetComponentFromGameObject(mono, field.FieldType, inject);
+                if (component)
+                {
+                    field.SetValue(mono, component);
+                    continue;
+                }
+
+                //default object resolve method 
                 field.SetValue(mono,
                     container.ResolveObject(field.FieldType, mono,
                         inject == null ? LifeCycle.Default : inject.LifeCycle));
             }
+        }
+
+        /// <summary>
+        /// Try to resolve unity component, this should be used in other process methods
+        /// </summary>
+        /// <param name="mono">object is expected as unity mono behaviour</param>
+        /// <returns>true if you want to stop other attribute process methods</returns>
+        private Component GetComponentFromGameObject(object mono, Type type, InjectAttribute injectAttribute)
+        {
+            if (type.IsSubclassOf(typeof(MonoBehaviour)))
+            {
+                var behaviour = mono as MonoBehaviour;
+
+                if (behaviour == null) return null;
+
+                //not supported for transient or singleton inject
+                if (injectAttribute.LifeCycle == LifeCycle.Transient || 
+                    injectAttribute.LifeCycle == LifeCycle.Singleton)
+                {
+                    return null;
+                }
+                
+                //by default, try to resolve by getting the component from the game object
+                var componentFromGameObject = behaviour.GetComponent(type);
+                if (componentFromGameObject != null)
+                {
+                    return componentFromGameObject;
+                }
+
+                //resolve by inject component to the gameobject
+                if (injectAttribute.GetType() == typeof(ComponentAttribute))
+                {
+                    return behaviour.gameObject.AddComponent(type);
+                }
+
+                //resolve by finding component from gameObject by name
+                if (injectAttribute.GetType() == typeof(FindGameObjectByNameAttribute))
+                {
+                    var attribute = injectAttribute as FindGameObjectByNameAttribute;
+                    var findingComponent = GameObject.Find(attribute.Name).GetComponent(type);
+                    if (findingComponent != null)
+                    {
+                        return findingComponent;
+                    }
+                }
+
+                //resolve by finding component from gameObjects by tag
+                if (injectAttribute.GetType() == typeof(FindGameObjectsByTagAttribute))
+                {
+                    var attribute = injectAttribute as FindGameObjectsByTagAttribute;
+                    var findingObj = GameObject.FindGameObjectsWithTag(attribute.Name)
+                        .FirstOrDefault(go => go.GetComponent(type) != null);
+
+                    if (findingObj != null)
+                    {
+                        var findingComponent = findingObj.GetComponent(type);
+                        if (findingComponent != null)
+                        {
+                            return findingComponent;
+                        }
+                    }
+                }
+
+                //resolve by finding type of mono behaviour
+                if (injectAttribute.GetType() == typeof(FindObjectOfTypeAttribute))
+                {
+                    var findingObj = Object.FindObjectOfType(type) as MonoBehaviour;
+                    if (findingObj != null)
+                    {
+                        return findingObj;
+                    }
+                }
+            }
+
+            return null;
         }
 
         #endregion

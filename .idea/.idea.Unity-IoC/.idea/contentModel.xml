@@ -31,22 +31,13 @@
               <e p="Context.DefaultContainer.cs" t="Include" />
               <e p="Context.DictionaryContainer.cs" t="Include" />
               <e p="IContainer.cs" t="Include" />
+              <e p="ImplementClass.cs" t="Include" />
               <e p="InjectAttribute.cs" t="Include" />
               <e p="LifeCycle.cs" t="Include" />
               <e p="MyResources.cs" t="Include" />
               <e p="ObjectExtension.cs" t="Include" />
               <e p="RegisteredObject.cs" t="Include" />
-              <e p="TestClass" t="Include">
-                <e p="AnotherDependency.cs" t="Include" />
-                <e p="Dependency.cs" t="Include" />
-                <e p="ImplementClass.cs" t="Include" />
-                <e p="ISomeInterface.cs" t="Include" />
-                <e p="SingletonClass.cs" t="Include" />
-                <e p="SingletonComponent.cs" t="Include" />
-                <e p="SingletonDependency.cs" t="Include" />
-                <e p="TestClass.cs" t="Include" />
-                <e p="TestComponent.cs" t="Include" />
-              </e>
+              <e p="SingletonClass.cs" t="Include" />
               <e p="TypeNotRegisteredException.cs" t="Include" />
             </e>
             <e p="MyAssembly.asmdef" t="Include" />
@@ -176,6 +167,7 @@
         </e>
         <e p="Editor" t="Include">
           <e p="EditModeTest" t="Include">
+            <e p="ClientEditTests.cs" t="Include" />
             <e p="ContainerTests.cs" t="Include" />
             <e p="EditModeTest.asmdef" t="Include" />
             <e p="Tests.cs" t="Include" />
@@ -226,6 +218,7 @@
             <e p="GameClientTestRunner.cs" t="Include" />
             <e p="MultitionContextTests.cs" t="Include" />
             <e p="Tests.asmdef" t="Include" />
+            <e p="ZalClientIoCTests.cs" t="Include" />
             <e p="ZalClientTestRunner.cs" t="Include" />
           </e>
           <e p="Scripts" t="Include">
@@ -289,53 +282,6 @@
               <e p="link.xml" t="Include" />
             </e>
             <e p="link.xml" t="Include" />
-          </e>
-        </e>
-        <e p="LeanTouch" t="Include">
-          <e p="Examples" t="Include">
-            <e p="Fonts" t="Include">
-              <e p="OFL.txt" t="Include" />
-            </e>
-            <e p="Scripts" t="Include">
-              <e p="LeanCameraMove.cs" t="Include" />
-              <e p="LeanCameraZoom.cs" t="Include" />
-              <e p="LeanCanvasArrow.cs" t="Include" />
-              <e p="LeanDestroy.cs" t="Include" />
-              <e p="LeanDll.asmdef" t="Include" />
-              <e p="LeanFingerDown.cs" t="Include" />
-              <e p="LeanFingerHeld.cs" t="Include" />
-              <e p="LeanFingerLine.cs" t="Include" />
-              <e p="LeanFingerSet.cs" t="Include" />
-              <e p="LeanFingerSwipe.cs" t="Include" />
-              <e p="LeanFingerTap.cs" t="Include" />
-              <e p="LeanFingerTrail.cs" t="Include" />
-              <e p="LeanFingerUp.cs" t="Include" />
-              <e p="LeanOpenUrl.cs" t="Include" />
-              <e p="LeanPath.cs" t="Include" />
-              <e p="LeanPlane.cs" t="Include" />
-              <e p="LeanRotate.cs" t="Include" />
-              <e p="LeanScale.cs" t="Include" />
-              <e p="LeanScreenDepth.cs" t="Include" />
-              <e p="LeanSelect.cs" t="Include" />
-              <e p="LeanSelectable.cs" t="Include" />
-              <e p="LeanSelectableBehaviour.cs" t="Include" />
-              <e p="LeanSelectableGraphicColor.cs" t="Include" />
-              <e p="LeanSelectableRendererColor.cs" t="Include" />
-              <e p="LeanSelectableSpriteRendererColor.cs" t="Include" />
-              <e p="LeanSpawnAt.cs" t="Include" />
-              <e p="LeanTouchEvents.cs" t="Include" />
-              <e p="LeanTranslate.cs" t="Include" />
-              <e p="Scripts" t="Include">
-                <e p="LeanFinger.cs" t="Include" />
-                <e p="LeanGesture.cs" t="Include" />
-                <e p="LeanSnapshot.cs" t="Include" />
-                <e p="LeanTouch.cs" t="Include" />
-              </e>
-            </e>
-            <e p="Shaders" t="Include">
-              <e p="Skybox.shader" t="Include" />
-              <e p="Smooth.shader" t="Include" />
-            </e>
           </e>
         </e>
         <e p="Photon Unity Networking" t="Include">
@@ -761,7 +707,6 @@
       <e p="EditModeTest.csproj" t="IncludeRecursive" />
       <e p="Editor.csproj" t="IncludeRecursive" />
       <e p="GameDll.csproj" t="IncludeRecursive" />
-      <e p="LeanDll.csproj" t="IncludeRecursive" />
       <e p="Library" t="ExcludeRecursive" />
       <e p="MyAssembly.csproj" t="IncludeRecursive" />
       <e p="obj" t="ExcludeRecursive" />
