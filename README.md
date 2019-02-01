@@ -3,6 +3,12 @@ Implements for Unity in fields of IoC, Reactive programming, Firebase, Photon Se
 
 This project is under an active development and subjected to be changed, got bugs fixing and maybe many unknown threats. Using source code from this project is at your own risk!
 
+You can read a full version with nice formated at https://docs.google.com/document/d/1xVOoFa0KxrTnqfogQ_s9qoCgWL5meJnlkENV4_WaylE/edit?usp=sharing
+
+I also made some videos for this on my youtube channel, 
+https://www.youtube.com/playlist?list=PLrxnIke4BNsTyVk2piv7PclE5aDadmfIB 
+(my voice isn’t clear, so sorry about that)
+
 Unity IoC User's Guide
 Programmer & Document writer: Vinh Vu Thanh
 Contact email: Mrthanhvinh168@gmail.com
