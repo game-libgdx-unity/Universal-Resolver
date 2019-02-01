@@ -67,13 +67,19 @@ Context context = new Context();
 Now we have the context, that will resolve most of objects for your classes. 
 I intend to make C# attributes to decorate your code! Let me show you some of them!
 Create bindings
+
 [Binding] should be placed before class keyword
+
 [Binding(typeof(AbstractClassOrInterface)] means you will bind the abstract code to this conrete class when you use the context to resolve the abstract type.
 Resolve objects
 There are some attributes to resolve object using binding you defined, they are singleton, transient, component, etc. They should be placed before a class member (fields, properties, methods, etc)
+
 [Singleton] :  If you want to context resolve an object as a singleton. 
+
 [Transient] :  If you want to context resolve an object as a singleton.
+
 [Component] : used only for unity objects. these objects will be get from the gameObject or created by adding new component to the gameObject
+
 And more to come,...
 Instead of using attributes, you can just write a line of code to resolve
 Context context = new Context();
