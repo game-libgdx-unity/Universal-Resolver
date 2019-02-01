@@ -1,4 +1,10 @@
-﻿using System;
+﻿/**
+ * Author:    Vinh Vu Thanh
+ * This class is a part of Unity IoC project that can be downloaded free at 
+ * https://github.com/game-libgdx-unity/UnityEngine.IoC
+ * (c) Copyright by MrThanhVinh168@gmail.com
+ **/
+using System;
 
 namespace UnityIoC
 {
@@ -9,6 +15,15 @@ namespace UnityIoC
         void Bind(Type typeToResolve, Type concreteType, LifeCycle lifeCycle = LifeCycle.Default);
         void Bind<TConcrete>(LifeCycle lifeCycle);
         object Resolve(Type typeToResolve, LifeCycle lifeCycle = LifeCycle.Default, params object[] parameters);
+        
+        /// <summary>
+        /// resolve an instance from a type
+        /// </summary>
+        /// <param name="typeToResolve"></param>
+        /// <param name="injectInto"></param>
+        /// <param name="preferredLifeCycle"></param>
+        /// <param name="parameters"></param>
+        /// <returns></returns>
         object ResolveObject(Type typeToResolve, object injectInto = null,
             LifeCycle preferredLifeCycle = LifeCycle.Default,
             params object[] parameters);

@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.TestTools;
 
 [TestFixture]
-public class ZalClientIoCTests
+public class ClientIoCTests
 {
     private Client client1;
     private Client client2;

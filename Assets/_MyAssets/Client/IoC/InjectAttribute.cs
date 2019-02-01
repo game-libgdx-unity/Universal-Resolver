@@ -1,24 +1,19 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿/**
+ * Author:    Vinh Vu Thanh
+ * This class is a part of Unity IoC project that can be downloaded free at 
+ * https://github.com/game-libgdx-unity/UnityEngine.IoC
+ * (c) Copyright by MrThanhVinh168@gmail.com
+ **/
+using System;
 using UnityIoC;
-using UnityEngine;
 
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Constructor |
                 AttributeTargets.Field)]
 public class InjectAttribute : Attribute
 {
-    public InjectAttribute(LifeCycle lifeCycle, string prefabToCreateGameObject)
-    {
-        PrefabToCreateGameObject = prefabToCreateGameObject;
-        LifeCycle = lifeCycle;
-    }
-
-    public string PrefabToCreateGameObject { get; set; }
-
     public InjectAttribute(LifeCycle lifeCycle = LifeCycle.Default)
     {
-        this.LifeCycle = lifeCycle;
+        LifeCycle = lifeCycle;
     }
 
     public InjectAttribute():this(LifeCycle.Default)
@@ -41,40 +36,4 @@ public class TransientAttribute : InjectAttribute
         : base(LifeCycle.Transient)
     {
     }
-}
-public class ComponentAttribute : InjectAttribute
-{
-    public ComponentAttribute()
-        : base()
-    {
-    }
-}
-public class FindObjectOfTypeAttribute : InjectAttribute
-{
-    public FindObjectOfTypeAttribute()
-        : base()
-    {
-    }
-}
-public class FindGameObjectByNameAttribute : InjectAttribute
-{
-    
-    public FindGameObjectByNameAttribute(string name)
-        : base()
-    {
-        Name = name;
-    }
-
-    public string Name { get; set; }
-}
-public class FindGameObjectsByTagAttribute : InjectAttribute
-{
-    
-    public FindGameObjectsByTagAttribute(string name)
-        : base()
-    {
-        Name = name;
-    }
-
-    public string Name { get; set; }
 }

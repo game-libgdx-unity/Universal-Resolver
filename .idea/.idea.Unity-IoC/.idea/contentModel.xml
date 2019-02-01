@@ -28,10 +28,12 @@
             </e>
             <e p="IoC" t="Include">
               <e p="BindingAttribute.cs" t="Include" />
+              <e p="ComponentAttribute.cs" t="Include" />
               <e p="Context.cs" t="Include" />
               <e p="Context.DefaultContainer.cs" t="Include" />
               <e p="Context.DictionaryContainer.cs" t="Include" />
               <e p="IContainer.cs" t="Include" />
+              <e p="IInjectComponent.cs" t="Include" />
               <e p="ImplementClass.cs" t="Include" />
               <e p="InjectAttribute.cs" t="Include" />
               <e p="LifeCycle.cs" t="Include" />
@@ -323,6 +325,17 @@
                   <e p="google-services.xml" t="Include" />
                 </e>
               </e>
+            </e>
+          </e>
+          <e p="LINQtoGameObject" t="Include">
+            <e p="Examples" t="Include">
+              <e p="SampleSceneScript.cs" t="Include" />
+            </e>
+            <e p="README.txt" t="Include" />
+            <e p="Scripts" t="Include">
+              <e p="GameObjectExtensions.Enumerable.cs" t="Include" />
+              <e p="GameObjectExtensions.Operate.cs" t="Include" />
+              <e p="GameObjectExtensions.Traverse.cs" t="Include" />
             </e>
           </e>
           <e p="Photon3Unity3D.xml" t="Include" />

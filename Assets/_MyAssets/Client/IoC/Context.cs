@@ -1,4 +1,11 @@
-﻿using System;
+﻿
+/**
+ * Author:    Vinh Vu Thanh
+ * This class is a part of Unity IoC project that can be downloaded free at 
+ * https://github.com/game-libgdx-unity/UnityEngine.IoC
+ * (c) Copyright by MrThanhVinh168@gmail.com
+ **/
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -10,14 +17,6 @@ using UnityEngine.SceneManagement;
 using Debug = UnityEngine.Debug;
 using Object = UnityEngine.Object;
 
-/**
- * Author:    Vinh Vu Thanh
- * Email:     MrThanhVinh168@gmail.com
- * Created:   01/31/2019
- * 
- * 
- * (c) Copyright by Blub Corp.
- **/
 namespace UnityIoC
 {
     public partial class Context
@@ -45,18 +44,13 @@ namespace UnityIoC
 
         public Context()
         {
-            Initialize(typeof(Context));
+            Initialize(null);
         }
 
         private IContainer container;
 
         public void Initialize(Type target)
         {
-            if (target == null)
-            {
-                target = typeof(Context);
-            }
-
             TargetType = target;
             container = new DefaultContainer(this, TargetType);
 
@@ -118,7 +112,7 @@ namespace UnityIoC
 
         private void ProcessBindingAttribute()
         {
-            var myAssembly = TargetType.Assembly;
+            var myAssembly = TargetType == null? Assembly.GetExecutingAssembly() : TargetType.Assembly;
             foreach (Type concreteType in myAssembly.GetTypes())
             {
                 var bindingAttributes = concreteType.GetCustomAttributes(
@@ -281,68 +275,24 @@ namespace UnityIoC
         /// <returns>true if you want to stop other attribute process methods</returns>
         private Component GetComponentFromGameObject(object mono, Type type, InjectAttribute injectAttribute)
         {
+            //not supported for transient or singleton injections
+            if (injectAttribute.LifeCycle == LifeCycle.Transient ||
+                injectAttribute.LifeCycle == LifeCycle.Singleton)
+            {
+                return null;
+            }
+            
             if (type.IsSubclassOf(typeof(MonoBehaviour)))
             {
                 var behaviour = mono as MonoBehaviour;
 
                 if (behaviour == null) return null;
 
-                //not supported for transient or singleton inject
-                if (injectAttribute.LifeCycle == LifeCycle.Transient ||
-                    injectAttribute.LifeCycle == LifeCycle.Singleton)
-                {
-                    return null;
-                }
-
-                //by default, try to resolve by getting the component from the game object
-                var componentFromGameObject = behaviour.GetComponent(type);
-                if (componentFromGameObject != null)
-                {
-                    return componentFromGameObject;
-                }
-
                 //resolve by inject component to the gameobject
-                if (injectAttribute.GetType() == typeof(ComponentAttribute))
+                var injectComponent = injectAttribute as IInjectComponent;
+                if (injectComponent != null)
                 {
-                    return behaviour.gameObject.AddComponent(type);
-                }
-
-                //resolve by finding component from gameObject by name
-                if (injectAttribute.GetType() == typeof(FindGameObjectByNameAttribute))
-                {
-                    var attribute = injectAttribute as FindGameObjectByNameAttribute;
-                    var findingComponent = GameObject.Find(attribute.Name).GetComponent(type);
-                    if (findingComponent != null)
-                    {
-                        return findingComponent;
-                    }
-                }
-
-                //resolve by finding component from gameObjects by tag
-                if (injectAttribute.GetType() == typeof(FindGameObjectsByTagAttribute))
-                {
-                    var attribute = injectAttribute as FindGameObjectsByTagAttribute;
-                    var findingObj = GameObject.FindGameObjectsWithTag(attribute.Name)
-                        .FirstOrDefault(go => go.GetComponent(type) != null);
-
-                    if (findingObj != null)
-                    {
-                        var findingComponent = findingObj.GetComponent(type);
-                        if (findingComponent != null)
-                        {
-                            return findingComponent;
-                        }
-                    }
-                }
-
-                //resolve by finding type of mono behaviour
-                if (injectAttribute.GetType() == typeof(FindObjectOfTypeAttribute))
-                {
-                    var findingObj = Object.FindObjectOfType(type) as MonoBehaviour;
-                    if (findingObj != null)
-                    {
-                        return findingObj;
-                    }
+                    return injectComponent.GetComponent(behaviour, type);
                 }
             }
 

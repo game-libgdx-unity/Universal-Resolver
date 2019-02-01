@@ -6,7 +6,7 @@ using UnityEngine;
 public class MultitionContextTests
 {
     [SetUp]
-    public void ZalClientTestRunnerSimplePasses()
+    public void Setup()
     {
         var  multiContext = Singleton<Multiton<byte, Context>>.Instance;
         

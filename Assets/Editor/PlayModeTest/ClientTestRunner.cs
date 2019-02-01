@@ -5,14 +5,14 @@ using System.Collections;
 using UnityIoC;
 using UniRx;
 
-public class ZalClientTestRunner
+public class ClientTestRunner
 {
     private Client client;
     private Client client2;
     private bool finished;
 
     [SetUp]
-    public void ZalClientTestRunnerSimplePasses()
+    public void SetUp()
     {
         Client.AutoLogin = false;
         Client.EnableLogging = true;
