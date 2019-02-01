@@ -7,12 +7,17 @@ You can read a nice format full version at https://docs.google.com/document/d/1x
 
 I also made some videos for this on my youtube channel, 
 https://www.youtube.com/playlist?list=PLrxnIke4BNsTyVk2piv7PclE5aDadmfIB 
+
 (my voice isn’t clear, so sorry about that)
 
 Unity IoC User's Guide
+
 Programmer & Document writer: Vinh Vu Thanh
+
 Contact email: Mrthanhvinh168@gmail.com
+
 My public repositories: https://github.com/game-libgdx-unity 
+
 What is IoC?
 
 I found an answer on stackoverflow
@@ -41,9 +46,9 @@ IoC context = new IoC();
 var svc = context.Resolve<ShippingService>();
 
 As you can see everything done with the help from a simple IoC.
-That’s one of things I want to archive from developing this project!
+That’s one of goals I want to achieve from developing this project!
 Other benefits can be
-You write Loose coupling classes, much easier to write unit tests.
+You can write Loose coupling classes, much easier to write unit tests.
 Your code is testable, using unity test runner or other automatic test tools.
 Testable code is the good code. If you are not sure why, you should google it :)
 Reduce number of lines of code you have to write (or copy & paste)
