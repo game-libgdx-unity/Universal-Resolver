@@ -81,7 +81,7 @@ There are some attributes to resolve object using binding you defined, they are 
 
 [Singleton] :  If you want to context resolve an object as a singleton. 
 
-[Transient] :  If you want to context resolve an object as a singleton.
+[Transient] :  If you want to context resolve an object as a Transient.
 
 [Component] : used only for unity objects. these objects will be get from the gameObject or created by adding new component to the gameObject
 
