@@ -2,7 +2,7 @@
 
 namespace UnityIoC
 {
-    public interface IContainer
+    public interface IContainer : IDisposable
     {
         void Bind(Type typeToResolve, object instance);     
         void Bind<TTypeToResolve, TConcrete>(LifeCycle lifeCycle);     
@@ -12,8 +12,7 @@ namespace UnityIoC
         object ResolveObject(Type typeToResolve, object injectInto = null,
             LifeCycle preferredLifeCycle = LifeCycle.Default,
             params object[] parameters);
-
-        void Unload();
+ 
     }
 }
 

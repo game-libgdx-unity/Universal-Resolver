@@ -38,6 +38,7 @@ public class FirebaseTestRunner
         client.SendFriendRequest("John");
 
         yield return client2.FriendRequestIncoming.IsValued("Vinh");
+        yield return client.GetComponent<FirebaseSupport>().IsLoading.IsValued(false);
     }
 
     [UnityTest]

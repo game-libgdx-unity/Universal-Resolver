@@ -10,6 +10,14 @@ using UnityEngine.SceneManagement;
 using Debug = UnityEngine.Debug;
 using Object = UnityEngine.Object;
 
+/**
+ * Author:    Vinh Vu Thanh
+ * Email:     MrThanhVinh168@gmail.com
+ * Created:   01/31/2019
+ * 
+ * 
+ * (c) Copyright by Blub Corp.
+ **/
 namespace UnityIoC
 {
     public partial class Context
@@ -44,6 +52,11 @@ namespace UnityIoC
 
         public void Initialize(Type target)
         {
+            if (target == null)
+            {
+                target = typeof(Context);
+            }
+
             TargetType = target;
             container = new DefaultContainer(this, TargetType);
 
@@ -95,11 +108,11 @@ namespace UnityIoC
             }
         }
 
-        public void Unload()
+        public void Dispose()
         {
             if (container != null)
             {
-                container.Unload();
+                container.Dispose();
             }
         }
 
@@ -275,12 +288,12 @@ namespace UnityIoC
                 if (behaviour == null) return null;
 
                 //not supported for transient or singleton inject
-                if (injectAttribute.LifeCycle == LifeCycle.Transient || 
+                if (injectAttribute.LifeCycle == LifeCycle.Transient ||
                     injectAttribute.LifeCycle == LifeCycle.Singleton)
                 {
                     return null;
                 }
-                
+
                 //by default, try to resolve by getting the component from the game object
                 var componentFromGameObject = behaviour.GetComponent(type);
                 if (componentFromGameObject != null)
@@ -389,6 +402,40 @@ namespace UnityIoC
         #endregion
 
         #region Static members
+
+        private static Context _defaultInstance;
+
+        public static Context DefaultInstance
+        {
+            get
+            {
+                if (_defaultInstance == null)
+                {
+                    _defaultInstance = new Context();
+                }
+
+                return _defaultInstance;
+            }
+        }
+
+        public static Context GetDefaultInstance(Type type = null, bool recreate = false)
+        {
+            if (_defaultInstance == null || recreate)
+            {
+                _defaultInstance = new Context(type);
+            }
+
+            return _defaultInstance;
+        }
+
+        public static void DeleteDefaultInstance()
+        {
+            if (_defaultInstance != null)
+            {
+                _defaultInstance.Dispose();
+                _defaultInstance = null;
+            }
+        }
 
         public static void SetPropertyValue(object inputObject, string propertyName, object propertyVal)
         {

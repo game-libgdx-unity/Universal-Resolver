@@ -14,7 +14,7 @@ namespace App.Scripts.Boards
 
         [Singleton] private List<CellData> CellData { get; set; }
 
-        [Singleton] private IGameBoard Board { get; set; }
+        [Singleton] private GameBoard Board { get; set; }
 
         [Singleton] private Random Random { get; set; }
 

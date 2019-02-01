@@ -5,6 +5,7 @@
         "Editor",
         "MyAssembly",
         "UniRx.Async",
+        "GameDll",
         "UniRx.Async.Editor"
     ],
     "optionalUnityReferences": [

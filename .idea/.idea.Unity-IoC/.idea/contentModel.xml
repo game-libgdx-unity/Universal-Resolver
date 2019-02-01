@@ -24,6 +24,7 @@
             <e p="Firebase" t="Include">
               <e p="FirebaseManager.cs" t="Include" />
               <e p="FirebaseSupport.cs" t="Include" />
+              <e p="FirebaseSupportNew.cs" t="Include" />
             </e>
             <e p="IoC" t="Include">
               <e p="BindingAttribute.cs" t="Include" />
@@ -169,7 +170,11 @@
           <e p="EditModeTest" t="Include">
             <e p="ClientEditTests.cs" t="Include" />
             <e p="ContainerTests.cs" t="Include" />
+            <e p="ContextEditModeTests.cs" t="Include" />
             <e p="EditModeTest.asmdef" t="Include" />
+            <e p="Minesweeper" t="Include">
+              <e p="GameBoardTest.cs" t="Include" />
+            </e>
             <e p="Tests.cs" t="Include" />
             <e p="UnitTest.NUnit.cs" t="Include" />
             <e p="UnityTests" t="Include">
@@ -211,11 +216,15 @@
             </e>
           </e>
           <e p="PlayModeTest" t="Include">
-            <e p="ContextTests.cs" t="Include" />
+            <e p="ContextPlayModeTests.cs" t="Include" />
+            <e p="FirebaseNewTestRunner.cs" t="Include" />
             <e p="FirebaseTestRunner.cs" t="Include" />
             <e p="FriendRequestUI.cs" t="Include" />
             <e p="FriendRequestUITests.cs" t="Include" />
             <e p="GameClientTestRunner.cs" t="Include" />
+            <e p="Minesweeper" t="Include">
+              <e p="GameTests.cs" t="Include" />
+            </e>
             <e p="MultitionContextTests.cs" t="Include" />
             <e p="Tests.asmdef" t="Include" />
             <e p="ZalClientIoCTests.cs" t="Include" />

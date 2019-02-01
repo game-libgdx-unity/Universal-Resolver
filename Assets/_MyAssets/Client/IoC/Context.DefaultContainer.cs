@@ -23,11 +23,16 @@ namespace UnityIoC
                 this.injectInto = injectInto;
             }
 
-            public void Unload()
+            public void Dispose()
             {
                 Debug.Log("Disposing container...");
-                registeredTypes = new HashSet<Type>();
-                registeredObjects = new List<RegisteredObject>();
+                foreach (var registeredObject in registeredObjects)
+                {
+                    registeredObject.Dispose();
+                }
+                
+                registeredTypes.Clear();
+                registeredObjects.Clear();
             }
 
             public void Bind<TTypeToResolve, TConcrete>()
@@ -164,9 +169,10 @@ namespace UnityIoC
                         //if the typeToResolve is abstract, then we cannot resolve it, throw exceptions
                         if (typeToResolve.IsAbstract || typeToResolve.IsInterface)
                         {
-                            throw new InvalidOperationException("Cannot resolve the typeToResolve which is abstract");
+                            throw new InvalidOperationException(
+                                "Cannot resolve an abstract TypeToResolve with no respective registeredObject!");
                         }
-                        
+
                         Debug.LogFormat("trying to register {0} ", typeToResolve);
 
                         registeredObject = new RegisteredObject(typeToResolve, typeToResolve, context.Binding,
@@ -215,8 +221,7 @@ namespace UnityIoC
                 var objectLifeCycle = preferredLifeCycle != LifeCycle.Default
                     ? preferredLifeCycle
                     : registeredObject.LifeCycle;
-                Debug.Log("Resolved " + registeredObject.TypeToResolve + " as " +
-                          registeredObject.ConcreteType + " by " + objectLifeCycle);
+
 
                 object obj = null;
 
@@ -228,17 +233,21 @@ namespace UnityIoC
 
                     if (parameters == null || parameters.Length == 0)
                     {
-                        var param = ResolveConstructorParameters(registeredObject).ToArray();
-                        paramArray = param.ToArray();
+                        var param = ResolveConstructorParameters(registeredObject);
+                        paramArray = param == null ? null : param.ToArray();
                     }
 
                     obj = registeredObject.CreateInstance(context, objectLifeCycle, paramArray);
                 }
                 else
                 {
+                    Debug.Log("Successfully resolved " + registeredObject.TypeToResolve + " as " +
+                              registeredObject.ConcreteType + " by " + objectLifeCycle);
                     return registeredObject.Instance;
                 }
 
+                Debug.Log("Successfully resolved " + registeredObject.TypeToResolve + " as " +
+                          registeredObject.ConcreteType + " by " + objectLifeCycle);
                 return obj;
             }
 
@@ -249,7 +258,7 @@ namespace UnityIoC
                 if (constructorInfo == null)
                 {
                     Debug.LogFormat(
-                        "No constructor to resolve object of {0} found, using default constructor",
+                        "No constructor to resolve object of {0} found, will use the default constructor",
                         registeredObject.ConcreteType);
                     yield break;
                 }

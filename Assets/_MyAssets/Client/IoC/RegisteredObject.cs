@@ -5,7 +5,7 @@ using Object = UnityEngine.Object;
 
 namespace UnityIoC
 {
-    public class RegisteredObject
+    public class RegisteredObject :  IDisposable
     {
         public Type TypeToResolve { get; private set; }
 
@@ -99,6 +99,15 @@ namespace UnityIoC
             }
 
             return Instance;
+        }
+
+        public void Dispose()
+        {
+            var disposable = Instance as IDisposable;
+            if (disposable != null)
+            {
+                disposable.Dispose();
+            }
         }
     }
 }

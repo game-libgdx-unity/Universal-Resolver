@@ -5,6 +5,7 @@ using UnityIoC;
 using UnityEngine;
 using UnityEngine.TestTools;
 
+[TestFixture]
 public class ZalClientIoCTests
 {
     private Client client1;
@@ -21,6 +22,8 @@ public class ZalClientIoCTests
         
         client1.Connect("Vin");
         client2.Connect("John");
+        
+        Context.DeleteDefaultInstance();
     }
 
     [UnityTest]
@@ -43,13 +46,13 @@ public class ZalClientIoCTests
     [Test]
     public void t3_ResolveFrom_Interface()
     {
-        var obj = context.Resolve<ISomeInterface>();
+        var obj = Context.DefaultInstance.Resolve<ISomeInterface>();
         Assert.IsInstanceOf(typeof(Dependency), obj);
     }
     [Test]
     public void t4_TestClass_TestPropertyAsInterface()
     {
-        var obj = context.Resolve<TestClass>();
+        var obj = Context.DefaultInstance.Resolve<TestClass>();
         Assert.IsNotNull(obj);
         Assert.IsNotNull(obj.PropertyAsInterface);
         Assert.IsInstanceOf(typeof(Dependency), obj.PropertyAsInterface);

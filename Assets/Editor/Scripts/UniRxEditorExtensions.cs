@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using UniRx;
 using UnityEngine;
@@ -34,11 +35,22 @@ public static class UniRxEditorExtensions
         params T[] expectedValue)
     {
         bool finished = false;
-        observable.ToList().Take(1).Subscribe(list =>
-        {
-            list.Is(expectedValue);
-            finished = true;
-        });
+        observable.Subscribe(x =>
+            {
+                expectedValue.ToList().ForEach(v =>
+                {
+                    if (v.Equals(x))
+                    {
+                        finished = true;
+                    }
+                });
+            },
+            ex => { Assert.Fail("Error occurs: " + ex.Message); },
+            () =>
+            {
+                if (!finished) Assert.Fail("Expected values aren't coming");
+            }
+        );
 
         yield return new WaitUntil(() => finished);
     }
