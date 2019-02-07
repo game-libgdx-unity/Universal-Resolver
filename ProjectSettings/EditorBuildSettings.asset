@@ -6,36 +6,36 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 0
-    path: Assets/_MyAssets/Editor/PlayModeTest/TestScenes/Scenes/TestIncomingChallengeDialogue.unity
-    guid: 522061d2822df41f38d3cac92f658151
+    path: 
+    guid: 00000000000000000000000000000000
   - enabled: 0
-    path: Assets/_MyAssets/Editor/PlayModeTest/TestScenes/Scenes/TestRequestListUI.unity
-    guid: 5ca54ae587d9847d2895018571171b3a
-  - enabled: 1
-    path: Assets/_MyAssets/Editor/PlayModeTest/TestScenes/Scenes/TestUserListUISendChallengeRequest.unity
-    guid: 44c2c796613f54ff49ad062add3884ce
+    path: 
+    guid: 00000000000000000000000000000000
   - enabled: 0
-    path: Assets/_MyAssets/Editor/PlayModeTest/TestScenes/Scenes/TestUserListUISendFriendRequest.unity
-    guid: cf3b22e0c2701a1408a14832ce665b61
+    path: 
+    guid: 00000000000000000000000000000000
+  - enabled: 0
+    path: 
+    guid: 00000000000000000000000000000000
+  - enabled: 0
+    path: 
+    guid: 00000000000000000000000000000000
+  - enabled: 0
+    path: 
+    guid: 00000000000000000000000000000000
+  - enabled: 0
+    path: 
+    guid: 00000000000000000000000000000000
+  - enabled: 0
+    path: 
+    guid: 00000000000000000000000000000000
+  - enabled: 0
+    path: 
+    guid: 00000000000000000000000000000000
+  - enabled: 0
+    path: 
+    guid: 00000000000000000000000000000000
   - enabled: 1
-    path: Assets/_MyAssets/Scenes/MainMenu.unity
-    guid: 460d3d0248851124eb5c9fb0bfa64731
-  - enabled: 1
-    path: Assets/_MyAssets/Editor/PlayModeTest/TestScenes/Scenes/TestIncomingChallengeDialogue.unity
-    guid: 522061d2822df41f38d3cac92f658151
-  - enabled: 1
-    path: Assets/_MyAssets/Editor/PlayModeTest/TestScenes/Scenes/TestRequestListUI.unity
-    guid: 5ca54ae587d9847d2895018571171b3a
-  - enabled: 1
-    path: Assets/_MyAssets/Editor/PlayModeTest/TestScenes/Scenes/TestUserListUISendChallengeRequest.unity
-    guid: 44c2c796613f54ff49ad062add3884ce
-  - enabled: 1
-    path: Assets/_MyAssets/Editor/PlayModeTest/TestScenes/Scenes/TestUserListUISendFriendRequest.unity
-    guid: cf3b22e0c2701a1408a14832ce665b61
-  - enabled: 1
-    path: Assets/_MyAssets/Scenes/MainGame.unity
-    guid: 164efdc1035cc9547b5318d6a553554a
-  - enabled: 1
-    path: Assets/_MyAssets/Scenes/MainMenu.unity
-    guid: 460d3d0248851124eb5c9fb0bfa64731
+    path: 
+    guid: 00000000000000000000000000000000
   m_configObjects: {}

@@ -14,6 +14,7 @@ namespace UnityIoC
                     AttributeTargets.Field, AllowMultiple = true, Inherited = true)]
     public class BindingAttribute : Attribute
     {
+        public Type ConcreteType { get; set; }
         public Type TypeToResolve { get; private set; }
         public LifeCycle LifeCycle { get; set; }
         public Type[] InjectInto { get; set; }
@@ -56,6 +57,13 @@ namespace UnityIoC
             params Type[] injectInto
         )
             :this(typeToResolve, lifeCycle, injectInto, null)
+        {
+        }
+        
+        public BindingAttribute(
+            params Type[] injectInto
+        )
+            :this(null, LifeCycle.Default, injectInto, null)
         {
         }
     }

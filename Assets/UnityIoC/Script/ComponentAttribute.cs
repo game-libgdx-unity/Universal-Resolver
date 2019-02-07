@@ -4,12 +4,12 @@
  * https://github.com/game-libgdx-unity/UnityEngine.IoC
  * (c) Copyright by MrThanhVinh168@gmail.com
  **/
+
 using System;
 using System.Linq;
 using UnityEngine;
 using Object = UnityEngine.Object;
-
-public class ComponentAttribute : InjectAttribute, IInjectComponent
+public partial class ComponentAttribute : InjectAttribute, IInjectComponent
 {
     public Component GetComponent(MonoBehaviour behaviour, Type type)
     {
@@ -19,6 +19,7 @@ public class ComponentAttribute : InjectAttribute, IInjectComponent
             return componentFromGameObject;
         }
 
+        Debug.LogFormat("Can't find type of {0}, create a new one on gameObject {1}", type, behaviour.gameObject.name);
         return behaviour.gameObject.AddComponent(type);
     }
 }
@@ -28,7 +29,14 @@ public class ChildrenAttribute : InjectAttribute, IInjectComponent
 {
     public Component GetComponent(MonoBehaviour behaviour, Type type)
     {
-        throw new NotImplementedException();
+        var componentInChildren = behaviour.GetComponentInChildren(type);
+        if (componentInChildren != null)
+        {
+            return componentInChildren;
+        }
+
+        Debug.LogFormat("Can't find type of {0}, create a new one on gameObject {1}", type, behaviour.gameObject.name);
+        return behaviour.gameObject.AddComponent(type);
     }
 }
 
@@ -36,32 +44,29 @@ public class ParentsAttribute : InjectAttribute, IInjectComponent
 {
     public Component GetComponent(MonoBehaviour behaviour, Type type)
     {
-        throw new NotImplementedException();
+        var componentInParent = behaviour.GetComponentInParent(type);
+        if (componentInParent != null)
+        {
+            return componentInParent;
+        }
+
+        Debug.LogFormat("Can't find type of {0}, create a new one on gameObject {1}", type, behaviour.gameObject.name);
+        return behaviour.gameObject.AddComponent(type);
     }
 }
-
-public class AncestorsAttribute : InjectAttribute, IInjectComponent
-{
-    public Component GetComponent(MonoBehaviour behaviour, Type type)
-    {
-        throw new NotImplementedException();
-    }
-}
-
-public class DescendantsAttribute : InjectAttribute, IInjectComponent
-{
-    public Component GetComponent(MonoBehaviour behaviour, Type type)
-    {
-        throw new NotImplementedException();
-    }
-}
-
 
 public class FindObjectOfTypeAttribute : InjectAttribute, IInjectComponent
 {
     public Component GetComponent(MonoBehaviour behaviour, Type type)
     {
-        return Object.FindObjectOfType(type) as MonoBehaviour;
+        var component = Object.FindObjectOfType(type) as MonoBehaviour;
+        if (!ReferenceEquals(component, null))
+        {
+            return component;
+        }
+
+        Debug.LogFormat("Can't find type of {0}, create a new one on gameObject {1}", type, behaviour.gameObject.name);
+        return behaviour.gameObject.AddComponent(type);
     }
 }
 
@@ -81,7 +86,14 @@ public class FindGameObjectByNameAttribute : InjectAttribute, IInjectComponent
             throw new MissingMemberException("You need to set value for Name property!");
         }
 
-        return GameObject.Find(Name).GetComponent(type);
+        var component = GameObject.Find(Name).GetComponent(type);
+        if (!ReferenceEquals(component, null))
+        {
+            return component;
+        }
+
+        Debug.LogFormat("Can't find type of {0}, create a new one on gameObject {1}", type, behaviour.gameObject.name);
+        return behaviour.gameObject.AddComponent(type);
     }
 }
 
@@ -101,10 +113,10 @@ public class FindGameObjectsByTagAttribute : InjectAttribute, IInjectComponent
 
         if (findingObj != null)
         {
-            return findingObj.GetComponent(type);
+            return findingObj.GetComponent(type) ?? behaviour.gameObject.AddComponent(type);
         }
 
-        //unable to find GameObjects By Tag
-        return null;
+        Debug.LogFormat("Can't find type of {0}, create a new one on gameObject {1}", type, behaviour.gameObject.name);
+        return behaviour.gameObject.AddComponent(type);
     }
 }

@@ -5,7 +5,8 @@
         "Editor",
         "MyAssembly",
         "UniRx.Async",
-        "GameDll"
+        "GameDll",
+        "UnityIoC"
     ],
     "optionalUnityReferences": [
         "TestAssemblies"

@@ -1,11 +1,12 @@
-﻿
-/**
+﻿/**
  * Author:    Vinh Vu Thanh
  * This class is a part of Unity IoC project that can be downloaded free at 
  * https://github.com/game-libgdx-unity/UnityEngine.IoC
  * (c) Copyright by MrThanhVinh168@gmail.com
  **/
+
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -23,15 +24,17 @@ namespace UnityIoC
     {
         #region Variables & Constants
 
+        private IList<BindingAttribute> bindingAttributes = new List<BindingAttribute>();
+        private IList<InjectAttribute> injectAttributes = new List<InjectAttribute>();
+
         public bool loadDefaultSetting;
         public bool requirePreRegistered = true;
 
         public ImplementClass implementClasses;
 
-        public BindingAttribute Binding { get; set; }
-        public InjectAttribute Inject { get; set; }
-
         public Type TargetType { get; set; }
+
+        private IContainer container;
 
         #endregion
 
@@ -45,16 +48,6 @@ namespace UnityIoC
         public Context()
         {
             Initialize(null);
-        }
-
-        private IContainer container;
-
-        public void Initialize(Type target)
-        {
-            TargetType = target;
-            container = new DefaultContainer(this, TargetType);
-
-            InitialProcess();
         }
 
         private void InitialProcess()
@@ -76,7 +69,42 @@ namespace UnityIoC
 
             ProcessBindingAttribute();
 
+            ProcessAutomaticBinding();
+
             ProcessInjectAttributeForMonoBehaviour();
+        }
+
+        private void ProcessAutomaticBinding()
+        {
+            var myAssembly = TargetType == null ? Assembly.GetExecutingAssembly() : TargetType.Assembly;
+            var concreteTypes = myAssembly.GetTypes().Where(t => !(t.IsInterface || t.IsAbstract)).ToArray();
+            var abstractions = myAssembly.GetTypes().Where(t => t.IsInterface || t.IsAbstract).ToArray();
+
+            //find interface with only 1 implement
+            foreach (var abstraction in abstractions)
+            {
+                //process for IContainer internally
+                if (abstraction == typeof(IContainer))
+                {
+                    Bind(abstraction, this.container);
+                    continue;
+                }
+
+                var concreteType = concreteTypes.FirstOrDefault(t =>
+                    t.GetCustomAttributes(typeof(BindingAttribute), true).Length == 0 &&
+                    (t.GetInterface(abstraction.Name) != null) || t.IsSubclassOf(abstraction));
+
+                if (concreteType == null) continue;
+
+                //do not bind for existing registered typeToResolve
+                if (Container.IsRegistered(abstraction))
+                {
+                    Debug.LogFormat("type of {0} which is already registered", abstraction);
+                }
+                
+                Debug.LogFormat("Automatically Bind {0} for {1}", concreteType, abstraction);
+                Bind(abstraction, concreteType);
+            }
         }
 
         private void LoadClassesFromConfigFile(ImplementClass implementClasses)
@@ -112,7 +140,7 @@ namespace UnityIoC
 
         private void ProcessBindingAttribute()
         {
-            var myAssembly = TargetType == null? Assembly.GetExecutingAssembly() : TargetType.Assembly;
+            var myAssembly = TargetType == null ? Assembly.GetExecutingAssembly() : TargetType.Assembly;
             foreach (Type concreteType in myAssembly.GetTypes())
             {
                 var bindingAttributes = concreteType.GetCustomAttributes(
@@ -128,7 +156,11 @@ namespace UnityIoC
                         var prefabName = bindingAttribute.GameObjectNames;
                         var injectInto = bindingAttribute.InjectInto;
 
-                        this.Binding = bindingAttribute;
+                        //set the conrete type back to BindingAttribute
+                        bindingAttribute.ConcreteType = concreteType;
+
+                        //add to binding cache
+                        this.bindingAttributes.Add(bindingAttribute);
 
                         Debug.Log("Found binding " + concreteType + " for " +
                                   (typeToResolve == null ? "itself" : typeToResolve.ToString()) + " with lifeCycle " +
@@ -146,14 +178,11 @@ namespace UnityIoC
                     }
                 }
             }
-
-            //disable binding cache
-            this.Binding = null;
         }
 
         private void ProcessInjectAttributeForMonoBehaviour()
         {
-            MonoBehaviour[] behaviours = Object.FindObjectsOfType<MonoBehaviour>();
+            var behaviours = Object.FindObjectsOfType<MonoBehaviour>();
 
             Debug.Log("Found behavior: " + behaviours.Length);
 
@@ -194,6 +223,8 @@ namespace UnityIoC
             {
                 inject = method.GetCustomAttributes(typeof(InjectAttribute), true).FirstOrDefault() as InjectAttribute;
             }
+            
+            injectAttributes.Add(inject);
 
             var parameters = method.GetParameters();
             var paramObjects = Array.ConvertAll(parameters, p =>
@@ -252,6 +283,8 @@ namespace UnityIoC
             {
                 var inject =
                     field.GetCustomAttributes(typeof(InjectAttribute), true).FirstOrDefault() as InjectAttribute;
+                
+                injectAttributes.Add(inject);
 
                 //try to resolve as monoBehaviour first
                 var component = GetComponentFromGameObject(mono, field.FieldType, inject);
@@ -281,7 +314,7 @@ namespace UnityIoC
             {
                 return null;
             }
-            
+
             if (type.IsSubclassOf(typeof(MonoBehaviour)))
             {
                 var behaviour = mono as MonoBehaviour;
@@ -303,7 +336,20 @@ namespace UnityIoC
 
         #region Public members
 
-        public IContainer GetInstance()
+        public IContainer Container
+        {
+            get { return container; }
+        }
+
+        public void Initialize(Type target)
+        {
+            TargetType = target;
+            container = new DefaultContainer(this, TargetType);
+
+            InitialProcess();
+        }
+
+        public IContainer GetContainer()
         {
             return container;
         }

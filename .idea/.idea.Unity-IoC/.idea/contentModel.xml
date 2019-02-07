@@ -26,23 +26,6 @@
               <e p="FirebaseSupport.cs" t="Include" />
               <e p="FirebaseSupportNew.cs" t="Include" />
             </e>
-            <e p="IoC" t="Include">
-              <e p="BindingAttribute.cs" t="Include" />
-              <e p="ComponentAttribute.cs" t="Include" />
-              <e p="Context.cs" t="Include" />
-              <e p="Context.DefaultContainer.cs" t="Include" />
-              <e p="Context.DictionaryContainer.cs" t="Include" />
-              <e p="IContainer.cs" t="Include" />
-              <e p="IInjectComponent.cs" t="Include" />
-              <e p="ImplementClass.cs" t="Include" />
-              <e p="InjectAttribute.cs" t="Include" />
-              <e p="LifeCycle.cs" t="Include" />
-              <e p="MyResources.cs" t="Include" />
-              <e p="ObjectExtension.cs" t="Include" />
-              <e p="RegisteredObject.cs" t="Include" />
-              <e p="SingletonClass.cs" t="Include" />
-              <e p="TypeNotRegisteredException.cs" t="Include" />
-            </e>
             <e p="MyAssembly.asmdef" t="Include" />
             <e p="Observers" t="Include">
               <e p="ChallengeOptionCanvasObserver.cs" t="Include" />
@@ -171,8 +154,6 @@
         <e p="Editor" t="Include">
           <e p="EditModeTest" t="Include">
             <e p="ClientEditTests.cs" t="Include" />
-            <e p="ContainerTests.cs" t="Include" />
-            <e p="ContextEditModeTests.cs" t="Include" />
             <e p="EditModeTest.asmdef" t="Include" />
             <e p="Minesweeper" t="Include">
               <e p="GameBoardTest.cs" t="Include" />
@@ -218,7 +199,8 @@
             </e>
           </e>
           <e p="PlayModeTest" t="Include">
-            <e p="ContextPlayModeTests.cs" t="Include" />
+            <e p="ClientIoCTests.cs" t="Include" />
+            <e p="ClientTestRunner.cs" t="Include" />
             <e p="FirebaseNewTestRunner.cs" t="Include" />
             <e p="FirebaseTestRunner.cs" t="Include" />
             <e p="FriendRequestUI.cs" t="Include" />
@@ -229,8 +211,6 @@
             </e>
             <e p="MultitionContextTests.cs" t="Include" />
             <e p="Tests.asmdef" t="Include" />
-            <e p="ZalClientIoCTests.cs" t="Include" />
-            <e p="ZalClientTestRunner.cs" t="Include" />
           </e>
           <e p="Scripts" t="Include">
             <e p="ChainingAssertion.NUnit.cs" t="Include" />
@@ -294,6 +274,36 @@
             </e>
             <e p="link.xml" t="Include" />
           </e>
+        </e>
+        <e p="IoC" t="Include">
+          <e p="Editor" t="Include">
+            <e p="TestEdit" t="Include">
+              <e p="ContainerTests1.cs" t="Include" />
+              <e p="ContextEditModeTest.asmdef" t="Include" />
+            </e>
+            <e p="TestPlay" t="Include">
+              <e p="ContextPlayMode.cs" t="Include" />
+              <e p="Tests 1.asmdef" t="Include" />
+            </e>
+          </e>
+          <e p="Script" t="Include">
+            <e p="BindingAttribute.cs" t="Include" />
+            <e p="ComponentAttribute.cs" t="Include" />
+            <e p="Context.cs" t="Include" />
+            <e p="Context.DefaultContainer.cs" t="Include" />
+            <e p="Context.DictionaryContainer.cs" t="Include" />
+            <e p="IContainer.cs" t="Include" />
+            <e p="IInjectComponent.cs" t="Include" />
+            <e p="ImplementClass.cs" t="Include" />
+            <e p="InjectAttribute.cs" t="Include" />
+            <e p="LifeCycle.cs" t="Include" />
+            <e p="MyResources.cs" t="Include" />
+            <e p="ObjectExtension.cs" t="Include" />
+            <e p="RegisteredObject.cs" t="Include" />
+            <e p="SingletonClass.cs" t="Include" />
+            <e p="TypeNotRegisteredException.cs" t="Include" />
+          </e>
+          <e p="UnityIoC.asmdef" t="Include" />
         </e>
         <e p="Photon Unity Networking" t="Include">
           <e p="changelog.txt" t="Include" />
@@ -726,6 +736,8 @@
           </e>
         </e>
       </e>
+      <e p="ContextEditModeTest.csproj" t="IncludeRecursive" />
+      <e p="ContextPlayTests.csproj" t="IncludeRecursive" />
       <e p="EditModeTest.csproj" t="IncludeRecursive" />
       <e p="Editor.csproj" t="IncludeRecursive" />
       <e p="GameDll.csproj" t="IncludeRecursive" />
@@ -742,6 +754,7 @@
       <e p="UniRx.csproj" t="IncludeRecursive" />
       <e p="UniRx.Examples.csproj" t="IncludeRecursive" />
       <e p="Unity-IoC.sln" t="IncludeFlat" />
+      <e p="UnityIoC.csproj" t="IncludeRecursive" />
     </e>
   </component>
 </project>

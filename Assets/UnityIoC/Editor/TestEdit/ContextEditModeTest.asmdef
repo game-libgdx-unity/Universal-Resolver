@@ -1,12 +1,6 @@
 {
-    "name": "EditModeTest",
+    "name": "ContextEditModeTest",
     "references": [
-        "UniRx",
-        "Editor",
-        "MyAssembly",
-        "UniRx.Async",
-        "GameDll",
-        "UniRx.Async.Editor",
         "UnityIoC"
     ],
     "optionalUnityReferences": [

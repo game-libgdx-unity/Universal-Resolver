@@ -1,9 +1,9 @@
-﻿/**
- * Author:    Vinh Vu Thanh
- * This class is a part of Unity IoC project that can be downloaded free at 
- * https://github.com/game-libgdx-unity/UnityEngine.IoC
- * (c) Copyright by MrThanhVinh168@gmail.com
- **/
+﻿///**
+// * Author:    Vinh Vu Thanh
+// * This class is a part of Unity IoC project that can be downloaded free at 
+// * https://github.com/game-libgdx-unity/UnityEngine.IoC
+// * (c) Copyright by MrThanhVinh168@gmail.com
+// **/
 using System;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -11,9 +11,8 @@ using NUnit.Framework;
 using System.Collections;
 using System.Collections.Generic;
 using UnityIoC;
-using UniRx;
 
-public class ContextPlayModeTests
+public class ContextPlayMode
 {
     private Context _context;
 
@@ -35,12 +34,6 @@ public class ContextPlayModeTests
 
         //wait for start() called
         yield return null;
-
-        //act: try to resolve
-        var obj = _context.Resolve<FirebaseSupport>();
-
-        //assert
-        Assert.IsNotNull(obj);
     }
 
     [Test]
@@ -51,12 +44,6 @@ public class ContextPlayModeTests
         _context.loadDefaultSetting = false;
 //        _context.implementClasses = Resources.Load<ImplementClass>("TestConfiguration");
 
-
-        //act: try to resolve
-        var obj = _context.Resolve<FirebaseSupport>();
-
-        //assert
-        Assert.IsNotNull(obj);
     }
 
     [UnityTest]
@@ -244,7 +231,7 @@ public class ContextPlayModeTests
 
         var testObj = _context.Resolve<TestClass>();
         Assert.IsNotNull(testObj);
-        Assert.IsNotNull(testObj.PropertyAsInterface);
+        Assert.IsNotNull(testObj.SomeInterface);
     }
 
     [UnityTest]
@@ -258,10 +245,10 @@ public class ContextPlayModeTests
         yield return null;
 
         var testObj = _context.Resolve<TestClass>(LifeCycle.Singleton);
-        testObj.PropertyAsInterface.SomeIntProperty = 10;
+        testObj.SomeInterface.SomeIntProperty = 10;
 
         var anotherTestObj = _context.Resolve<TestClass>(LifeCycle.Transient);
-        Assert.AreEqual(anotherTestObj.PropertyAsInterface.SomeIntProperty, 0);
+        Assert.AreEqual(anotherTestObj.SomeInterface.SomeIntProperty, 0);
     }
 
     [UnityTest]
@@ -275,13 +262,13 @@ public class ContextPlayModeTests
         yield return null;
 
         var testObj = _context.Resolve<TestClass>(LifeCycle.Singleton);
-        testObj.PropertyAsInterface.SomeIntProperty = 10;
+        testObj.SomeInterface.SomeIntProperty = 10;
 
         var anotherTestObj = _context.Resolve<TestClass>(LifeCycle.Transient);
-        anotherTestObj.PropertyAsInterface.SomeIntProperty = 5;
+        anotherTestObj.SomeInterface.SomeIntProperty = 5;
 
         var stillTestObj = _context.Resolve<TestClass>(LifeCycle.Singleton);
-        Assert.IsTrue(stillTestObj.PropertyAsInterface.SomeIntProperty == 10);
+        Assert.IsTrue(stillTestObj.SomeInterface.SomeIntProperty == 10);
     }
 
     [UnityTest]
@@ -413,43 +400,15 @@ public class ContextPlayModeTests
         yield return null;
 
         var obj = _context.Resolve<SingletonClass>();
-        obj.SingletonAsInterface.SomeIntProperty = 1;
         obj.PropertyAsInterface.SomeIntProperty = 2;
 
         var testObj = _context.Resolve<SingletonClass>(LifeCycle.Transient);
         testObj.PropertyAsInterface.SomeIntProperty = 10;
 
         var singletonObj = _context.Resolve<SingletonClass>();
-        Assert.AreEqual(1, singletonObj.SingletonAsInterface.SomeIntProperty);
 
         singletonObj = _context.Resolve<SingletonClass>();
-        Assert.AreEqual(1, singletonObj.SingletonAsInterface.SomeIntProperty);
     }
 
-    [UnityTest]
-    public IEnumerator t20_Singleton_Dependency()
-    {
-        //arrange: do setup context obj for this test
-
-        _context.loadDefaultSetting = false;
-
-
-        yield return null;
-
-        var obj = _context.Resolve<TestClass>(LifeCycle.Transient);
-        obj.SingletonDependency.SomeIntProperty = 1;
-        obj.PropertyAsInterface.SomeIntProperty = 2;
-
-        var obj2 = _context.Resolve<TestClass>(LifeCycle.Transient);
-        obj2.SingletonDependency.SomeIntProperty = 3;
-        obj2.PropertyAsInterface.SomeIntProperty = 4;
-
-        var obj3 = _context.Resolve<TestClass>(LifeCycle.Transient);
-        obj3.SingletonDependency.SomeIntProperty = 5;
-        obj3.PropertyAsInterface.SomeIntProperty = 6;
-
-        var obj4 = _context.Resolve<TestClass>(LifeCycle.Transient);
-        Assert.AreEqual(5, obj4.SingletonDependency.SomeIntProperty);
-        Assert.AreEqual(0, obj4.PropertyAsInterface.SomeIntProperty);
-    }
+   
 }

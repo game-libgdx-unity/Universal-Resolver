@@ -1,11 +1,11 @@
 {
-    "name": "GameDll",
+    "name": "ContextPlayTests",
     "references": [
-        "MyAssembly",
-        "UniRx",
         "UnityIoC"
     ],
-    "optionalUnityReferences": [],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false

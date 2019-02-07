@@ -1,7 +1,8 @@
 {
     "name": "MyAssembly",
     "references": [
-        "UniRx"
+        "UniRx",
+        "UnityIoC"
     ],
     "optionalUnityReferences": [],
     "includePlatforms": [],

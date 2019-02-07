@@ -20,14 +20,15 @@ namespace UnityIoC
         /// resolve an instance from a type
         /// </summary>
         /// <param name="typeToResolve"></param>
-        /// <param name="injectInto"></param>
+        /// <param name="resolveFrom"></param>
         /// <param name="preferredLifeCycle"></param>
         /// <param name="parameters"></param>
         /// <returns></returns>
-        object ResolveObject(Type typeToResolve, object injectInto = null,
+        object ResolveObject(Type typeToResolve, object resolveFrom = null,
             LifeCycle preferredLifeCycle = LifeCycle.Default,
             params object[] parameters);
- 
+
+        bool IsRegistered(Type abstraction);
     }
 }
 
