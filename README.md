@@ -3,16 +3,24 @@ Implements for Unity in fields of IoC, Reactive programming, Firebase, Photon Se
 
 This project is under an active development and subjected to be changed, got bugs fixing and maybe many unknown threats. Using source code from this project is at your own risk!
 
-You can read a full version with nice formated at https://docs.google.com/document/d/1xVOoFa0KxrTnqfogQ_s9qoCgWL5meJnlkENV4_WaylE/edit?usp=sharing
+You can read a nice format full version at https://docs.google.com/document/d/1xVOoFa0KxrTnqfogQ_s9qoCgWL5meJnlkENV4_WaylE/edit?usp=sharing
 
 I also made some videos for this on my youtube channel, 
 https://www.youtube.com/playlist?list=PLrxnIke4BNsTyVk2piv7PclE5aDadmfIB 
+
+Free chat on Discord
+https://discord.gg/QWrveUQ
+
 (my voice isn’t clear, so sorry about that)
 
 Unity IoC User's Guide
+
 Programmer & Document writer: Vinh Vu Thanh
+
 Contact email: Mrthanhvinh168@gmail.com
+
 My public repositories: https://github.com/game-libgdx-unity 
+
 What is IoC?
 
 I found an answer on stackoverflow
@@ -41,9 +49,9 @@ IoC context = new IoC();
 var svc = context.Resolve<ShippingService>();
 
 As you can see everything done with the help from a simple IoC.
-That’s one of things I want to archive from developing this project!
+That’s one of goals I want to achieve from developing this project!
 Other benefits can be
-You write Loose coupling classes, much easier to write unit tests.
+You can write Loose coupling classes, much easier to write unit tests.
 Your code is testable, using unity test runner or other automatic test tools.
 Testable code is the good code. If you are not sure why, you should google it :)
 Reduce number of lines of code you have to write (or copy & paste)
@@ -67,13 +75,19 @@ Context context = new Context();
 Now we have the context, that will resolve most of objects for your classes. 
 I intend to make C# attributes to decorate your code! Let me show you some of them!
 Create bindings
+
 [Binding] should be placed before class keyword
+
 [Binding(typeof(AbstractClassOrInterface)] means you will bind the abstract code to this conrete class when you use the context to resolve the abstract type.
 Resolve objects
 There are some attributes to resolve object using binding you defined, they are singleton, transient, component, etc. They should be placed before a class member (fields, properties, methods, etc)
+
 [Singleton] :  If you want to context resolve an object as a singleton. 
-[Transient] :  If you want to context resolve an object as a singleton.
+
+[Transient] :  If you want to context resolve an object as a Transient.
+
 [Component] : used only for unity objects. these objects will be get from the gameObject or created by adding new component to the gameObject
+
 And more to come,...
 Instead of using attributes, you can just write a line of code to resolve
 Context context = new Context();
