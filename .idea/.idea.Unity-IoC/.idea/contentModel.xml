@@ -275,36 +275,6 @@
             <e p="link.xml" t="Include" />
           </e>
         </e>
-        <e p="IoC" t="Include">
-          <e p="Editor" t="Include">
-            <e p="TestEdit" t="Include">
-              <e p="ContainerTests1.cs" t="Include" />
-              <e p="ContextEditModeTest.asmdef" t="Include" />
-            </e>
-            <e p="TestPlay" t="Include">
-              <e p="ContextPlayMode.cs" t="Include" />
-              <e p="Tests 1.asmdef" t="Include" />
-            </e>
-          </e>
-          <e p="Script" t="Include">
-            <e p="BindingAttribute.cs" t="Include" />
-            <e p="ComponentAttribute.cs" t="Include" />
-            <e p="Context.cs" t="Include" />
-            <e p="Context.DefaultContainer.cs" t="Include" />
-            <e p="Context.DictionaryContainer.cs" t="Include" />
-            <e p="IContainer.cs" t="Include" />
-            <e p="IInjectComponent.cs" t="Include" />
-            <e p="ImplementClass.cs" t="Include" />
-            <e p="InjectAttribute.cs" t="Include" />
-            <e p="LifeCycle.cs" t="Include" />
-            <e p="MyResources.cs" t="Include" />
-            <e p="ObjectExtension.cs" t="Include" />
-            <e p="RegisteredObject.cs" t="Include" />
-            <e p="SingletonClass.cs" t="Include" />
-            <e p="TypeNotRegisteredException.cs" t="Include" />
-          </e>
-          <e p="UnityIoC.asmdef" t="Include" />
-        </e>
         <e p="Photon Unity Networking" t="Include">
           <e p="changelog.txt" t="Include" />
           <e p="link.xml" t="Include" />
@@ -335,17 +305,6 @@
                   <e p="google-services.xml" t="Include" />
                 </e>
               </e>
-            </e>
-          </e>
-          <e p="LINQtoGameObject" t="Include">
-            <e p="Examples" t="Include">
-              <e p="SampleSceneScript.cs" t="Include" />
-            </e>
-            <e p="README.txt" t="Include" />
-            <e p="Scripts" t="Include">
-              <e p="GameObjectExtensions.Enumerable.cs" t="Include" />
-              <e p="GameObjectExtensions.Operate.cs" t="Include" />
-              <e p="GameObjectExtensions.Traverse.cs" t="Include" />
             </e>
           </e>
           <e p="Photon3Unity3D.xml" t="Include" />
@@ -733,6 +692,50 @@
           </e>
           <e p="WebSocket" t="Include">
             <e p="WebSocket.cs" t="Include" />
+          </e>
+        </e>
+        <e p="UnityIoC" t="Include">
+          <e p="Editor" t="Include">
+            <e p="TestEdit" t="Include">
+              <e p="AttributeTests.cs" t="Include" />
+              <e p="ContainerTests1.cs" t="Include" />
+              <e p="ContextEditModeTest.asmdef" t="Include" />
+            </e>
+            <e p="TestPlay" t="Include">
+              <e p="ContextPlayMode.cs" t="Include" />
+              <e p="Tests 1.asmdef" t="Include" />
+            </e>
+          </e>
+          <e p="Script" t="Include">
+            <e p="BindingAttribute.cs" t="Include" />
+            <e p="ComponentAttribute.cs" t="Include" />
+            <e p="ComponentAttribute.LinqToGameObject.cs" t="Include" />
+            <e p="Context.cs" t="Include" />
+            <e p="Context.DefaultContainer.cs" t="Include" />
+            <e p="Context.DictionaryContainer.cs" t="Include" />
+            <e p="DefaultImplement.cs" t="Include" />
+            <e p="IContainer.cs" t="Include" />
+            <e p="IInjectComponent.cs" t="Include" />
+            <e p="ImplementClass.cs" t="Include" />
+            <e p="InjectAttribute.cs" t="Include" />
+            <e p="ISomeInterface.cs" t="Include" />
+            <e p="LifeCycle.cs" t="Include" />
+            <e p="LINQtoGameObject" t="Include">
+              <e p="README.txt" t="Include" />
+              <e p="Scripts" t="Include">
+                <e p="GameObjectExtensions.Enumerable.cs" t="Include" />
+                <e p="GameObjectExtensions.Operate.cs" t="Include" />
+                <e p="GameObjectExtensions.Traverse.cs" t="Include" />
+              </e>
+            </e>
+            <e p="MyResources.cs" t="Include" />
+            <e p="ObjectExtension.cs" t="Include" />
+            <e p="RegisteredObject.cs" t="Include" />
+            <e p="SingleClassImplement.cs" t="Include" />
+            <e p="SingletonClass.cs" t="Include" />
+            <e p="TestClassImplement.cs" t="Include" />
+            <e p="TypeNotRegisteredException.cs" t="Include" />
+            <e p="UnityIoC.asmdef" t="Include" />
           </e>
         </e>
       </e>

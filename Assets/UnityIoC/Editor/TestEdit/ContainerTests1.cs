@@ -83,11 +83,21 @@ public class ContainerTests
     }
 
     [Test]
-    public void t7_Internally_Bind_IContainer()
+    public void t8_Internally_Bind_IContainer()
     {
         var container = context.Resolve<IContainer>(LifeCycle.Singleton);
 
         Assert.IsNotNull(container);
         Assert.AreSame(context.Container, container);
+    }
+    [Test]
+    public void t9_Resolve_component()
+    {
+        var component = context.Resolve<ComponentAttributeTest>();
+
+        Assert.IsNotNull(component);
+        Assert.IsNotNull(component.SingletonComponentTest);
+        Assert.IsNotNull(component.TransientComponentTest);
+        Assert.IsNotNull(component.ComponentTest);
     }
 }

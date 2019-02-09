@@ -21,8 +21,14 @@ public partial class ComponentAttribute
                 return componentInChildren;
             }
 
-            Debug.LogFormat("Can't find type of {0}, create a new one on gameObject {1}", type, behaviour.gameObject.name);
-            return behaviour.gameObject.AddComponent(type);
+            if (type.IsSubclassOf(typeof(MonoBehaviour)))
+            {
+                Debug.LogFormat("Can't find type of {0}, create a new one on gameObject {1}", type, behaviour.gameObject.name);
+                return behaviour.gameObject.AddComponent(type);
+            }
+
+            Debug.LogFormat("Unable to Get/Add non-monobehaviour {0} using on object {1}", type, behaviour.gameObject.name);
+            return null;
         }
     }
 
@@ -42,8 +48,14 @@ public partial class ComponentAttribute
                 }
             }
 
-            Debug.LogFormat("Can't find type of {0}, create a new one on gameObject {1}", type, behaviour.gameObject.name);
-            return behaviour.gameObject.AddComponent(type);
+            if (type.IsSubclassOf(typeof(MonoBehaviour)))
+            {
+                Debug.LogFormat("Can't find type of {0}, create a new one on gameObject {1}", type, behaviour.gameObject.name);
+                return behaviour.gameObject.AddComponent(type);
+            }
+
+            Debug.LogFormat("Unable to Get/Add non-monobehaviour {0} using on object {1}", type, behaviour.gameObject.name);
+            return null;
         }
     }
 
@@ -63,8 +75,14 @@ public partial class ComponentAttribute
                 }
             }
 
-            Debug.LogFormat("Can't find type of {0}, create a new one on gameObject {1}", type, behaviour.gameObject.name);
-            return behaviour.gameObject.AddComponent(type);
+            if (type.IsSubclassOf(typeof(MonoBehaviour)))
+            {
+                Debug.LogFormat("Can't find type of {0}, create a new one on gameObject {1}", type, behaviour.gameObject.name);
+                return behaviour.gameObject.AddComponent(type);
+            }
+
+            Debug.LogFormat("Unable to Get/Add non-monobehaviour {0} using on object {1}", type, behaviour.gameObject.name);
+            return null;
         }
     }
 

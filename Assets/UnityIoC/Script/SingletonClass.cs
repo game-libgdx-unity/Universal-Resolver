@@ -1,12 +1,10 @@
-#if UNITY_EDITOR
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
 
- 
+
 using UnityEngine;
 
 namespace UnityIoC
 {
-
-
     [Binding(LifeCycle.Singleton)]
     public class SingletonComponent : MonoBehaviour
     {
@@ -30,8 +28,8 @@ namespace UnityIoC
 
     public class TestComponent : MonoBehaviour
     {
-        [Inject(LifeCycle.Singleton)] public ISomeInterface SingletonAsInterface { get; set; }
-        [Inject(LifeCycle.Transient)] public ISomeInterface PropertyAsInterface { get; set; }
+        [Singleton] public ISomeInterface SingletonAsInterface { get; set; }
+        [Transient] public ISomeInterface PropertyAsInterface { get; set; }
     }
 
 
@@ -41,5 +39,19 @@ namespace UnityIoC
         public int SomeIntProperty { get; set; }
     }
 
+
+    [RequireComponent(typeof(SomeComponent))]
+    public class AnotherComponent : MonoBehaviour
+    {
+        [Component] public ISomeComponentInterface SomeComponent { get; private set; }
+    }
+
+    public class SomeComponent : MonoBehaviour, ISomeComponentInterface
+    {
+    }
+
+    public interface ISomeComponentInterface
+    {
+    }
 }
 #endif

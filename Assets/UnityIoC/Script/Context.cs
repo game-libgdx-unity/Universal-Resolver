@@ -67,11 +67,17 @@ namespace UnityIoC
                 LoadClassesFromConfigFile(objClassConfig);
             }
 
+            ProcessComponentAttribute();
+
             ProcessBindingAttribute();
 
             ProcessAutomaticBinding();
 
             ProcessInjectAttributeForMonoBehaviour();
+        }
+
+        private void ProcessComponentAttribute()
+        {
         }
 
         private void ProcessAutomaticBinding()
@@ -90,18 +96,21 @@ namespace UnityIoC
                     continue;
                 }
 
+                //binding attribute gives Type a higher priority than automatic binding with no attributes 
+                //Only automatically bind for classes have no binding attributes  
                 var concreteType = concreteTypes.FirstOrDefault(t =>
                     t.GetCustomAttributes(typeof(BindingAttribute), true).Length == 0 &&
                     (t.GetInterface(abstraction.Name) != null) || t.IsSubclassOf(abstraction));
 
                 if (concreteType == null) continue;
 
-                //do not bind for existing registered typeToResolve
+                //still bind for existing registered typeToResolve
+                //however this is low priority than binding using attributes or Bind() methods.
                 if (Container.IsRegistered(abstraction))
                 {
                     Debug.LogFormat("type of {0} which is already registered", abstraction);
                 }
-                
+
                 Debug.LogFormat("Automatically Bind {0} for {1}", concreteType, abstraction);
                 Bind(abstraction, concreteType);
             }
@@ -223,7 +232,7 @@ namespace UnityIoC
             {
                 inject = method.GetCustomAttributes(typeof(InjectAttribute), true).FirstOrDefault() as InjectAttribute;
             }
-            
+
             injectAttributes.Add(inject);
 
             var parameters = method.GetParameters();
@@ -283,7 +292,7 @@ namespace UnityIoC
             {
                 var inject =
                     field.GetCustomAttributes(typeof(InjectAttribute), true).FirstOrDefault() as InjectAttribute;
-                
+
                 injectAttributes.Add(inject);
 
                 //try to resolve as monoBehaviour first
@@ -302,7 +311,7 @@ namespace UnityIoC
         }
 
         /// <summary>
-        /// Try to resolve unity component, this should be used in other process methods
+        /// Try to resolve unity component, this should be used in other attribute process methods
         /// </summary>
         /// <param name="mono">object is expected as unity mono behaviour</param>
         /// <returns>true if you want to stop other attribute process methods</returns>
@@ -315,18 +324,35 @@ namespace UnityIoC
                 return null;
             }
 
-            if (type.IsSubclassOf(typeof(MonoBehaviour)))
+            var behaviour = mono as MonoBehaviour;
+
+            if (behaviour == null) return null;
+
+            //resolve by inject component to the gameobject
+            var injectComponent = injectAttribute as IInjectComponent;
+            if (injectComponent != null)
             {
-                var behaviour = mono as MonoBehaviour;
+                var component = injectComponent.GetComponent(behaviour, type);
 
-                if (behaviour == null) return null;
-
-                //resolve by inject component to the gameobject
-                var injectComponent = injectAttribute as IInjectComponent;
-                if (injectComponent != null)
+                //try to search from registeredObject of this type and resolve
+                if (container.IsRegistered(type))
                 {
-                    return injectComponent.GetComponent(behaviour, type);
+                    //valid when concreteType is subclass of monobehaviour
+                    var obj = Container.GetRegisteredObject(type);
+                    if (obj.ConcreteType.IsSubclassOf(typeof(MonoBehaviour)))
+                    {
+                        Debug.LogFormat("Adding {0} is to gameObject", obj.ConcreteType);
+                        return behaviour.gameObject.AddComponent(obj.ConcreteType);
+                    }
                 }
+                
+                //unable to get it from gameObject
+                if (component == null)
+                {
+                    throw new InvalidOperationException("You cannot apply Component attribute to resolve non-unity component");
+                }
+
+                return component;
             }
 
             return null;

@@ -241,6 +241,11 @@ namespace UnityIoC
                 return registeredTypes.FirstOrDefault(t => t == type) != null;
             }
 
+            public RegisteredObject GetRegisteredObject(Type typeToResolve)
+            {
+                return registeredObjects.FirstOrDefault(t => t.TypeToResolve == typeToResolve);
+            }
+
             private object GetInstance(RegisteredObject registeredObject,
                 LifeCycle preferredLifeCycle = LifeCycle.Default,
                 params object[] parameters)
