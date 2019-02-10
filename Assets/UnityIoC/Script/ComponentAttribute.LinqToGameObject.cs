@@ -10,7 +10,7 @@ using UnityEngine;
 public partial class ComponentAttribute
 {
     
-    public class SiblingAttribute : InjectAttribute, IInjectComponent
+    public class SiblingAttribute : InjectAttribute, IComponentResolvable
     {
         public Component GetComponent(MonoBehaviour behaviour, Type type)
         {
@@ -32,7 +32,7 @@ public partial class ComponentAttribute
         }
     }
 
-    public class AncestorsAttribute : InjectAttribute, IInjectComponent
+    public class AncestorsAttribute : InjectAttribute, IComponentResolvable
     {
         public Component GetComponent(MonoBehaviour behaviour, Type type)
         {
@@ -59,7 +59,7 @@ public partial class ComponentAttribute
         }
     }
 
-    public class DescendantsAttribute : InjectAttribute, IInjectComponent
+    public class DescendantsAttribute : InjectAttribute, IComponentResolvable
     {
         public Component GetComponent(MonoBehaviour behaviour, Type type)
         {

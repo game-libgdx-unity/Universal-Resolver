@@ -264,7 +264,11 @@ namespace UnityIoC
                     .GetCustomAttributes(typeof(InjectAttribute), true)
                     .FirstOrDefault() as InjectAttribute;
 
-                //try to resolve as monoBehaviour first
+                //pass container to injectAttribute
+                // ReSharper disable once PossibleNullReferenceException
+                inject.container = GetContainer();
+
+                //todo: try to resolve as monoBehaviour or as array
                 var component = GetComponentFromGameObject(mono, property.PropertyType, inject);
                 if (component)
                 {
@@ -295,12 +299,47 @@ namespace UnityIoC
 
                 injectAttributes.Add(inject);
 
-                //try to resolve as monoBehaviour first
-                var component = GetComponentFromGameObject(mono, field.FieldType, inject);
-                if (component)
+                //pass container to injectAttribute
+                inject.container = GetContainer();
+
+                if (field.FieldType.IsArray)
                 {
-                    field.SetValue(mono, component);
-                    continue;
+                    //check if field type is array for particular processing
+                    var injectComponentArray = inject as IComponentArrayResolvable;
+
+                    if (injectComponentArray == null)
+                    {
+                        throw new InvalidOperationException(
+                            "You must use apply injectAttribute with IComponentArrayResolvable to resolve array of components");
+                    }
+
+                    //try to resolve as monoBehaviour first
+                    var components = GetComponentsFromGameObject(mono, field.FieldType, inject);
+                    if (components != null && components.Length > 0)
+                    {
+                        var array = Array.CreateInstance(field.FieldType.GetElementType(), components.Length);
+                        for (var i = 0; i < components.Length; i++)
+                        {
+                            var component = components[i];
+                            array.SetValue(component, i);
+                        }
+
+                        field.SetValue(mono, array
+//                            Convert.ChangeType(components, field.FieldType)
+//                            Array.ConvertAll(components, c => Convert.ChangeType(c, field.FieldType.GetElementType()))
+                            );
+                        continue;
+                    }
+                }
+                else
+                {
+                    //try to resolve as monoBehaviour component
+                    var component = GetComponentFromGameObject(mono, field.FieldType, inject);
+                    if (component)
+                    {
+                        field.SetValue(mono, component);
+                        continue;
+                    }
                 }
 
                 //default object resolve method 
@@ -329,33 +368,67 @@ namespace UnityIoC
             if (behaviour == null) return null;
 
             //resolve by inject component to the gameobject
-            var injectComponent = injectAttribute as IInjectComponent;
+            var injectComponent = injectAttribute as IComponentResolvable;
+
+            //output component
+            Component component = null;
+
+            //try get/add component with IInjectComponent interface
             if (injectComponent != null)
             {
-                var component = injectComponent.GetComponent(behaviour, type);
+                component = injectComponent.GetComponent(behaviour, type);
 
-                //try to search from registeredObject of this type and resolve
-                if (container.IsRegistered(type))
-                {
-                    //valid when concreteType is subclass of monobehaviour
-                    var obj = Container.GetRegisteredObject(type);
-                    if (obj.ConcreteType.IsSubclassOf(typeof(MonoBehaviour)))
-                    {
-                        Debug.LogFormat("Adding {0} is to gameObject", obj.ConcreteType);
-                        return behaviour.gameObject.AddComponent(obj.ConcreteType);
-                    }
-                }
-                
                 //unable to get it from gameObject
                 if (component == null)
                 {
-                    throw new InvalidOperationException("You cannot apply Component attribute to resolve non-unity component");
+                    Debug.LogFormat("Unable to resolve component of {0} for {1}", type, behaviour.name);
                 }
-
-                return component;
             }
 
-            return null;
+            return component;
+        }
+
+        /// <summary>
+        /// Try to resolve array of components, this should be used in other attribute process methods
+        /// </summary>
+        /// <param name="mono">object is expected as unity mono behaviour</param>
+        /// <returns>true if you want to stop other attribute process methods</returns>
+        private Component[] GetComponentsFromGameObject(object mono, Type type, InjectAttribute injectAttribute)
+        {
+            //not supported for transient or singleton injections
+            if (injectAttribute.LifeCycle == LifeCycle.Transient ||
+                injectAttribute.LifeCycle == LifeCycle.Singleton)
+            {
+                return null;
+            }
+
+            var behaviour = mono as MonoBehaviour;
+
+            if (behaviour == null) return null;
+
+            //output components
+            Component[] components = null;
+
+            //resolve by inject component to the gameobject
+            var injectComponentArray = injectAttribute as IComponentArrayResolvable;
+
+            if (injectComponentArray == null)
+            {
+                throw new InvalidOperationException(
+                    "You must use apply injectAttribute with IComponentArrayResolvable to resolve array of components");
+                //unable to get it from gameObject
+            }
+
+            components = injectComponentArray.GetComponents(behaviour, type.GetElementType());
+
+            //unable to get it from gameObject
+            if (components == null || components.Length == 0)
+            {
+                Debug.LogFormat("Unable to resolve components of {0} for {1}, found {2} elements",
+                    type.GetElementType(), behaviour.name, components != null ? components.Length : 0);
+            }
+
+            return components;
         }
 
         #endregion

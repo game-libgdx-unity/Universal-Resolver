@@ -61,7 +61,7 @@ namespace UnityIoC
                 }
                 else
                 {
-                    Debug.Log("registered type: " + typeToResolve + " as " + lifeCycle);
+                    Debug.Log("new type registered: " + typeToResolve + " as " + lifeCycle);
                     registeredTypes.Add(typeToResolve);
                 }
 

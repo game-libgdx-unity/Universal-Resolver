@@ -11,6 +11,7 @@ using UnityIoC;
                 AttributeTargets.Field)]
 public class InjectAttribute : Attribute
 {
+    public IContainer container { get; set; }
     public InjectAttribute(LifeCycle lifeCycle = LifeCycle.Default)
     {
         LifeCycle = lifeCycle;

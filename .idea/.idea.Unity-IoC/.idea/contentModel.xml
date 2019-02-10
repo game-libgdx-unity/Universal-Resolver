@@ -707,6 +707,7 @@
             </e>
           </e>
           <e p="Script" t="Include">
+            <e p="ArrayOfComponent.cs" t="Include" />
             <e p="BindingAttribute.cs" t="Include" />
             <e p="ComponentAttribute.cs" t="Include" />
             <e p="ComponentAttribute.LinqToGameObject.cs" t="Include" />
@@ -714,8 +715,8 @@
             <e p="Context.DefaultContainer.cs" t="Include" />
             <e p="Context.DictionaryContainer.cs" t="Include" />
             <e p="DefaultImplement.cs" t="Include" />
+            <e p="IComponentResolvable.cs" t="Include" />
             <e p="IContainer.cs" t="Include" />
-            <e p="IInjectComponent.cs" t="Include" />
             <e p="ImplementClass.cs" t="Include" />
             <e p="InjectAttribute.cs" t="Include" />
             <e p="ISomeInterface.cs" t="Include" />
@@ -733,6 +734,7 @@
             <e p="RegisteredObject.cs" t="Include" />
             <e p="SingleClassImplement.cs" t="Include" />
             <e p="SingletonClass.cs" t="Include" />
+            <e p="SomeComponent.cs" t="Include" />
             <e p="TestClassImplement.cs" t="Include" />
             <e p="TypeNotRegisteredException.cs" t="Include" />
             <e p="UnityIoC.asmdef" t="Include" />

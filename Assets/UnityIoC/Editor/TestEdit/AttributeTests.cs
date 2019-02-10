@@ -4,6 +4,7 @@ using NUnit.Framework;
 using System.Collections;
 using UnityIoC;
 
+[TestFixture]
 public class AttributeTests {
 
     
@@ -20,13 +21,28 @@ public class AttributeTests {
     {
         var component = context.Resolve<AnotherComponent>();
         Assert.IsNotNull(component);       
-        Assert.IsNotNull(component.SomeComponent);       
+        Assert.IsNotNull(component.SomeComponent);   
+        Assert.IsNotNull(component.TransientComponent);   
     }
+    
     [Test]
     public void t2_resolve_component_attribute()
     {
         var component = context.Resolve<AnotherComponent>();
         Assert.IsInstanceOf(typeof(SomeComponent), component.SomeComponent);       
+        Assert.IsInstanceOf(typeof(SomeComponent), component.TransientComponent);       
+        Assert.AreSame(component.gameObject, ((SomeComponent)component.SomeComponent).gameObject);
+        Assert.AreNotSame(component.gameObject, ((SomeComponent)component.TransientComponent).gameObject);
+    }
+
+    [Test]
+    public void t3_resolve_array_of_components_prefab()
+    {
+        var arrayOfComponent = context.Resolve<ArrayOfComponent>();
+        
+        Assert.IsNotNull(arrayOfComponent);       
+        Assert.IsNotNull(arrayOfComponent.SomeComponents);       
+        Assert.AreEqual(3, arrayOfComponent.SomeComponents.Length);
     }
     
     [Test]

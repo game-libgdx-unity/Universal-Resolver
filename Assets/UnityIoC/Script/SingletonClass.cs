@@ -44,10 +44,7 @@ namespace UnityIoC
     public class AnotherComponent : MonoBehaviour
     {
         [Component] public ISomeComponentInterface SomeComponent { get; private set; }
-    }
-
-    public class SomeComponent : MonoBehaviour, ISomeComponentInterface
-    {
+        [Transient] public ISomeComponentInterface TransientComponent { get; private set; }
     }
 
     public interface ISomeComponentInterface

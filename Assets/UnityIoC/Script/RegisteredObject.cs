@@ -85,36 +85,10 @@ namespace UnityIoC
                     objectLifeCycle == LifeCycle.Default)
                 {
                     object instance;
-                    if (TypeToResolve.IsSubclassOf(typeof(MonoBehaviour)))
+                    if (ConcreteType.IsSubclassOf(typeof(MonoBehaviour)))
                     {
-                        //search for templates from resources path folders
-                        var prefab = MyResources.Load<GameObject>(string.Format("prefabs/scenes/{0}", ConcreteType));
-                        if (!prefab) prefab = MyResources.Load<GameObject>(string.Format("scenes/{0}", ConcreteType));
-                        if (!prefab) prefab = MyResources.Load<GameObject>(string.Format("prefabs/{0}", ConcreteType));
-                        if (!prefab) prefab = MyResources.Load<GameObject>(ConcreteType.ToString());
-
-                        if (prefab)
-                        {
-                            Debug.LogFormat("Found prefab for {0} .......", ConcreteType);
-                            var prefabInstance = Object.Instantiate(prefab);
-
-                            if (prefabInstance.GetComponent(ConcreteType) == null)
-                            {
-                                Debug.LogFormat("Found component {0} in prefab children", ConcreteType);
-                                instance = prefabInstance.GetComponentInChildren(ConcreteType);
-                            }
-                            else
-                            {
-                                Debug.LogFormat("Found component {0} in the prefab", ConcreteType);
-                                instance = prefabInstance.GetComponent(ConcreteType);
-                            }
-                        }
-                        else
-                        {
-                            Debug.LogFormat("FNot found prefab for {0} in the prefab, created a new game object",
-                                ConcreteType);
-                            instance = new GameObject().AddComponent(ConcreteType);
-                        }
+                        GameObject prefab;
+                        instance = TryFetPrefab(out prefab, ConcreteType, ConcreteType.Name);
                     }
                     else
                     {
@@ -132,6 +106,41 @@ namespace UnityIoC
                 }
 
                 return Instance;
+            }
+
+            private object TryFetPrefab(out GameObject prefab, Type concreteType, string TypeName)
+            {
+                object instance;
+//search for templates from resources path folders
+                prefab = MyResources.Load<GameObject>(string.Format("prefabs/scenes/{0}", TypeName));
+                if (!prefab) prefab = MyResources.Load<GameObject>(string.Format("scenes/{0}", TypeName));
+                if (!prefab) prefab = MyResources.Load<GameObject>(string.Format("prefabs/{0}", TypeName));
+                if (!prefab) prefab = MyResources.Load<GameObject>(TypeName.ToString());
+
+                if (prefab)
+                {
+                    Debug.LogFormat("Found prefab for {0} .......", TypeName);
+                    var prefabInstance = Object.Instantiate(prefab);
+
+                    if (prefabInstance.GetComponent(TypeName) == null)
+                    {
+                        Debug.LogFormat("Found component {0} in prefab children", TypeName);
+                        instance = prefabInstance.GetComponentInChildren(concreteType);
+                    }
+                    else
+                    {
+                        Debug.LogFormat("Found component {0} in the prefab", TypeName);
+                        instance = prefabInstance.GetComponent(TypeName);
+                    }
+                }
+                else
+                {
+                    Debug.LogFormat("FNot found prefab for {0} in the prefab, created a new game object",
+                        TypeName);
+                    instance = new GameObject().AddComponent(concreteType);
+                }
+
+                return instance;
             }
 
             public void Dispose()
