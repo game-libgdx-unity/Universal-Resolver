@@ -49,7 +49,7 @@ public partial class ComponentAttribute : InjectAttribute, IComponentResolvable,
 }
 
 
-public class ChildAttribute : InjectAttribute, IComponentResolvable
+public class ChildrenAttribute : InjectAttribute, IComponentResolvable, IComponentArrayResolvable
 {
     public Component GetComponent(MonoBehaviour behaviour, Type type)
     {
@@ -68,6 +68,11 @@ public class ChildAttribute : InjectAttribute, IComponentResolvable
 
         Debug.LogFormat("Unable to Get/Add non-monobehaviour {0} using on object {1}", type, behaviour.gameObject.name);
         return null;
+    }
+
+    public Component[] GetComponents(MonoBehaviour behaviour, Type type)
+    {
+        return behaviour.GetComponentsInChildren(type);
     }
 }
 

@@ -36,13 +36,42 @@ public class AttributeTests {
     }
 
     [Test]
-    public void t3_resolve_array_of_components_prefab()
+    public void t3_resolve_array_of_components_as_variable_from_prefab()
     {
         var arrayOfComponent = context.Resolve<ArrayOfComponent>();
         
         Assert.IsNotNull(arrayOfComponent);       
         Assert.IsNotNull(arrayOfComponent.SomeComponents);       
         Assert.AreEqual(3, arrayOfComponent.SomeComponents.Length);
+    }
+    [Test]
+    public void t4_resolve_array_of_components_as_property_from_prefab()
+    {
+        var arrayOfComponent = context.Resolve<ArrayOfComponent>();
+        
+        Assert.IsNotNull(arrayOfComponent);       
+        Assert.IsNotNull(arrayOfComponent.SomeComponentsAsProperty);       
+        Assert.AreEqual(3, arrayOfComponent.SomeComponentsAsProperty.Length);
+    }
+    
+    
+    [Test]
+    public void t5_resolve_array_of_components_from_children_as_variable_by_prefab()
+    {
+        var arrayOfComponent = context.Resolve<ArrayOfComponentFromChildren>();
+        
+        Assert.IsNotNull(arrayOfComponent);       
+        Assert.IsNotNull(arrayOfComponent.SomeComponents);       
+        Assert.AreEqual(5, arrayOfComponent.SomeComponents.Length);
+    }
+    [Test]
+    public void t6_resolve_array_of_components_from_children_as_property_by_prefab()
+    {
+        var arrayOfComponent = context.Resolve<ArrayOfComponentFromChildren>();
+        
+        Assert.IsNotNull(arrayOfComponent);       
+        Assert.IsNotNull(arrayOfComponent.SomeComponentsAsProperty);       
+        Assert.AreEqual(5, arrayOfComponent.SomeComponentsAsProperty.Length);
     }
     
     [Test]

@@ -268,15 +268,28 @@ namespace UnityIoC
                 // ReSharper disable once PossibleNullReferenceException
                 inject.container = GetContainer();
 
-                //todo: try to resolve as monoBehaviour or as array
-                var component = GetComponentFromGameObject(mono, property.PropertyType, inject);
-                if (component)
+                //try to resolve as monoBehaviour or as array
+                if (property.PropertyType.IsArray)
                 {
-                    property.SetValue(mono, component, null);
-                    continue;
+                    var components = GetComponentsFromGameObject(mono, property.PropertyType, inject);
+                    if (components != null && components.Length > 0)
+                    {
+                        property.SetValue(mono, ConvertComponentArrayTo(property.PropertyType.GetElementType(), components), null);
+                        continue;
+                    }
+                }
+                else
+                {
+                    var component = GetComponentFromGameObject(mono, property.PropertyType, inject);
+                    if (component)
+                    {
+                        property.SetValue(mono, component, null);
+                        continue;
+                    }
                 }
 
-                //default object resolve method 
+                Debug.LogFormat("IComponentResolvable attribute fails to resolve {0}", property.PropertyType);
+                //default object resolve method if component attribute fails to resolve
                 ProcessMethodInfo(mono, method, inject);
             }
         }
@@ -317,12 +330,7 @@ namespace UnityIoC
                     var components = GetComponentsFromGameObject(mono, field.FieldType, inject);
                     if (components != null && components.Length > 0)
                     {
-                        var array = Array.CreateInstance(field.FieldType.GetElementType(), components.Length);
-                        for (var i = 0; i < components.Length; i++)
-                        {
-                            var component = components[i];
-                            array.SetValue(component, i);
-                        }
+                        var array = ConvertComponentArrayTo(field.FieldType.GetElementType(), components);
 
                         field.SetValue(mono, array
 //                            Convert.ChangeType(components, field.FieldType)
@@ -341,12 +349,27 @@ namespace UnityIoC
                         continue;
                     }
                 }
+                
+                
+                Debug.LogFormat("IComponentResolvable attribute fails to resolve {0}", field.FieldType);
 
                 //default object resolve method 
                 field.SetValue(mono,
                     container.ResolveObject(field.FieldType, mono,
                         inject == null ? LifeCycle.Default : inject.LifeCycle));
             }
+        }
+
+        private static Array ConvertComponentArrayTo(Type typeOfArray, Component[] components)
+        {
+            var array = Array.CreateInstance(typeOfArray, components.Length);
+            for (var i = 0; i < components.Length; i++)
+            {
+                var component = components[i];
+                array.SetValue(component, i);
+            }
+
+            return array;
         }
 
         /// <summary>
