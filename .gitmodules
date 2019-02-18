@@ -1,0 +1,3 @@
+[submodule "Assets/UnityIoC2"]
+	path = Assets/UnityIoC2
+	url = https://game-libgdx-unity@github.com/game-libgdx-unity/UnityEngine.IoC.git
