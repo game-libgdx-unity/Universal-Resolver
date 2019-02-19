@@ -1,9 +1,12 @@
 fileFormatVersion: 2
-guid: 8d4f08d435c4b6343969d8af249460ff
+guid: 5af2fce738828a54284c7369887595a8
 labels:
 - ExitGames
 - PUN
 - Photon
 - Networking
 TextScriptImporter:
+  externalObjects: {}
   userData: 
+  assetBundleName: 
+  assetBundleVariant: 
