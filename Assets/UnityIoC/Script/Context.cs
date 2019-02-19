@@ -58,14 +58,22 @@ namespace UnityIoC
                 return;
             }
 
-            LoadClassesFromConfigFile(implementClasses);
 
-            if (loadDefaultSetting)
+            //try to get the implement class setting
+            if (implementClasses == null)
             {
                 //try to load a default setting for context
-                var objClassConfig = Resources.Load<ImplementClass>(SceneManager.GetActiveScene().name);
-                LoadClassesFromConfigFile(objClassConfig);
+                implementClasses = Resources.Load<ImplementClass>(SceneManager.GetActiveScene().name);
             }
+
+            //try to get the implement class setting
+            if (implementClasses == null)
+            {
+                //try to load a default setting for context
+                implementClasses = Resources.Load<ImplementClass>("default");
+            }
+
+            LoadClassesFromConfigFile(implementClasses);
 
             ProcessComponentAttribute();
 
@@ -120,20 +128,25 @@ namespace UnityIoC
         {
             if (implementClasses)
             {
-                foreach (var objClass in implementClasses.classObjectsToLoad)
+                foreach (var objClass in implementClasses.defaultSetting)
                 {
-                    var className = objClass.name;
-                    var classType = Type.GetType(className);
+                    Debug.Assert(objClass.ImplementedType);
+                    Debug.Assert(objClass.AbstractType);
+                    
+                    var implementedType = Type.GetType(objClass.ImplementedType.name);
+                    var abstractType = Type.GetType(objClass.AbstractType.name);
+                    var lifeCycle = objClass.LifeCycle;
+                    var injectInto = objClass.InjectInto ? Type.GetType(objClass.InjectInto.name) : null;
 
-                    if (classType.IsSubclassOf(typeof(MonoBehaviour)))
+                    if (implementedType.IsSubclassOf(typeof(MonoBehaviour)))
                     {
                         //
                     }
                     else
                     {
-                        Debug.Log("create of type " + classType);
-                        var obj = Activator.CreateInstance(Type.GetType(className), false);
-                        Bind(classType, obj);
+                        Debug.Log("create of type " + implementedType);
+                        var obj = Activator.CreateInstance(implementedType, false);
+                        Bind(implementedType, obj);
                     }
                 }
             }
@@ -274,7 +287,8 @@ namespace UnityIoC
                     var components = GetComponentsFromGameObject(mono, property.PropertyType, inject);
                     if (components != null && components.Length > 0)
                     {
-                        property.SetValue(mono, ConvertComponentArrayTo(property.PropertyType.GetElementType(), components), null);
+                        property.SetValue(mono,
+                            ConvertComponentArrayTo(property.PropertyType.GetElementType(), components), null);
                         continue;
                     }
                 }
@@ -335,7 +349,7 @@ namespace UnityIoC
                         field.SetValue(mono, array
 //                            Convert.ChangeType(components, field.FieldType)
 //                            Array.ConvertAll(components, c => Convert.ChangeType(c, field.FieldType.GetElementType()))
-                            );
+                        );
                         continue;
                     }
                 }
@@ -349,8 +363,8 @@ namespace UnityIoC
                         continue;
                     }
                 }
-                
-                
+
+
                 Debug.LogFormat("IComponentResolvable attribute fails to resolve {0}", field.FieldType);
 
                 //default object resolve method 
