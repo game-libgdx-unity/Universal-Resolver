@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: !!python/unicode '8f18ed76c0f04ce0a65736104f913ef8'
+guid: ad00ca584809e334c93d8fd9ea2a89e5
 labels:
 - gvh
 - gvh_version-5.4.3
-timeCreated: 1480838400
 DefaultImporter:
-  userData:
-  assetBundleName:
-  assetBundleVariant:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
