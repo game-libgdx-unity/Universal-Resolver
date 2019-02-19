@@ -128,7 +128,7 @@ namespace UnityIoC
         {
             if (implementClasses)
             {
-                foreach (var objClass in implementClasses.classObjectsToLoad)
+                foreach (var objClass in implementClasses.defaultSetting)
                 {
                     Debug.Assert(objClass.ImplementedType);
                     Debug.Assert(objClass.AbstractType);
