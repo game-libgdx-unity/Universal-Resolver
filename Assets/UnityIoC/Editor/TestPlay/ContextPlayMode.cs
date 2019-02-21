@@ -28,8 +28,8 @@ public class ContextPlayMode
     {
         //arrange: do setup context obj for this test
 
-        _context.loadDefaultSetting = false;
-        _context.implementClasses = Resources.Load<ImplementClass>("TestConfiguration");
+        _context.enableAutomaticBinding = false;
+        _context._implementClass = Resources.Load<ImplementClass>("TestConfiguration");
 
 
         //wait for start() called
@@ -41,7 +41,7 @@ public class ContextPlayMode
     {
         //arrange: do setup context obj for this test
 
-        _context.loadDefaultSetting = false;
+        _context.enableAutomaticBinding = false;
 //        _context.implementClasses = Resources.Load<ImplementClass>("TestConfiguration");
 
     }
@@ -51,8 +51,8 @@ public class ContextPlayMode
     {
         //arrange: do setup context obj for this test
 
-        _context.loadDefaultSetting = false;
-        _context.implementClasses = Resources.Load<ImplementClass>("TestConfiguration");
+        _context.enableAutomaticBinding = false;
+        _context._implementClass = Resources.Load<ImplementClass>("TestConfiguration");
 
 
         //wait for start() called
@@ -72,8 +72,8 @@ public class ContextPlayMode
     {
         //arrange: do setup context obj for this test
 
-        _context.loadDefaultSetting = false;
-        _context.implementClasses = Resources.Load<ImplementClass>("TestConfiguration");
+        _context.enableAutomaticBinding = false;
+        _context._implementClass = Resources.Load<ImplementClass>("TestConfiguration");
 
         _context.Bind<IList>(new System.Collections.Generic.List<object>());
 
@@ -92,7 +92,7 @@ public class ContextPlayMode
     {
         //arrange: do setup context obj for this test
 
-        _context.loadDefaultSetting = false;
+        _context.enableAutomaticBinding = false;
 
         _context.Bind<IList, List<object>>(LifeCycle.Singleton);
 
@@ -118,7 +118,7 @@ public class ContextPlayMode
     {
         //arrange: do setup context obj for this test
 
-        _context.loadDefaultSetting = false;
+        _context.enableAutomaticBinding = false;
 
         _context.Bind<IList, List<object>>(LifeCycle.Singleton);
 
@@ -144,7 +144,7 @@ public class ContextPlayMode
     {
         //arrange: do setup context obj for this test
 
-        _context.loadDefaultSetting = false;
+        _context.enableAutomaticBinding = false;
 
         _context.Bind<IList, List<object>>(LifeCycle.Singleton);
 
@@ -169,7 +169,7 @@ public class ContextPlayMode
     {
         //arrange: do setup context obj for this test
 
-        _context.loadDefaultSetting = false;
+        _context.enableAutomaticBinding = false;
 
         _context.Bind<IList, List<object>>(LifeCycle.Singleton);
 
@@ -202,8 +202,8 @@ public class ContextPlayMode
     {
         //arrange: do setup context obj for this test
 
-        _context.loadDefaultSetting = false;
-        _context.implementClasses = Resources.Load<ImplementClass>("TestConfiguration");
+        _context.enableAutomaticBinding = false;
+        _context._implementClass = Resources.Load<ImplementClass>("TestConfiguration");
 
 
         //wait for start() called
@@ -224,7 +224,7 @@ public class ContextPlayMode
     {
         //arrange: do setup context obj for this test
 
-        _context.loadDefaultSetting = false;
+        _context.enableAutomaticBinding = false;
 
 
         yield return null;
@@ -239,7 +239,7 @@ public class ContextPlayMode
     {
         //arrange: do setup context obj for this test
 
-        _context.loadDefaultSetting = false;
+        _context.enableAutomaticBinding = false;
 
 
         yield return null;
@@ -256,7 +256,7 @@ public class ContextPlayMode
     {
         //arrange: do setup context obj for this test
 
-        _context.loadDefaultSetting = false;
+        _context.enableAutomaticBinding = false;
 
 
         yield return null;
@@ -276,7 +276,7 @@ public class ContextPlayMode
     {
         //arrange: do setup context obj for this test
 
-        _context.loadDefaultSetting = false;
+        _context.enableAutomaticBinding = false;
 
 
         yield return null;
@@ -296,7 +296,7 @@ public class ContextPlayMode
     {
         //arrange: do setup context obj for this test
 
-        _context.loadDefaultSetting = false;
+        _context.enableAutomaticBinding = false;
 
 
         yield return null;
@@ -311,7 +311,7 @@ public class ContextPlayMode
     {
         //arrange: do setup context obj for this test
 
-        _context.loadDefaultSetting = false;
+        _context.enableAutomaticBinding = false;
 
 
         yield return null;
@@ -328,7 +328,7 @@ public class ContextPlayMode
     {
         //arrange: do setup context obj for this test
 
-        _context.loadDefaultSetting = false;
+        _context.enableAutomaticBinding = false;
 
 
         yield return null;
@@ -348,7 +348,7 @@ public class ContextPlayMode
     {
         //arrange: do setup context obj for this test
 
-        _context.loadDefaultSetting = false;
+        _context.enableAutomaticBinding = false;
 
 
         yield return null;
@@ -368,7 +368,7 @@ public class ContextPlayMode
     {
         //arrange: do setup context obj for this test
 
-        _context.loadDefaultSetting = false;
+        _context.enableAutomaticBinding = false;
 
 
         yield return null;
@@ -394,7 +394,7 @@ public class ContextPlayMode
     {
         //arrange: do setup context obj for this test
 
-        _context.loadDefaultSetting = false;
+        _context.enableAutomaticBinding = false;
 
 
         yield return null;

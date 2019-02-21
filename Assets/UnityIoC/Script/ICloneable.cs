@@ -5,9 +5,8 @@ using UnityEngine;
 
 namespace UnityIoC
 {
-	public interface ICloneable<T> : ICloneable
-		where T : ICloneable<T>
+	public interface ICloneable<T>
 	{
-		new T Clone();
+		 T Clone();
 	}
 }

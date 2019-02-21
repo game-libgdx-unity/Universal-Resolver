@@ -18,16 +18,14 @@ namespace UnityIoC
     {
         private class DefaultContainer : IContainer
         {
-            private HashSet<Type> registeredTypes = new HashSet<Type>();
-            private IList<RegisteredObject> registeredObjects = new List<RegisteredObject>();
+            internal HashSet<Type> registeredTypes = new HashSet<Type>();
+            internal IList<RegisteredObject> registeredObjects = new List<RegisteredObject>();
 
             private Context context;
-            private Type injectInto;
 
-            public DefaultContainer(Context context, Type injectInto)
+            public DefaultContainer(Context context)
             {
                 this.context = context;
-                this.injectInto = injectInto;
             }
 
             public void Dispose()
@@ -51,7 +49,7 @@ namespace UnityIoC
             {
                 if (concreteType.IsAbstract || concreteType.IsInterface)
                 {
-                    throw new InvalidOperationException("Cannot bind to empty object of abstract type " + concreteType);
+                    throw new InvalidOperationException("Cannot bind to concrete class by an abstract type " + concreteType);
                 }
 
                 if (registeredTypes.Contains(typeToResolve))

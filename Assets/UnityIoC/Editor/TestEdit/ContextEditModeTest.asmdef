@@ -1,7 +1,8 @@
 {
     "name": "ContextEditModeTest",
     "references": [
-        "UnityIoC"
+        "UnityIoC",
+        "UnityIoc.Editor"
     ],
     "optionalUnityReferences": [
         "TestAssemblies"

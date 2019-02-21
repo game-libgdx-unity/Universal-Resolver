@@ -17,6 +17,19 @@ namespace UnityIoC.Editor
             DrawFoldOut("Show Default Inspector", () => DrawDefaultInspector(), false);
         }
 
+        protected T DrawEnumPopup<T>(string label, ref T value, params GUILayoutOption[] options)
+            where T : struct, IConvertible
+        {
+            if (!typeof(T).IsEnum)
+            {
+                throw new ArgumentException("T must be an enumerated type");
+            }
+
+            var enumValue = (Enum) Enum.ToObject(typeof(T), value);
+            value = (T) (object) EditorGUILayout.EnumPopup(label, enumValue, options);
+            return value;
+        }
+
         protected void DrawListObject<T>(string label, string elementName, List<T> objects) where T : UnityEngine.Object
         {
             int objCount = objects.Count;
@@ -47,7 +60,7 @@ namespace UnityIoC.Editor
             EndHorizontal();
 
             if (objects.Count > 0)
-                DrawFoldOut(label, () =>
+                DrawFoldOut(elementName, () =>
                 {
                     for (int i = 0; i < objects.Count; i++)
                     {
@@ -56,12 +69,15 @@ namespace UnityIoC.Editor
                 });
         }
 
-        protected void DrawList<T>(string label, string elementName, List<T> objects, Action<T> DrawElement)
-            where T : ICloneable<T>
+        protected void DrawList<T>(string label, string elementName, List<T> objects, Func<T, T> DrawElement,
+            bool useFoldout = true)
+            where T : ICloneable<T>, new()
         {
-            T defaultElement = default(T);
+            T defaultElement = new T();
             int objCount = objects.Count;
-            label = "List size:";
+
+            BeginHorizontal();
+
             //label = CheckInFoldout(label);
             DrawInt(label, ref objCount);
 
@@ -71,70 +87,75 @@ namespace UnityIoC.Editor
                 while (objects.Count > objCount) objects.RemoveAt(objects.Count - 1);
             }
 
-            EditorGUILayout.BeginHorizontal();
+
+            var list = objects;
+            DrawButton("Create", () =>
+            {
+                list.Add(defaultElement);
+                showFoldOutFlags[label] = true;
+            });
+
             if (objCount > 0)
-                DrawButton("Clone", () => { objects.Add(objects[objects.Count - 1].Clone()); });
-            else
-                DrawButton("Create", () => { objects.Add(defaultElement); });
-
-            DrawButton("Remove First", () =>
             {
-                if (objCount > 0) objects.RemoveAt(0);
-            });
-            DrawButton("Remove Last", () =>
-            {
-                if (objCount > 0) objects.RemoveAt(objects.Count - 1);
-            });
-            EndHorizontal();
-
-            if (objects.Count > 0)
-                DrawFoldOut(label, () =>
+                DrawButton("Clear", () =>
                 {
-                    for (int i = 0; i < objects.Count; i++)
-                    {
-                        DrawElement(objects[i]);
-                    }
+                    if (objCount > 0) list.Clear();
+                    showFoldOutFlags[label] = true;
                 });
+                DrawButton("Remove last", () =>
+                {
+                    if (objCount > 0) list.RemoveAt(list.Count - 1);
+                    showFoldOutFlags[label] = true;
+                });
+            }
+
+            EndHorizontal();
+            try
+            {
+                if (objects.Count > 0)
+                {
+                    if (useFoldout)
+                        DrawFoldOut(label, () =>
+                        {
+                            for (int i = 0; i < list.Count; i++)
+                            {
+                                if (list[i] == null)
+                                {
+                                    list[i] = new T();
+                                }
+
+                                var item = DrawElement(list[i]);
+                                if (item != null)
+                                {
+                                    list[i] = item;
+                                }
+                            }
+
+                            objects = list;
+                        }, false);
+                    else
+                    {
+                        for (int i = 0; i < objects.Count; i++)
+                        {
+                            if (objects[i] == null)
+                            {
+                                objects[i] = new T();
+                            }
+
+                            objects[i] = DrawElement(objects[i]);
+                        }
+                    }
+                }
+            }
+            catch (ArgumentOutOfRangeException ex)
+            {
+                Debug.Log(ex.Message);
+            }
         }
 
-        protected Transform DrawTransform(string label, UnityEngine.Transform transform)
+        protected void DrawLabel(string content, params GUILayoutOption[] options)
         {
-            label = CheckInFoldout(label);
-
-            transform = (Transform) EditorGUILayout.ObjectField(label: label, obj: transform,
-                objType: typeof(Transform), allowSceneObjects: true);
-            return transform;
-        }
-
-        protected GameObject DrawGameObject(string label, UnityEngine.GameObject gameObject)
-        {
-            label = CheckInFoldout(label);
-            gameObject = (GameObject) EditorGUILayout.ObjectField(label: label, obj: gameObject,
-                objType: typeof(GameObject), allowSceneObjects: true);
-            return gameObject;
-        }
-
-        protected T DrawObject<T>(string label, ref T @object) where T : UnityEngine.Object
-        {
-            label = CheckInFoldout(label);
-            @object = (T) EditorGUILayout.ObjectField(label: label, obj: @object, objType: typeof(T),
-                allowSceneObjects: true);
-            return @object;
-        }
-
-        protected T DrawGameObject<T>(string label, ref T gameObject) where T : Component
-        {
-            label = CheckInFoldout(label);
-            gameObject = (T) EditorGUILayout.ObjectField(label: label, obj: gameObject, objType: typeof(T),
-                allowSceneObjects: true);
-            return gameObject;
-        }
-
-        protected void DrawGO(string label, ref UnityEngine.Object gameObject)
-        {
-            label = CheckInFoldout(label);
-            gameObject = (UnityEngine.Object) EditorGUILayout.ObjectField(label: label, obj: gameObject,
-                objType: typeof(UnityEngine.Object), allowSceneObjects: true);
+            EditorGUILayout.LabelField(content, options);
         }
 
         protected void DrawFoldOut(string label, Action draw, bool foldout = true)
@@ -146,32 +167,125 @@ namespace UnityIoC.Editor
 
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("", GUILayout.MaxWidth(10));
+
+            //default is fold out.
+            if (!showFoldOutFlags.ContainsKey(label))
+            {
+                showFoldOutFlags[label] = true;
+            }
+            
             showFoldOutFlags[label] = EditorGUILayout.Foldout(showFoldOutFlags[label], label, true);
             EditorGUILayout.EndHorizontal();
-            inFoldout = true;
-            if (showFoldOutFlags[label] && draw != null) draw();
-            inFoldout = false;
+
+            if (showFoldOutFlags[label]) draw();
         }
 
-        protected void DrawButton(string label, System.Action onClicked)
+
+        protected void DrawDictionary<K, V>(string label, string elementName, Dictionary<K, V> objects,
+            Action<K> DrawKeyElement, Action<V> DrawValueElement)
+            where K : ICloneable<K>
         {
-            if (GUILayout.Button(label))
+            K defaultElement = default(K);
+            int objCount = objects.Count;
+            //label = CheckInFoldout(label);
+            DrawInt(label, ref objCount);
+
+//            if (objCount != objects.Count)
+//            {
+//                while (objects.Count < objCount) objects.Add(defaultElement);
+//                while (objects.Count > objCount) objects.RemoveAt(objects.Count - 1);
+//            }
+//
+//            EditorGUILayout.BeginHorizontal();
+//
+//            DrawButton("Create", () => { objects.Add(defaultElement); });
+//
+//            if (objCount > 0)
+//            {
+//                DrawButton("Clone", () => { objects.Add(objects[objects.Count - 1].Clone()); });
+//            }
+//
+//            DrawButton("Remove First", () =>
+//            {
+//                if (objCount > 0) objects.RemoveAt(0);
+//            });
+//            DrawButton("Remove Last", () =>
+//            {
+//                if (objCount > 0) objects.RemoveAt(objects.Count - 1);
+//            });
+//            EndHorizontal();
+//
+//            if (objects.Count > 0)
+//                DrawFoldOut(label, () =>
+//                {
+//                    for (int i = 0; i < objects.Count; i++)
+//                    {
+//                        DrawElement(objects[i]);
+//                    }
+//                });
+        }
+
+        protected Transform DrawTransform(string label, UnityEngine.Transform transform)
+        {
+            label = CheckInFoldout(label);
+
+            transform = (Transform) EditorGUILayout.ObjectField(label: label, obj: transform,
+                objType: typeof(Transform), allowSceneObjects: true);
+            return transform;
+        }
+
+        protected GameObject DrawGameObject(string label, UnityEngine.GameObject gameObject,
+            params GUILayoutOption[] options)
+        {
+            label = CheckInFoldout(label);
+            gameObject = (GameObject) EditorGUILayout.ObjectField(label: label, obj: gameObject,
+                objType: typeof(GameObject), allowSceneObjects: true, options: options);
+            return gameObject;
+        }
+
+        protected T DrawObject<T>(string label, ref T obj, params GUILayoutOption[] options)
+            where T : UnityEngine.Object
+        {
+            label = CheckInFoldout(label);
+            obj = (T) EditorGUILayout.ObjectField(label, obj, typeof(T), true, options);
+            return obj;
+        }
+
+        protected T DrawGameObject<T>(string label, ref T gameObject, params GUILayoutOption[] options)
+            where T : Component
+        {
+            label = CheckInFoldout(label);
+            gameObject = (T) EditorGUILayout.ObjectField(label: label, obj: gameObject, objType: typeof(T),
+                allowSceneObjects: true, options: options);
+            return gameObject;
+        }
+
+        protected void DrawGO(string label, ref UnityEngine.Object gameObject, params GUILayoutOption[] options)
+        {
+            label = CheckInFoldout(label);
+            gameObject = (UnityEngine.Object) EditorGUILayout.ObjectField(label: label, obj: gameObject,
+                objType: typeof(UnityEngine.Object), allowSceneObjects: true, options: options);
+        }
+
+
+        protected void DrawButton(string label, System.Action onClicked, params GUILayoutOption[] options)
+        {
+            if (GUILayout.Button(label, options: options))
             {
                 onClicked();
             }
         }
 
-        protected void DrawTextfield(string label, ref string unitName)
+        protected void DrawTextfield(string label, ref string unitName, params GUILayoutOption[] options)
         {
             label = CheckInFoldout(label);
-            unitName = EditorGUILayout.TextField(label, unitName);
+            unitName = EditorGUILayout.TextField(label, unitName, options: options);
         }
 
         static List<string> layers;
         static string[] layerNames;
-        private bool inFoldout;
 
-        protected void DrawMask(string label, ref LayerMask mask)
+        protected void DrawMask(string label, ref LayerMask mask, params GUILayoutOption[] options)
         {
             label = CheckInFoldout(label);
             if (layers == null)
@@ -206,7 +320,7 @@ namespace UnityIoC.Editor
             }
 
             for (int i = 0; i < layerNames.Length; i++) layerNames[i] = layers[i];
-            mask.value = EditorGUILayout.MaskField(label, mask.value, layerNames);
+            mask.value = EditorGUILayout.MaskField(label, mask.value, layerNames, options: options);
         }
 
         protected void EndHorizontal()
@@ -223,66 +337,67 @@ namespace UnityIoC.Editor
 
         private string CheckInFoldout(string label)
         {
-            if (inFoldout)
-            {
-                StringBuilder sb = new StringBuilder("     ");
-                label = sb.Append(label).ToString();
-            }
-
             return label;
+        }
+
+
+        protected void BeginVertical()
+        {
+            EditorGUILayout.BeginVertical();
+        }
+
+        protected void EndVertical()
+        {
+            EditorGUILayout.EndVertical();
         }
 
         protected void BeginHorizontal()
         {
             EditorGUILayout.BeginHorizontal();
-            //if (inFoldout)
-            //{
-            //    EditorGUILayout.LabelField("    ");
-            //}
         }
 
-        protected void Space()
+        protected void Separator()
         {
-            EditorGUILayout.Space();
+            EditorGUILayout.Separator();
         }
 
-        protected void DrawLayer2(string label, ref LayerMask customMask)
+        protected void DrawLayer2(string label, ref LayerMask customMask, params GUILayoutOption[] options)
         {
             label = CheckInFoldout(label);
-            customMask = EditorGUILayout.LayerField(label, customMask.value);
+            customMask = EditorGUILayout.LayerField(label, customMask.value, options);
         }
 
-        protected int DrawLayer(string label, int customMask)
+        protected int DrawLayer(string label, int customMask, params GUILayoutOption[] options)
         {
             label = CheckInFoldout(label);
-            customMask = EditorGUILayout.LayerField(label, customMask);
+            customMask = EditorGUILayout.LayerField(label, customMask, options);
             return customMask;
         }
 
-        protected bool DrawToggle(string label, ref bool value)
+        protected bool DrawButtonToggle(string label, ref bool value, params GUILayoutOption[] options)
         {
             label = CheckInFoldout(label);
-            value = EditorGUILayout.Toggle(label, value);
+            value = EditorGUILayout.Toggle(label, value, options);
             return value;
         }
 
-        protected void DrawFloat(string label, ref float value)
+        protected void DrawFloat(string label, ref float value, params GUILayoutOption[] options)
         {
             label = CheckInFoldout(label);
-            value = EditorGUILayout.FloatField(label, value);
+            value = EditorGUILayout.FloatField(label, value, options);
         }
 
-        protected int DrawInt(string label, ref int value)
+        protected int DrawInt(string label, ref int value, params GUILayoutOption[] options)
         {
             label = CheckInFoldout(label);
-            value = EditorGUILayout.IntField(label, value);
+            value = EditorGUILayout.IntField(label, value, options);
             return value;
         }
 
-        protected void DrawSlider(string label, ref float value, float min, float max)
+        protected void DrawSlider(string label, ref float value, float min, float max, params GUILayoutOption[] options)
         {
             label = CheckInFoldout(label);
-            value = EditorGUILayout.Slider(label, value, min, max);
+            value = EditorGUILayout.Slider(label, value, min, max, options);
         }
     }
 }

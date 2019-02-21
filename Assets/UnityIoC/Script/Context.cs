@@ -7,15 +7,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
-using UnityIoC;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using Debug = UnityEngine.Debug;
 using Object = UnityEngine.Object;
 
 namespace UnityIoC
@@ -24,13 +19,12 @@ namespace UnityIoC
     {
         #region Variables & Constants
 
-        private IList<BindingAttribute> bindingAttributes = new List<BindingAttribute>();
-        private IList<InjectAttribute> injectAttributes = new List<InjectAttribute>();
+        private List<BindingAttribute> bindingAttributes = new List<BindingAttribute>();
+        private List<InjectAttribute> injectAttributes = new List<InjectAttribute>();
 
-        public bool loadDefaultSetting;
         public bool requirePreRegistered = true;
 
-        public ImplementClass implementClasses;
+        public ImplementClass _implementClass;
 
         public Type TargetType { get; set; }
 
@@ -47,7 +41,7 @@ namespace UnityIoC
 
         public Context()
         {
-            Initialize(null);
+            Initialize();
         }
 
         private void InitialProcess()
@@ -58,24 +52,16 @@ namespace UnityIoC
                 return;
             }
 
-
             //try to get the implement class setting
-            if (implementClasses == null)
+            if (_implementClass == null)
             {
                 //try to load a default setting for context
-                implementClasses = Resources.Load<ImplementClass>(SceneManager.GetActiveScene().name);
+                _implementClass = Resources.Load<ImplementClass>(CurrentAssembly.GetName().Name + "_default");
+                if (_implementClass)
+                {
+                    Debug.LogFormat("Found binding setting");
+                }
             }
-
-            //try to get the implement class setting
-            if (implementClasses == null)
-            {
-                //try to load a default setting for context
-                implementClasses = Resources.Load<ImplementClass>("default");
-            }
-
-            LoadClassesFromConfigFile(implementClasses);
-
-            ProcessComponentAttribute();
 
             ProcessBindingAttribute();
 
@@ -84,23 +70,162 @@ namespace UnityIoC
             ProcessInjectAttributeForMonoBehaviour();
         }
 
-        private void ProcessComponentAttribute()
+        public void LoadDefaultBindingSetting(ImplementClass implementClass = null)
         {
+            //if the parameter is null, use the internal member.
+            if (implementClass == null)
+            {
+                if (_implementClass)
+                {
+                    LoadDefaultBindingSetting(_implementClass);
+                }
+                else
+                {
+                    Debug.Log("No binding setting found");
+                }
+
+                return;
+            }
+
+            ProcessBindingSetting(implementClass, false);
+        }
+
+        public void LoadBindingSetting(string settingFileName)
+        {
+            LoadBindingSetting(Resources.Load<ImplementClass>(settingFileName));
+        }
+        
+        public void LoadBindingSetting(ImplementClass implementClass)
+        {
+            if (!implementClass)
+            {
+                Debug.LogError("input must not be null!");
+                return;
+            }
+
+            ProcessBindingSetting(implementClass, true);
+        }
+
+
+        private void ProcessBindingSetting(ImplementClass implementClass, bool overriden = false)
+        {
+
+            //binding for default setting 
+            if (implementClass.defaultSettings != null)
+            {
+                Debug.Log("Process binding from default setting");
+                foreach (var setting in implementClass.defaultSettings)
+                {
+                    BindFromSetting(setting, overriden);
+                }
+            }
+        }
+
+        private void BindFromSetting(BindingData binding, bool overriden = false)
+        {
+            if (binding.ImplementedType == null)
+            {
+                binding.ImplementedType = GetTypeFromCurrentAssembly(binding.ImplementedTypeHolder.name);
+            }
+            if (binding.AbstractType == null)
+            {
+                binding.AbstractType = GetTypeFromCurrentAssembly(binding.AbstractTypeHolder.name);
+            }
+            if (binding.EnableInjectInto && binding.InjectInto == null)
+            {
+                binding.InjectInto = GetTypeFromCurrentAssembly(binding.InjectIntoHolder.name);
+            }
+
+            Debug.Assert(binding.ImplementedType != null, "bind data must not null");
+            Debug.Assert(binding.AbstractType != null, "bind data must not null");
+            
+            Debug.Log("class I: " + binding.ImplementedType);
+            var lifeCycle = binding.LifeCycle;
+
+            Debug.LogFormat("Bind from setting {0} for {1} by {2}",
+                binding.ImplementedType,
+                binding.AbstractType,
+                lifeCycle.ToString());
+
+            //try to unbind or stop binding if the overriden is set as true
+            while (defaultContainer.IsRegistered(binding.AbstractType))
+            {
+                if (overriden)
+                {
+                    var registeredObject = defaultContainer.GetRegisteredObject(binding.AbstractType);
+
+                    if (registeredObject != null)
+                    {
+                        Debug.LogFormat("Unbind {0} registered for {1}", binding.ImplementedType, binding.AbstractType);
+                        defaultContainer.registeredObjects.Remove(registeredObject);
+                        defaultContainer.registeredTypes.Remove(binding.AbstractType);
+                    }
+                }
+                else
+                {
+                    Debug.LogFormat("type of {0} which is already registered", binding.AbstractType);
+                    return;
+                }
+            }
+            
+            if (binding.EnableInjectInto && binding.InjectInto != null)
+            {
+                bindingAttributes.RemoveAll(b =>
+                    b.TypeToResolve.Name == binding.AbstractType.Name &&
+                    b.ConcreteType.Name == binding.ImplementedType.Name &&
+                    b.InjectInto.Count(t => t.Name == binding.InjectInto.Name) > 0
+                );
+            }
+
+            //bind from binding setting
+            //first check injectInto to create binding attributes
+            if (binding.EnableInjectInto && binding.InjectInto != null)
+            {
+                //add to binding cache
+                var bindingAttribute = new BindingAttribute
+                {
+                    TypeToResolve = binding.AbstractType,
+                    ConcreteType = binding.ImplementedType,
+                    InjectInto = new[] {binding.InjectInto},
+                    LifeCycle = binding.LifeCycle
+                };
+
+                bindingAttributes.Add(bindingAttribute);
+            }
+            
+            Bind(binding.AbstractType, binding.ImplementedType, lifeCycle);
+        }
+
+        private Type GetTypeFromCurrentAssembly(string className)
+        {
+            foreach (var type in CurrentAssembly.GetTypes())
+            {
+                if (type.Name == className)
+                {
+                    return type;
+                }
+            }
+            
+            Debug.LogFormat("Cannot get type {0} from assembly {1}", className, CurrentAssembly.GetName(true));
+            return null;
         }
 
         private void ProcessAutomaticBinding()
         {
-            var myAssembly = TargetType == null ? Assembly.GetExecutingAssembly() : TargetType.Assembly;
-            var concreteTypes = myAssembly.GetTypes().Where(t => !(t.IsInterface || t.IsAbstract)).ToArray();
-            var abstractions = myAssembly.GetTypes().Where(t => t.IsInterface || t.IsAbstract).ToArray();
+            if (!enableAutomaticBinding)
+            {
+                return;
+            }
+            
+            var concreteTypes = CurrentAssembly.GetTypes().Where(t => !(t.IsInterface || t.IsAbstract)).ToArray();
+            var abstractions = CurrentAssembly.GetTypes().Where(t => t.IsInterface || t.IsAbstract).ToArray();
 
-            //find interface with only 1 implement
             foreach (var abstraction in abstractions)
             {
                 //process for IContainer internally
                 if (abstraction == typeof(IContainer))
                 {
-                    Bind(abstraction, this.container);
+                    Bind(abstraction, container);
                     continue;
                 }
 
@@ -112,43 +237,16 @@ namespace UnityIoC
 
                 if (concreteType == null) continue;
 
-                //still bind for existing registered typeToResolve
-                //however this is low priority than binding using attributes or Bind() methods.
-                if (Container.IsRegistered(abstraction))
+                //won't bind existing registered typeToResolve
+                if (defaultContainer.IsRegistered(abstraction))
                 {
                     Debug.LogFormat("type of {0} which is already registered", abstraction);
+                    continue;
                 }
 
+                // this is low priority than binding using attributes or Bind() methods.
                 Debug.LogFormat("Automatically Bind {0} for {1}", concreteType, abstraction);
                 Bind(abstraction, concreteType);
-            }
-        }
-
-        private void LoadClassesFromConfigFile(ImplementClass implementClasses)
-        {
-            if (implementClasses)
-            {
-                foreach (var objClass in implementClasses.defaultSetting)
-                {
-                    Debug.Assert(objClass.ImplementedType);
-                    Debug.Assert(objClass.AbstractType);
-                    
-                    var implementedType = Type.GetType(objClass.ImplementedType.name);
-                    var abstractType = Type.GetType(objClass.AbstractType.name);
-                    var lifeCycle = objClass.LifeCycle;
-                    var injectInto = objClass.InjectInto ? Type.GetType(objClass.InjectInto.name) : null;
-
-                    if (implementedType.IsSubclassOf(typeof(MonoBehaviour)))
-                    {
-                        //
-                    }
-                    else
-                    {
-                        Debug.Log("create of type " + implementedType);
-                        var obj = Activator.CreateInstance(implementedType, false);
-                        Bind(implementedType, obj);
-                    }
-                }
             }
         }
 
@@ -210,7 +308,10 @@ namespace UnityIoC
 
             foreach (var mono in behaviours)
             {
-                ProcessInjectAttribute(mono);
+                if (mono)
+                {
+                    ProcessInjectAttribute(mono);
+                }
             }
         }
 
@@ -472,15 +573,15 @@ namespace UnityIoC
 
         #region Public members
 
-        public IContainer Container
+        private DefaultContainer defaultContainer
         {
-            get { return container; }
+            get { return (DefaultContainer) container; }
         }
 
-        public void Initialize(Type target)
+        public void Initialize(Type target = null)
         {
             TargetType = target;
-            container = new DefaultContainer(this, TargetType);
+            container = new DefaultContainer(this);
 
             InitialProcess();
         }
@@ -536,6 +637,16 @@ namespace UnityIoC
         #region Static members
 
         private static Context _defaultInstance;
+        
+        public bool enableAutomaticBinding = false;
+
+        private Assembly CurrentAssembly
+        {
+            get
+            {
+                return TargetType == null ? Assembly.GetExecutingAssembly() : TargetType.Assembly;
+            }
+        }
 
         public static Context DefaultInstance
         {
@@ -593,5 +704,6 @@ namespace UnityIoC
         }
 
         #endregion
+
     }
 }

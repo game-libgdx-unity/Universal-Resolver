@@ -2,11 +2,9 @@
     "name": "EditModeTest",
     "references": [
         "UniRx",
-        "Editor",
+        "UnityIoc.Editor",
         "MyAssembly",
         "UniRx.Async",
-        "GameDll",
-        "UniRx.Async.Editor",
         "UnityIoC"
     ],
     "optionalUnityReferences": [

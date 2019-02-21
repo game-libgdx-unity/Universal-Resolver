@@ -15,7 +15,7 @@ namespace UnityIoC
     public class BindingAttribute : Attribute
     {
         public Type ConcreteType { get; set; }
-        public Type TypeToResolve { get; private set; }
+        public Type TypeToResolve { get; set; }
         public LifeCycle LifeCycle { get; set; }
         public Type[] InjectInto { get; set; }
         public Type[] ContainComponents { get; set; }

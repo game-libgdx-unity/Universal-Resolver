@@ -696,6 +696,8 @@
         </e>
         <e p="UnityIoC" t="Include">
           <e p="Editor" t="Include">
+            <e p="BaseInspector.cs" t="Include" />
+            <e p="ImplementClassInspector.cs" t="Include" />
             <e p="TestEdit" t="Include">
               <e p="AttributeTests.cs" t="Include" />
               <e p="ContainerTests1.cs" t="Include" />
@@ -708,6 +710,7 @@
           </e>
           <e p="Script" t="Include">
             <e p="ArrayOfComponent.cs" t="Include" />
+            <e p="ArrayOfComponentFromChildren.cs" t="Include" />
             <e p="BindingAttribute.cs" t="Include" />
             <e p="ComponentAttribute.cs" t="Include" />
             <e p="ComponentAttribute.LinqToGameObject.cs" t="Include" />
@@ -715,6 +718,7 @@
             <e p="Context.DefaultContainer.cs" t="Include" />
             <e p="Context.DictionaryContainer.cs" t="Include" />
             <e p="DefaultImplement.cs" t="Include" />
+            <e p="ICloneable.cs" t="Include" />
             <e p="IComponentResolvable.cs" t="Include" />
             <e p="IContainer.cs" t="Include" />
             <e p="ImplementClass.cs" t="Include" />

@@ -48,14 +48,6 @@ public class ContainerTests
     }
 
     [Test]
-    public void t5_DefaultTestClass_DefaultImplement()
-    {
-        var obj = context.Resolve<JustATestClass>(LifeCycle.Transient);
-        Assert.IsInstanceOf(typeof(DefaultImplement), obj.SomeInterface);
-    }
-
-
-    [Test]
     public void t6_ISomeThing()
     {
         var obj = context.Resolve<ISomeThing>(LifeCycle.Transient);
@@ -88,7 +80,7 @@ public class ContainerTests
         var container = context.Resolve<IContainer>(LifeCycle.Singleton);
 
         Assert.IsNotNull(container);
-        Assert.AreSame(context.Container, container);
+        Assert.AreSame(context.GetContainer(), container);
     }
     [Test]
     public void t9_Resolve_component()

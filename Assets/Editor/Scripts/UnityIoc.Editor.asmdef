@@ -1,11 +1,7 @@
 {
-    "name": "Tests",
+    "name": "UnityIoc.Editor",
     "references": [
-        "UniRx",
-        "UnityIoc.Editor",
-        "MyAssembly",
-        "UniRx.Async",
-        "UnityIoC"
+        "UniRx"
     ],
     "optionalUnityReferences": [
         "TestAssemblies"

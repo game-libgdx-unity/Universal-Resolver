@@ -118,7 +118,7 @@ namespace UniRx
             {
                 if (EditorGUI.EndChangeCheck())
                 {
-                    property.serializedObject.ApplyModifiedProperties(); // deserialize to field
+                    property.serializedObject.ApplyModifiedProperties();
 
                     var paths = property.propertyPath.Split('.'); // X.Y.Z...
                     var attachedComponent = property.serializedObject.targetObject;
