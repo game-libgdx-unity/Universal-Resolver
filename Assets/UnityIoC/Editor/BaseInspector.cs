@@ -10,12 +10,43 @@ namespace UnityIoC.Editor
     [CanEditMultipleObjects]
     public class BaseInspector : UnityEditor.Editor
     {
-        protected Dictionary<string, bool> showFoldOutFlags = new Dictionary<string, bool>();
+        protected Dictionary<GUIStyle, GUIStyle> customStyles = new Dictionary<GUIStyle, GUIStyle>();
+        protected Dictionary<string, bool> foldOutFlags = new Dictionary<string, bool>();
 
         public override void OnInspectorGUI()
         {
             DrawFoldOut("Show Default Inspector", () => DrawDefaultInspector(), false);
+            Revert();
         }
+        
+        protected virtual GUIStyle CustomizeStyle(GUIStyle editorStyle)
+        {
+            GUIStyle custom = new GUIStyle(editorStyle);
+            customStyles.Add(editorStyle, custom);
+            return custom;
+        }
+        protected virtual void Revert()
+        {
+            foreach (var style in customStyles.Keys)
+            {
+                RevertStyle(style, customStyles[style]);
+            }
+        }
+        protected virtual void RevertStyle(GUIStyle target,GUIStyle backup)
+        {
+            //todo: add more properties as long as you need to change it in your custom inspector
+            target.font = backup.font;
+            target.fontSize = backup.fontSize;
+            target.fontStyle = backup.fontStyle;
+            target.fixedHeight = backup.fixedHeight;
+            target.fixedWidth = backup.fixedWidth;
+            target.margin = backup.margin;
+            target.padding = backup.padding;
+            target.alignment = backup.alignment;
+            target.contentOffset = backup.contentOffset;
+        }
+        
+    
 
         protected T DrawEnumPopup<T>(string label, ref T value, params GUILayoutOption[] options)
             where T : struct, IConvertible
@@ -71,7 +102,7 @@ namespace UnityIoC.Editor
 
         protected void DrawList<T>(string label, string elementName, List<T> objects, Func<T, T> DrawElement,
             bool useFoldout = true)
-            where T : ICloneable<T>, new()
+            where T : new()
         {
             T defaultElement = new T();
             int objCount = objects.Count;
@@ -92,22 +123,22 @@ namespace UnityIoC.Editor
             DrawButton("Create", () =>
             {
                 list.Add(defaultElement);
-                showFoldOutFlags[label] = true;
+                foldOutFlags[label] = true;
             });
 
-            if (objCount > 0)
-            {
-                DrawButton("Clear", () =>
-                {
-                    if (objCount > 0) list.Clear();
-                    showFoldOutFlags[label] = true;
-                });
-                DrawButton("Remove last", () =>
-                {
-                    if (objCount > 0) list.RemoveAt(list.Count - 1);
-                    showFoldOutFlags[label] = true;
-                });
-            }
+//            if (objCount > 0)
+//            {
+//                DrawButton("Clear", () =>
+//                {
+//                    if (objCount > 0) list.Clear();
+//                    foldOutFlags[label] = true;
+//                });
+////                DrawButton("Remove last", () =>
+////                {
+////                    if (objCount > 0) list.RemoveAt(list.Count - 1);
+////                    showFoldOutFlags[label] = true;
+////                });
+//            }
 
             EndHorizontal();
             try
@@ -142,7 +173,8 @@ namespace UnityIoC.Editor
                                 objects[i] = new T();
                             }
 
-                            objects[i] = DrawElement(objects[i]);
+                            objects[i] = 
+                                DrawElement(objects[i]);
                         }
                     }
                 }
@@ -160,24 +192,24 @@ namespace UnityIoC.Editor
 
         protected void DrawFoldOut(string label, Action draw, bool foldout = true)
         {
-            if (!showFoldOutFlags.ContainsKey(label))
+            if (!foldOutFlags.ContainsKey(label))
             {
-                showFoldOutFlags.Add(label, foldout);
+                foldOutFlags.Add(label, foldout);
             }
 
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("", GUILayout.MaxWidth(10));
 
             //default is fold out.
-            if (!showFoldOutFlags.ContainsKey(label))
+            if (!foldOutFlags.ContainsKey(label))
             {
-                showFoldOutFlags[label] = true;
+                foldOutFlags[label] = true;
             }
             
-            showFoldOutFlags[label] = EditorGUILayout.Foldout(showFoldOutFlags[label], label, true);
+            foldOutFlags[label] = EditorGUILayout.Foldout(foldOutFlags[label], label, true);
             EditorGUILayout.EndHorizontal();
 
-            if (showFoldOutFlags[label]) draw();
+            if (foldOutFlags[label]) draw();
         }
 
 

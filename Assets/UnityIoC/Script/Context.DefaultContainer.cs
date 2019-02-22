@@ -185,48 +185,49 @@ namespace UnityIoC
                         registeredObjects.Add(registeredObject);
                     }
 
-                    var obj = GetInstance(registeredObject, preferredLifeCycle, parameters);
+                    var obj = GetInstance(registeredObject, preferredLifeCycle, resolveFrom, parameters);
 
                     return obj;
                 }
 
-                var typeResolveFrom = resolveFrom.GetType();
-                Debug.Log("resolve from: " + typeResolveFrom);
-
                 //high priority process for notnull InjectInto binding attributes
                 foreach (var registeredObject in registeredObjects.Where(filter))
                 {
-                    var binding = registeredObject.BindingAttribute;
-                    if (binding == null)
+                    //using binding attribute to filter registered objects
+                    var bindingAttribute = registeredObject.BindingAttribute;
+                    if (bindingAttribute == null)
                     {
                         //no binding found
                         continue;
                     }
 
-                    if (binding.InjectInto == null) //cannot process with empty inject into.
+                    //cannot process with empty inject into.
+                    if (bindingAttribute.InjectInto == null) 
                     {
-                        Debug.Log("binding of " + binding.ConcreteType + " has no injectInto");
+                        Debug.Log("binding of " + bindingAttribute.ConcreteType + " has no injectInto");
                         continue;
                     }
 
-                    Debug.Log("Binding of " + binding.ConcreteType + " has inject into: " +
-                              string.Join(", ", Array.ConvertAll(binding.InjectInto, t => t.ToString())));
+                    Debug.Log("Binding of " + bindingAttribute.ConcreteType + " has inject into: " +
+                              string.Join(", ", Array.ConvertAll(bindingAttribute.InjectInto, t => t.ToString())));
 
-
-                    if (binding.InjectInto.FirstOrDefault(t => t == typeResolveFrom) != null)
+                    
+                    var typeResolveFrom = resolveFrom.GetType();
+                    
+                    //get the correct registeredObject to create an instance
+                    if (bindingAttribute.InjectInto.FirstOrDefault(t => t == typeResolveFrom) != null)
                     {
-                        return GetInstance(registeredObject, preferredLifeCycle, parameters);
+                        Debug.Log("resolve from: " + typeResolveFrom + " by binding attributes");
+                        return GetInstance(registeredObject, preferredLifeCycle, resolveFrom, parameters);
                     }
                 }
 
-                Debug.Log("Resolve with null injectInto binding from registeredObjects");
-
-                //low priority process for null InjectInto binding attributes
+                //lowest priority process for null InjectIntoType or binding attributes
                 foreach (var registeredObject in registeredObjects.Where(filter))
                 {
                     if (registeredObject.BindingAttribute == null || registeredObject.BindingAttribute.InjectInto == null)
                     {
-                        return GetInstance(registeredObject, preferredLifeCycle, parameters);
+                        return GetInstance(registeredObject, preferredLifeCycle, resolveFrom, parameters);
                     }
                 }
 
@@ -246,6 +247,7 @@ namespace UnityIoC
 
             private object GetInstance(RegisteredObject registeredObject,
                 LifeCycle preferredLifeCycle = LifeCycle.Default,
+                object resolveFrom = null,
                 params object[] parameters)
             {
                 var objectLifeCycle = preferredLifeCycle != LifeCycle.Default
@@ -267,7 +269,7 @@ namespace UnityIoC
                         paramArray = param == null ? null : param.ToArray();
                     }
 
-                    obj = registeredObject.CreateInstance(context, objectLifeCycle, paramArray);
+                    obj = registeredObject.CreateInstance(context, objectLifeCycle, resolveFrom, paramArray);
                     
                     Debug.Log("Successfully resolved " + registeredObject.TypeToResolve + " as " +
                               registeredObject.ConcreteType + " by " + objectLifeCycle + " from new object");

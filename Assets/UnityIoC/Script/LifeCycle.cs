@@ -1,10 +1,16 @@
-﻿namespace UnityIoC
+﻿using System;
+
+namespace UnityIoC
 {
+   [Flags]
     public enum LifeCycle : byte
     {
-        Default,
-        Transient,
-        Singleton,
+        Default = 0,
+        Transient = 1 << 0,
+        Singleton = 1 << 1,
+        Component = 1 << 2,
+        AsSingletonComponent = Singleton | Component,
+        AsTransientComponent = Transient | Component
     }
 
     public static class LifeCycleExtension

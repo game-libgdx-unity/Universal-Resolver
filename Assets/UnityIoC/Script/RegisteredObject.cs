@@ -25,6 +25,7 @@ namespace UnityIoC
 
             public LifeCycle LifeCycle { get; private set; }
 
+            public Type InjectFromType { get; private set; }
             public BindingAttribute BindingAttribute { get; private set; }
 
             public RegisteredObject(Type typeToResolve, Type concreteType, Context context,
@@ -40,7 +41,8 @@ namespace UnityIoC
             }
 
             private RegisteredObject(Type typeToResolve, Type concreteType, object instance, Context context,
-                LifeCycle lifeCycle = LifeCycle.Default)
+                LifeCycle lifeCycle = LifeCycle.Default,
+                Type injectFromType = null)
             {
                 Instance = instance;
                 TypeToResolve = typeToResolve;
@@ -65,6 +67,7 @@ namespace UnityIoC
 
 
                 LifeCycle = lifeCycle;
+                InjectFromType = injectFromType;
                 BindingAttribute = GetBinding(context, typeToResolve, concreteType, lifeCycle);
             }
 
@@ -77,6 +80,7 @@ namespace UnityIoC
             }
 
             public object CreateInstance(Context context, LifeCycle preferredLifeCycle = LifeCycle.Default,
+                object resolveFrom = null,
                 params object[] args)
             {
                 var objectLifeCycle = preferredLifeCycle == LifeCycle.Default ? LifeCycle : preferredLifeCycle;
@@ -88,7 +92,7 @@ namespace UnityIoC
                     if (ConcreteType.IsSubclassOf(typeof(MonoBehaviour)))
                     {
                         GameObject prefab;
-                        instance = TryFetPrefab(out prefab, ConcreteType, ConcreteType.Name);
+                        instance = TryGetPrefab(out prefab, context, ConcreteType, ConcreteType.Name, preferredLifeCycle, resolveFrom);
                     }
                     else
                     {
@@ -108,19 +112,29 @@ namespace UnityIoC
                 return Instance;
             }
 
-            private object TryFetPrefab(out GameObject prefab, Type concreteType, string TypeName)
+            private object TryGetPrefab(out GameObject prefab,Context context, Type concreteType, string TypeName, LifeCycle lifeCycle, object resolveFrom)
             {
-                object instance;
-//search for templates from resources path folders
-                prefab = MyResources.Load<GameObject>(string.Format("prefabs/scenes/{0}", TypeName));
-                if (!prefab) prefab = MyResources.Load<GameObject>(string.Format("scenes/{0}", TypeName));
-                if (!prefab) prefab = MyResources.Load<GameObject>(string.Format("prefabs/{0}", TypeName));
-                if (!prefab) prefab = MyResources.Load<GameObject>(TypeName.ToString());
+                Component instance;
+                //search for templates from resources path folders
+                prefab = Resources.Load<GameObject>(string.Format("prefabs/scenes/{0}", TypeName));
+                if (!prefab) prefab = Resources.Load<GameObject>(string.Format("scenes/{0}", TypeName));
+                if (!prefab) prefab = Resources.Load<GameObject>(string.Format("prefabs/{0}", TypeName));
+                if (!prefab) prefab = Resources.Load<GameObject>(TypeName.ToString());
 
                 if (prefab)
                 {
                     Debug.LogFormat("Found prefab for {0} .......", TypeName);
-                    var prefabInstance = Object.Instantiate(prefab);
+                    GameObject prefabInstance = null;
+                    var monoBehaviour = resolveFrom as Component;
+                    
+                    if ((lifeCycle & LifeCycle.Component) == LifeCycle.Component && monoBehaviour != null)
+                    {
+                        prefabInstance = Object.Instantiate(prefab, monoBehaviour.transform);
+                    }
+                    else
+                    {
+                        prefabInstance = Object.Instantiate(prefab);
+                    }
 
                     if (prefabInstance.GetComponent(TypeName) == null)
                     {
@@ -137,7 +151,16 @@ namespace UnityIoC
                 {
                     Debug.LogFormat("FNot found prefab for {0} in the prefab, created a new game object",
                         TypeName);
-                    instance = new GameObject().AddComponent(concreteType);
+                    
+                    var monoBehaviour = resolveFrom as Component;
+                    if ((lifeCycle & LifeCycle.Component) == LifeCycle.Component && monoBehaviour != null)
+                    {
+                        instance = monoBehaviour.gameObject.AddComponent(concreteType);
+                    }
+                    else
+                    {
+                        instance = new GameObject().AddComponent(concreteType);
+                    }
                 }
 
                 return instance;

@@ -1,8 +1,8 @@
 {
-    "name": "UnityIoc.Editor",
+    "name": "ContextPlayTests",
     "references": [
-        "UniRx",
-        "UnityIoC"
+        "UnityIoC",
+        "UnityIoc.Editor"
     ],
     "optionalUnityReferences": [
         "TestAssemblies"

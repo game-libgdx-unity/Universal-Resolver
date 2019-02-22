@@ -38,3 +38,15 @@ public class TransientAttribute : InjectAttribute
     {
     }
 }
+public class ComponentAttribute : InjectAttribute
+{
+    public ComponentAttribute()
+        : base(LifeCycle.Component | LifeCycle.Default)
+    {
+    }
+    
+    public ComponentAttribute(LifeCycle lifeCycle)
+        : base(LifeCycle.Component | lifeCycle)
+    {
+    }
+}

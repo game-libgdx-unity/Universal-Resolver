@@ -24,7 +24,7 @@ namespace UnityIoC
 
         public bool requirePreRegistered = true;
 
-        public ImplementClass _implementClass;
+        public BindingSetting BindingSetting;
 
         public Type TargetType { get; set; }
 
@@ -53,13 +53,14 @@ namespace UnityIoC
             }
 
             //try to get the implement class setting
-            if (_implementClass == null)
+            if (BindingSetting == null)
             {
                 //try to load a default setting for context
-                _implementClass = Resources.Load<ImplementClass>(CurrentAssembly.GetName().Name + "_default");
-                if (_implementClass)
+                BindingSetting = UnityEngine.Resources.Load<BindingSetting>(CurrentAssembly.GetName().Name + "_default");
+                if (BindingSetting)
                 {
                     Debug.LogFormat("Found binding setting");
+                    LoadDefaultBindingSetting(BindingSetting);
                 }
             }
 
@@ -70,14 +71,14 @@ namespace UnityIoC
             ProcessInjectAttributeForMonoBehaviour();
         }
 
-        public void LoadDefaultBindingSetting(ImplementClass implementClass = null)
+        public void LoadDefaultBindingSetting(BindingSetting bindingSetting = null)
         {
             //if the parameter is null, use the internal member.
-            if (implementClass == null)
+            if (bindingSetting == null)
             {
-                if (_implementClass)
+                if (BindingSetting)
                 {
-                    LoadDefaultBindingSetting(_implementClass);
+                    LoadDefaultBindingSetting(BindingSetting);
                 }
                 else
                 {
@@ -87,113 +88,135 @@ namespace UnityIoC
                 return;
             }
 
-            ProcessBindingSetting(implementClass, false);
+            ProcessBindingSetting(bindingSetting, false);
         }
 
         public void LoadBindingSetting(string settingFileName)
         {
-            LoadBindingSetting(Resources.Load<ImplementClass>(settingFileName));
+            LoadBindingSetting(UnityEngine.Resources.Load<BindingSetting>(settingFileName));
         }
-        
-        public void LoadBindingSetting(ImplementClass implementClass)
+
+        public void LoadBindingSetting(BindingSetting bindingSetting)
         {
-            if (!implementClass)
+            if (!bindingSetting)
             {
                 Debug.LogError("input must not be null!");
                 return;
             }
 
-            ProcessBindingSetting(implementClass, true);
+            ProcessBindingSetting(bindingSetting, true);
         }
 
 
-        private void ProcessBindingSetting(ImplementClass implementClass, bool overriden = false)
+        private void ProcessBindingSetting(BindingSetting bindingSetting, bool overriden = false)
         {
-
             //binding for default setting 
-            if (implementClass.defaultSettings != null)
+            if (bindingSetting.defaultSettings != null)
             {
                 Debug.Log("Process binding from default setting");
-                foreach (var setting in implementClass.defaultSettings)
+                foreach (var setting in bindingSetting.defaultSettings)
                 {
                     BindFromSetting(setting, overriden);
                 }
             }
         }
 
-        private void BindFromSetting(BindingData binding, bool overriden = false)
+        private void BindFromSetting(BindingData bindingSetting, bool overriden = false)
         {
-            if (binding.ImplementedType == null)
+            if (bindingSetting.ImplementedType == null)
             {
-                binding.ImplementedType = GetTypeFromCurrentAssembly(binding.ImplementedTypeHolder.name);
-            }
-            if (binding.AbstractType == null)
-            {
-                binding.AbstractType = GetTypeFromCurrentAssembly(binding.AbstractTypeHolder.name);
-            }
-            if (binding.EnableInjectInto && binding.InjectInto == null)
-            {
-                binding.InjectInto = GetTypeFromCurrentAssembly(binding.InjectIntoHolder.name);
+                bindingSetting.ImplementedType = GetTypeFromCurrentAssembly(bindingSetting.ImplementedTypeHolder.name);
             }
 
-            Debug.Assert(binding.ImplementedType != null, "bind data must not null");
-            Debug.Assert(binding.AbstractType != null, "bind data must not null");
-            
-            Debug.Log("class I: " + binding.ImplementedType);
-            var lifeCycle = binding.LifeCycle;
+            if (bindingSetting.AbstractType == null)
+            {
+                bindingSetting.AbstractType = GetTypeFromCurrentAssembly(bindingSetting.AbstractTypeHolder.name);
+            }
+
+            //remove all null injectInto holder.
+            bindingSetting.InjectIntoHolder.RemoveAll(i => !i);
+
+            if (bindingSetting.EnableInjectInto)
+            {
+                if (bindingSetting.InjectInto == null)
+                {
+                    //create an empty new list for injectInto list
+                    bindingSetting.InjectInto = new List<Type>();
+                }
+
+                var injectIntoCount = bindingSetting.InjectIntoHolder.Count;
+
+                for (var i = 0; i < injectIntoCount; i++)
+                {
+                    bindingSetting.InjectInto.Add(GetTypeFromCurrentAssembly(bindingSetting.InjectIntoHolder[i].name));
+                }
+            }
+
+            Debug.Assert(bindingSetting.ImplementedType != null, "bind data must not null");
+            Debug.Assert(bindingSetting.AbstractType != null, "bind data must not null");
+
+            var lifeCycle = bindingSetting.LifeCycle;
 
             Debug.LogFormat("Bind from setting {0} for {1} by {2}",
-                binding.ImplementedType,
-                binding.AbstractType,
+                bindingSetting.ImplementedType,
+                bindingSetting.AbstractType,
                 lifeCycle.ToString());
 
             //try to unbind or stop binding if the overriden is set as true
-            while (defaultContainer.IsRegistered(binding.AbstractType))
+            while (defaultContainer.IsRegistered(bindingSetting.AbstractType))
             {
                 if (overriden)
                 {
-                    var registeredObject = defaultContainer.GetRegisteredObject(binding.AbstractType);
+                    var registeredObject = defaultContainer.GetRegisteredObject(bindingSetting.AbstractType);
 
                     if (registeredObject != null)
                     {
-                        Debug.LogFormat("Unbind {0} registered for {1}", binding.ImplementedType, binding.AbstractType);
+                        Debug.LogFormat("Unbind {0} registered for {1}", bindingSetting.ImplementedType,
+                            bindingSetting.AbstractType);
                         defaultContainer.registeredObjects.Remove(registeredObject);
-                        defaultContainer.registeredTypes.Remove(binding.AbstractType);
+                        defaultContainer.registeredTypes.Remove(bindingSetting.AbstractType);
                     }
                 }
                 else
                 {
-                    Debug.LogFormat("type of {0} which is already registered", binding.AbstractType);
+                    Debug.LogFormat("type of {0} which is already registered", bindingSetting.AbstractType);
                     return;
                 }
             }
-            
-            if (binding.EnableInjectInto && binding.InjectInto != null)
+
+            var injectIntoArray = bindingSetting.InjectInto.Where(i => i != null).ToArray();
+
+            if (bindingSetting.EnableInjectInto && injectIntoArray.Length > 0)
             {
                 bindingAttributes.RemoveAll(b =>
-                    b.TypeToResolve.Name == binding.AbstractType.Name &&
-                    b.ConcreteType.Name == binding.ImplementedType.Name &&
-                    b.InjectInto.Count(t => t.Name == binding.InjectInto.Name) > 0
+                    b.TypeToResolve.Name == bindingSetting.AbstractType.Name &&
+                    b.ConcreteType.Name == bindingSetting.ImplementedType.Name &&
+                    ArrayEqual(b.InjectInto, injectIntoArray)
                 );
             }
 
             //bind from binding setting
             //first check injectInto to create binding attributes
-            if (binding.EnableInjectInto && binding.InjectInto != null)
+            if (bindingSetting.EnableInjectInto && injectIntoArray.Length > 0)
             {
                 //add to binding cache
                 var bindingAttribute = new BindingAttribute
                 {
-                    TypeToResolve = binding.AbstractType,
-                    ConcreteType = binding.ImplementedType,
-                    InjectInto = new[] {binding.InjectInto},
-                    LifeCycle = binding.LifeCycle
+                    TypeToResolve = bindingSetting.AbstractType,
+                    ConcreteType = bindingSetting.ImplementedType,
+                    InjectInto = injectIntoArray,
+                    LifeCycle = bindingSetting.LifeCycle
                 };
 
                 bindingAttributes.Add(bindingAttribute);
             }
-            
-            Bind(binding.AbstractType, binding.ImplementedType, lifeCycle);
+
+            Bind(bindingSetting.AbstractType, bindingSetting.ImplementedType, lifeCycle);
+        }
+
+        private bool ArrayEqual<T>(T[] a, T[] b)
+        {
+            return (a.Length == b.Length && a.Intersect(b).Count() == a.Length);
         }
 
         private Type GetTypeFromCurrentAssembly(string className)
@@ -205,18 +228,18 @@ namespace UnityIoC
                     return type;
                 }
             }
-            
+
             Debug.LogFormat("Cannot get type {0} from assembly {1}", className, CurrentAssembly.GetName(true));
             return null;
         }
 
         private void ProcessAutomaticBinding()
         {
-            if (!enableAutomaticBinding)
+            if (!AutomaticBinding)
             {
                 return;
             }
-            
+
             var concreteTypes = CurrentAssembly.GetTypes().Where(t => !(t.IsInterface || t.IsAbstract)).ToArray();
             var abstractions = CurrentAssembly.GetTypes().Where(t => t.IsInterface || t.IsAbstract).ToArray();
 
@@ -382,6 +405,7 @@ namespace UnityIoC
                 // ReSharper disable once PossibleNullReferenceException
                 inject.container = GetContainer();
 
+                //resolve as [Component] attributes
                 //try to resolve as monoBehaviour or as array
                 if (property.PropertyType.IsArray)
                 {
@@ -404,7 +428,7 @@ namespace UnityIoC
                 }
 
                 Debug.LogFormat("IComponentResolvable attribute fails to resolve {0}", property.PropertyType);
-                //default object resolve method if component attribute fails to resolve
+                //resolve object as [Singleton], [Transient] or [AsComponent] if component attribute fails to resolve
                 ProcessMethodInfo(mono, method, inject);
             }
         }
@@ -414,7 +438,7 @@ namespace UnityIoC
             Type objectType = mono.GetType();
             var fieldInfos = objectType
                 .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-                .Where(fieldInfo => fieldInfo.IsDefined(typeof(InjectAttribute), false))
+                .Where(fieldInfo => fieldInfo.IsDefined(typeof(InjectAttribute), true))
                 .ToArray();
 
             if (fieldInfos.Length > 0)
@@ -438,7 +462,7 @@ namespace UnityIoC
                     if (injectComponentArray == null)
                     {
                         throw new InvalidOperationException(
-                            "You must use apply injectAttribute with IComponentArrayResolvable to resolve array of components");
+                            "You must use apply injectAttribute for IComponentArrayResolvable field to resolve the array of components");
                     }
 
                     //try to resolve as monoBehaviour first
@@ -447,10 +471,7 @@ namespace UnityIoC
                     {
                         var array = ConvertComponentArrayTo(field.FieldType.GetElementType(), components);
 
-                        field.SetValue(mono, array
-//                            Convert.ChangeType(components, field.FieldType)
-//                            Array.ConvertAll(components, c => Convert.ChangeType(c, field.FieldType.GetElementType()))
-                        );
+                        field.SetValue(mono, array);
                         continue;
                     }
                 }
@@ -468,7 +489,7 @@ namespace UnityIoC
 
                 Debug.LogFormat("IComponentResolvable attribute fails to resolve {0}", field.FieldType);
 
-                //default object resolve method 
+                //resolve object as [Singleton], [Transient] or [AsComponent] if component attribute fails to resolve
                 field.SetValue(mono,
                     container.ResolveObject(field.FieldType, mono,
                         inject == null ? LifeCycle.Default : inject.LifeCycle));
@@ -491,7 +512,7 @@ namespace UnityIoC
         /// Try to resolve unity component, this should be used in other attribute process methods
         /// </summary>
         /// <param name="mono">object is expected as unity mono behaviour</param>
-        /// <returns>true if you want to stop other attribute process methods</returns>
+        /// <returns>the component</returns>
         private Component GetComponentFromGameObject(object mono, Type type, InjectAttribute injectAttribute)
         {
             //not supported for transient or singleton injections
@@ -505,11 +526,11 @@ namespace UnityIoC
 
             if (behaviour == null) return null;
 
-            //resolve by inject component to the gameobject
-            var injectComponent = injectAttribute as IComponentResolvable;
-
             //output component
             Component component = null;
+            
+            //resolve by inject component to the gameobject
+            var injectComponent = injectAttribute as IComponentResolvable;
 
             //try get/add component with IInjectComponent interface
             if (injectComponent != null)
@@ -637,15 +658,12 @@ namespace UnityIoC
         #region Static members
 
         private static Context _defaultInstance;
-        
-        public bool enableAutomaticBinding = false;
+
+        public static bool AutomaticBinding = false;
 
         private Assembly CurrentAssembly
         {
-            get
-            {
-                return TargetType == null ? Assembly.GetExecutingAssembly() : TargetType.Assembly;
-            }
+            get { return TargetType == null ? Assembly.GetExecutingAssembly() : TargetType.Assembly; }
         }
 
         public static Context DefaultInstance
@@ -704,6 +722,5 @@ namespace UnityIoC
         }
 
         #endregion
-
     }
 }

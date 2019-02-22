@@ -28,7 +28,7 @@ public class MultitionContextTests
         
         foreach (var _context in multiContext)
         {
-            _context.enableAutomaticBinding = false;
+            
         }
         
         //assert
