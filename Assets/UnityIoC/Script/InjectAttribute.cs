@@ -50,3 +50,10 @@ public class ComponentAttribute : InjectAttribute
     {
     }
 }
+public class ComponentSingletonAttribute : InjectAttribute
+{
+    public ComponentSingletonAttribute()
+        : base(LifeCycle.Component | LifeCycle.Singleton)
+    {
+    }
+}

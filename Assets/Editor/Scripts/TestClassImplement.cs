@@ -1,14 +1,14 @@
 #if UNITY_EDITOR
 
-namespace UnityIoC
+namespace UnityIoC.Editor
 {
-    public class TestClass
+    public class TestClass2
     {
         [Inject] public ISomeInterface SomeInterface { get; set; }
         [Inject] public ISomeInterface PropertyAsInterface { get; set; }
     }
 
-    [Binding(typeof(ISomeInterface), LifeCycle.Default, typeof(TestClass))]
+    [Binding(typeof(ISomeInterface), LifeCycle.Default, typeof(TestClass2))]
     public class TestClassImplement : ISomeInterface
     {
         public int SomeIntProperty { get; set; }

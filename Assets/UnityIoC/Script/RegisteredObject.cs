@@ -13,7 +13,7 @@ using Object = UnityEngine.Object;
 
 namespace UnityIoC
 {
-    public partial class Context
+    public partial class AssemblyContext
     {
         public class RegisteredObject : IDisposable
         {
@@ -28,19 +28,19 @@ namespace UnityIoC
             public Type InjectFromType { get; private set; }
             public BindingAttribute BindingAttribute { get; private set; }
 
-            public RegisteredObject(Type typeToResolve, Type concreteType, Context context,
+            public RegisteredObject(Type typeToResolve, Type concreteType, AssemblyContext assemblyContext,
                 LifeCycle lifeCycle = LifeCycle.Default) :
-                this(typeToResolve, concreteType, null, context, lifeCycle)
+                this(typeToResolve, concreteType, null, assemblyContext, lifeCycle)
             {
             }
 
-            public RegisteredObject(Type typeToResolve, object instance, Context context,
+            public RegisteredObject(Type typeToResolve, object instance, AssemblyContext assemblyContext,
                 LifeCycle lifeCycle = LifeCycle.Default) :
-                this(typeToResolve, null, instance, context, lifeCycle)
+                this(typeToResolve, null, instance, assemblyContext, lifeCycle)
             {
             }
 
-            private RegisteredObject(Type typeToResolve, Type concreteType, object instance, Context context,
+            private RegisteredObject(Type typeToResolve, Type concreteType, object instance, AssemblyContext assemblyContext,
                 LifeCycle lifeCycle = LifeCycle.Default,
                 Type injectFromType = null)
             {
@@ -68,18 +68,18 @@ namespace UnityIoC
 
                 LifeCycle = lifeCycle;
                 InjectFromType = injectFromType;
-                BindingAttribute = GetBinding(context, typeToResolve, concreteType, lifeCycle);
+                BindingAttribute = GetBinding(assemblyContext, typeToResolve, concreteType, lifeCycle);
             }
 
-            private BindingAttribute GetBinding(Context context, Type typeToResolve, Type concreteType,
+            private BindingAttribute GetBinding(AssemblyContext assemblyContext, Type typeToResolve, Type concreteType,
                 LifeCycle lifeCycle)
             {
-                return context.bindingAttributes.FirstOrDefault(b =>
+                return assemblyContext.bindingAttributes.FirstOrDefault(b =>
                     b.TypeToResolve == typeToResolve && b.ConcreteType == concreteType &&
                     b.LifeCycle.IsEqual(lifeCycle));
             }
 
-            public object CreateInstance(Context context, LifeCycle preferredLifeCycle = LifeCycle.Default,
+            public object CreateInstance(AssemblyContext assemblyContext, LifeCycle preferredLifeCycle = LifeCycle.Default,
                 object resolveFrom = null,
                 params object[] args)
             {
@@ -92,18 +92,20 @@ namespace UnityIoC
                     if (ConcreteType.IsSubclassOf(typeof(MonoBehaviour)))
                     {
                         GameObject prefab;
-                        instance = TryGetPrefab(out prefab, context, ConcreteType, ConcreteType.Name, preferredLifeCycle, resolveFrom);
+                        instance = TryGetPrefab(out prefab, assemblyContext, ConcreteType, ConcreteType.Name, preferredLifeCycle, resolveFrom);
                     }
                     else
                     {
                         instance = Activator.CreateInstance(ConcreteType, args);
                     }
 
-                    context.ProcessInjectAttribute(instance);
+                    assemblyContext.ProcessInjectAttribute(instance);
 
-                    if (this.Instance == null && objectLifeCycle == LifeCycle.Singleton)
+                    if (Instance != null) return instance;
+                    
+                    if (objectLifeCycle == LifeCycle.Singleton || (objectLifeCycle & LifeCycle.Singleton) == LifeCycle.Singleton)
                     {
-                        this.Instance = instance;
+                        Instance = instance;
                     }
 
                     return instance;
@@ -112,7 +114,7 @@ namespace UnityIoC
                 return Instance;
             }
 
-            private object TryGetPrefab(out GameObject prefab,Context context, Type concreteType, string TypeName, LifeCycle lifeCycle, object resolveFrom)
+            private object TryGetPrefab(out GameObject prefab,AssemblyContext assemblyContext, Type concreteType, string TypeName, LifeCycle lifeCycle, object resolveFrom)
             {
                 Component instance;
                 //search for templates from resources path folders
@@ -123,7 +125,7 @@ namespace UnityIoC
 
                 if (prefab)
                 {
-                    Debug.LogFormat("Found prefab for {0} .......", TypeName);
+                    Debug.Log("Found prefab for {0} .......", TypeName);
                     GameObject prefabInstance = null;
                     var monoBehaviour = resolveFrom as Component;
                     
@@ -138,18 +140,18 @@ namespace UnityIoC
 
                     if (prefabInstance.GetComponent(TypeName) == null)
                     {
-                        Debug.LogFormat("Found component {0} in prefab children", TypeName);
+                        Debug.Log("Found component {0} in prefab children", TypeName);
                         instance = prefabInstance.GetComponentInChildren(concreteType);
                     }
                     else
                     {
-                        Debug.LogFormat("Found component {0} in the prefab", TypeName);
+                        Debug.Log("Found component {0} in the prefab", TypeName);
                         instance = prefabInstance.GetComponent(TypeName);
                     }
                 }
                 else
                 {
-                    Debug.LogFormat("FNot found prefab for {0} in the prefab, created a new game object",
+                    Debug.Log("Not found prefab for {0} in the prefab, created a new game object",
                         TypeName);
                     
                     var monoBehaviour = resolveFrom as Component;

@@ -100,7 +100,7 @@ namespace UnityIoC.Editor
                 });
         }
 
-        protected void DrawList<T>(string label, string elementName, List<T> objects, Func<T, T> DrawElement,
+        protected List<T> DrawList<T>(string label, string elementName, List<T> objects, Func<T, T> DrawElement,
             bool useFoldout = true)
             where T : new()
         {
@@ -183,6 +183,8 @@ namespace UnityIoC.Editor
             {
                 Debug.Log(ex.Message);
             }
+
+            return objects;
         }
 
         protected void DrawLabel(string content, params GUILayoutOption[] options)

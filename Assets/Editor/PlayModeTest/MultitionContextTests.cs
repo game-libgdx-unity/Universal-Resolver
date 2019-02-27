@@ -8,14 +8,14 @@ public class MultitionContextTests
     [SetUp]
     public void Setup()
     {
-        var  multiContext = Singleton<Multiton<byte, Context>>.Instance;
+        var  multiContext = Singleton<Multiton<byte, AssemblyContext>>.Instance;
         
-        var _context = new Context();
-        _context.Initialize(typeof(Context));
+        var _context = new AssemblyContext();
+        _context.Initialize(typeof(AssemblyContext));
         multiContext[0] = _context;
         
-        _context = new Context();
-        _context.Initialize(typeof(Context));
+        _context = new AssemblyContext();
+        _context.Initialize(typeof(AssemblyContext));
         multiContext[1] = _context;
         
     }
@@ -24,7 +24,7 @@ public class MultitionContextTests
     [Test]
     public void Test1_Create_Object_Instance()
     {
-        var  multiContext = Singleton<Multiton<byte, Context>>.Instance;
+        var  multiContext = Singleton<Multiton<byte, AssemblyContext>>.Instance;
         
         foreach (var _context in multiContext)
         {

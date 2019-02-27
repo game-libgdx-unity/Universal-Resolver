@@ -1,10 +1,14 @@
 using UnityEngine;
 
-namespace UnityIoC
+namespace UnityIoC.Editor
 {
     public class ArrayOfComponent : MonoBehaviour
     {
-        [FromComponent] public ISomeComponentInterface[] SomeComponents;
-        [FromComponent] public ISomeComponentInterface[] SomeComponentsAsProperty { get; set; }
+        [GetComponent] public ISomeComponentInterface[] SomeComponents;
+        [GetComponent] public ISomeComponentInterface[] SomeComponentsAsProperty { get; set; }
+    }
+
+    public interface ISomeComponentInterface
+    {
     }
 }

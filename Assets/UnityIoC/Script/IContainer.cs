@@ -29,7 +29,7 @@ namespace UnityIoC
             params object[] parameters);
 
         bool IsRegistered(Type abstraction);
-        Context.RegisteredObject GetRegisteredObject(Type typeToResolve);
+        AssemblyContext.RegisteredObject GetRegisteredObject(Type typeToResolve);
     }
 }
 

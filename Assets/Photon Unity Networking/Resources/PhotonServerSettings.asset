@@ -8,39 +8,23 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9f3758f8f58fdef43803eb9be1df0608, type: 3}
+  m_Script: {fileID: 11500000, guid: d01b8f54725fd2a4992bb75884b23175, type: 3}
   m_Name: PhotonServerSettings
   m_EditorClassIdentifier: 
-  AppID: f60c7f53-3723-4e56-9426-0b1a1b58a128
+  AppID: 
   VoiceAppID: 
-  ChatAppID: 8f74f188-0941-4965-ae79-71c448c56ca4
-  HostType: 1
-  PreferredRegion: 2
+  ChatAppID: 
+  HostType: 0
+  PreferredRegion: 0
   EnabledRegions: -1
-  Protocol: 1
-  ServerAddress: 52.77.234.141
-  ServerPort: 4530
+  Protocol: 0
+  ServerAddress: 
+  ServerPort: 5055
   VoiceServerPort: 5055
-  JoinLobby: 1
+  JoinLobby: 0
   EnableLobbyStatistics: 0
   PunLogging: 0
   NetworkLogging: 1
   RunInBackground: 1
-  RpcList:
-  - Chat
-  - ColorRpc
-  - DestroyRpc
-  - DoJump
-  - Flash
-  - InstantiateRpc
-  - Marco
-  - PickupItemInit
-  - Polo
-  - PunPickup
-  - PunPickupSimple
-  - PunRespawn
-  - RequestForPickupItems
-  - RequestForPickupTimes
-  - TaggedPlayer
-  - ResetScoreUI
-  DisableAutoOpenWizard: 1
+  RpcList: []
+  DisableAutoOpenWizard: 0

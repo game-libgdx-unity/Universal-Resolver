@@ -8,7 +8,7 @@ public class NewFirebaseTestRunner
     [UnityTest]
     public IEnumerator t1_client_saveOnFirebase()
     {
-        var _context = new Context();
+        var _context = new AssemblyContext();
 
         var firebase1 = _context.Resolve<FirebaseSupportNew>();
         var firebase2 = _context.Resolve<FirebaseSupportNew>();

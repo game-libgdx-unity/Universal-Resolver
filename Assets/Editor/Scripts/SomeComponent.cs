@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace UnityIoC
+namespace UnityIoC.Editor
 {
     public class SomeComponent : MonoBehaviour, ISomeComponentInterface
     {

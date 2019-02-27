@@ -1,0 +1,16 @@
+{
+    "name": "ContextEditModeTest",
+    "references": [
+        "UnityIoC",
+        "UnityIoc.Editor",
+        "SceneTest"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false
+}

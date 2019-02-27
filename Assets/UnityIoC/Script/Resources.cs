@@ -11,5 +11,9 @@ namespace UnityIoC
         {
             return UnityEngine.Resources.Load<T>(path);
         }
+        public static T Load<T>(string path, params object[] string_params) where T : Object
+        {
+            return UnityEngine.Resources.Load<T>(string.Format(path, string_params));
+        }
     }
 }

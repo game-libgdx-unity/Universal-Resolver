@@ -19,7 +19,7 @@ public class FirebaseSupportNew : MonoBehaviour
 {
     #region Variables & constants
 
-    [FromComponent] Client client;
+    [GetComponent] Client client;
     [SerializeField] string userId;
 
     public BoolReactiveProperty IsReady = new BoolReactiveProperty();
