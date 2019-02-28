@@ -26,23 +26,32 @@ namespace UnityIoC
             public LifeCycle LifeCycle { get; private set; }
 
             public Type InjectFromType { get; private set; }
-            public BindingAttribute BindingAttribute { get; private set; }
 
-            public RegisteredObject(Type typeToResolve, Type concreteType, AssemblyContext assemblyContext,
+            public RegisteredObject(
+                Type typeToResolve,
+                Type concreteType,
+                AssemblyContext assemblyContext,
                 LifeCycle lifeCycle = LifeCycle.Default) :
-                this(typeToResolve, concreteType, null, assemblyContext, lifeCycle)
+                this(typeToResolve, concreteType, null, lifeCycle, null)
             {
             }
 
-            public RegisteredObject(Type typeToResolve, object instance, AssemblyContext assemblyContext,
+            public RegisteredObject(
+                Type typeToResolve,
+                object instance,
+                AssemblyContext assemblyContext,
                 LifeCycle lifeCycle = LifeCycle.Default) :
-                this(typeToResolve, null, instance, assemblyContext, lifeCycle)
+                this(typeToResolve, null, instance, lifeCycle)
             {
             }
 
-            private RegisteredObject(Type typeToResolve, Type concreteType, object instance, AssemblyContext assemblyContext,
+            public RegisteredObject(
+                Type typeToResolve,
+                Type concreteType,
+                object instance,
                 LifeCycle lifeCycle = LifeCycle.Default,
-                Type injectFromType = null)
+                Type injectFromType = null
+            )
             {
                 Instance = instance;
                 TypeToResolve = typeToResolve;
@@ -68,18 +77,15 @@ namespace UnityIoC
 
                 LifeCycle = lifeCycle;
                 InjectFromType = injectFromType;
-                BindingAttribute = GetBinding(assemblyContext, typeToResolve, concreteType, lifeCycle);
+
+                if (InjectFromType != null)
+                {
+                    Debug.Log("Inject into: "+InjectFromType.Name);
+                }
             }
 
-            private BindingAttribute GetBinding(AssemblyContext assemblyContext, Type typeToResolve, Type concreteType,
-                LifeCycle lifeCycle)
-            {
-                return assemblyContext.bindingAttributes.FirstOrDefault(b =>
-                    b.TypeToResolve == typeToResolve && b.ConcreteType == concreteType &&
-                    b.LifeCycle.IsEqual(lifeCycle));
-            }
-
-            public object CreateInstance(AssemblyContext assemblyContext, LifeCycle preferredLifeCycle = LifeCycle.Default,
+            public object CreateInstance(AssemblyContext assemblyContext,
+                LifeCycle preferredLifeCycle = LifeCycle.Default,
                 object resolveFrom = null,
                 params object[] args)
             {
@@ -92,7 +98,8 @@ namespace UnityIoC
                     if (ConcreteType.IsSubclassOf(typeof(MonoBehaviour)))
                     {
                         GameObject prefab;
-                        instance = TryGetPrefab(out prefab, assemblyContext, ConcreteType, ConcreteType.Name, preferredLifeCycle, resolveFrom);
+                        instance = TryGetPrefab(out prefab, assemblyContext, ConcreteType, ConcreteType.Name,
+                            preferredLifeCycle, resolveFrom);
                     }
                     else
                     {
@@ -102,8 +109,9 @@ namespace UnityIoC
                     assemblyContext.ProcessInjectAttribute(instance);
 
                     if (Instance != null) return instance;
-                    
-                    if (objectLifeCycle == LifeCycle.Singleton || (objectLifeCycle & LifeCycle.Singleton) == LifeCycle.Singleton)
+
+                    if (objectLifeCycle == LifeCycle.Singleton ||
+                        (objectLifeCycle & LifeCycle.Singleton) == LifeCycle.Singleton)
                     {
                         Instance = instance;
                     }
@@ -114,7 +122,8 @@ namespace UnityIoC
                 return Instance;
             }
 
-            private object TryGetPrefab(out GameObject prefab,AssemblyContext assemblyContext, Type concreteType, string TypeName, LifeCycle lifeCycle, object resolveFrom)
+            private object TryGetPrefab(out GameObject prefab, AssemblyContext assemblyContext, Type concreteType,
+                string TypeName, LifeCycle lifeCycle, object resolveFrom)
             {
                 Component instance;
                 //search for templates from resources path folders
@@ -128,7 +137,7 @@ namespace UnityIoC
                     Debug.Log("Found prefab for {0} .......", TypeName);
                     GameObject prefabInstance = null;
                     var monoBehaviour = resolveFrom as Component;
-                    
+
                     if ((lifeCycle & LifeCycle.Component) == LifeCycle.Component && monoBehaviour != null)
                     {
                         prefabInstance = Object.Instantiate(prefab, monoBehaviour.transform);
@@ -153,7 +162,7 @@ namespace UnityIoC
                 {
                     Debug.Log("Not found prefab for {0} in the prefab, created a new game object",
                         TypeName);
-                    
+
                     var monoBehaviour = resolveFrom as Component;
                     if ((lifeCycle & LifeCycle.Component) == LifeCycle.Component && monoBehaviour != null)
                     {

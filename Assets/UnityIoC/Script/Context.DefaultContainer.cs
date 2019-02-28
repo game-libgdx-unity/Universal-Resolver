@@ -49,7 +49,8 @@ namespace UnityIoC
             {
                 if (concreteType.IsAbstract || concreteType.IsInterface)
                 {
-                    throw new InvalidOperationException("Cannot bind to concrete class by an abstract type " + concreteType);
+                    throw new InvalidOperationException("Cannot bind to concrete class by an abstract type " +
+                                                        concreteType);
                 }
 
                 if (registeredTypes.Contains(typeToResolve))
@@ -84,6 +85,24 @@ namespace UnityIoC
                 registeredTypes.Add(typeof(TTypeToResolve));
                 registeredObjects.Add(new RegisteredObject(typeof(TTypeToResolve), typeof(TConcrete), assemblyContext,
                     lifeCycle));
+            }
+
+            public void Bind(InjectIntoBindingData data)
+            {
+                if (data.ImplementedType.IsAbstract || data.ImplementedType.IsInterface)
+                {
+                    throw new InvalidOperationException("Cannot bind empty object of abstract type");
+                }
+
+                Debug.Log("  register type: " + data.AbstractType);
+                registeredTypes.Add(data.AbstractType);
+                registeredObjects.Add(
+                    new RegisteredObject(
+                        data.AbstractType,
+                        data.ImplementedType,
+                        null,
+                        data.LifeCycle,
+                        data.InjectInto));
             }
 
             public void Bind(Type typeToResolve, object instance)
@@ -175,7 +194,8 @@ namespace UnityIoC
                         if (typeToResolve.IsAbstract || typeToResolve.IsInterface)
                         {
                             throw new InvalidOperationException(
-                                "Cannot resolve the abstract type "+ typeToResolve.Name + " with no respective registeredObject!");
+                                "Cannot resolve the abstract type " + typeToResolve.Name +
+                                " with no respective registeredObject!");
                         }
 
                         Debug.Log("trying to register {0} ", typeToResolve);
@@ -194,28 +214,18 @@ namespace UnityIoC
                 foreach (var registeredObject in registeredObjects.Where(filter))
                 {
                     //using binding attribute to filter registered objects
-                    var bindingAttribute = registeredObject.BindingAttribute;
-                    if (bindingAttribute == null)
+                    var injectFromType = registeredObject.InjectFromType;
+                    if (injectFromType == null)
                     {
                         //no binding found
                         continue;
                     }
 
-                    //cannot process with empty inject into.
-                    if (bindingAttribute.InjectInto == null) 
-                    {
-                        Debug.Log("binding of " + bindingAttribute.ConcreteType + " has no injectInto");
-                        continue;
-                    }
-
-                    Debug.Log("Binding of " + bindingAttribute.ConcreteType + " has inject into: " +
-                              string.Join(", ", Array.ConvertAll(bindingAttribute.InjectInto, t => t.ToString())));
-
-                    
+                    Debug.Log("Binding of " + registeredObject.ConcreteType + " has inject into: " + injectFromType);
                     var typeResolveFrom = resolveFrom.GetType();
-                    
+
                     //get the correct registeredObject to create an instance
-                    if (bindingAttribute.InjectInto.FirstOrDefault(t => t == typeResolveFrom) != null)
+                    if (injectFromType == typeResolveFrom)
                     {
                         Debug.Log("resolve from: " + typeResolveFrom + " by binding attributes");
                         return GetInstance(registeredObject, preferredLifeCycle, resolveFrom, parameters);
@@ -225,7 +235,7 @@ namespace UnityIoC
                 //lowest priority process for null InjectIntoType or binding attributes
                 foreach (var registeredObject in registeredObjects.Where(filter))
                 {
-                    if (registeredObject.BindingAttribute == null || registeredObject.BindingAttribute.InjectInto == null)
+                    if (registeredObject.InjectFromType == null)
                     {
                         return GetInstance(registeredObject, preferredLifeCycle, resolveFrom, parameters);
                     }
@@ -234,6 +244,7 @@ namespace UnityIoC
                 Debug.Log("Resolve without resolveFrom object");
                 return ResolveObject(typeToResolve, null, preferredLifeCycle, parameters);
             }
+            
 
             public bool IsRegistered(Type type)
             {
@@ -270,7 +281,7 @@ namespace UnityIoC
                     }
 
                     obj = registeredObject.CreateInstance(assemblyContext, objectLifeCycle, resolveFrom, paramArray);
-                    
+
                     Debug.Log("Successfully resolved " + registeredObject.TypeToResolve + " as " +
                               registeredObject.ConcreteType + " by " + objectLifeCycle + " from new object");
                     return obj;

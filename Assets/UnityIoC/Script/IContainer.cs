@@ -10,23 +10,7 @@ namespace UnityIoC
 {
     public interface IContainer : IDisposable
     {
-        void Bind(Type typeToResolve, object instance);     
-        void Bind<TTypeToResolve, TConcrete>(LifeCycle lifeCycle);     
-        void Bind(Type typeToResolve, Type concreteType, LifeCycle lifeCycle = LifeCycle.Default);
-        void Bind<TConcrete>(LifeCycle lifeCycle);
-        object Resolve(Type typeToResolve, LifeCycle lifeCycle = LifeCycle.Default, params object[] parameters);
-        
-        /// <summary>
-        /// resolve an instance from a type
-        /// </summary>
-        /// <param name="typeToResolve"></param>
-        /// <param name="resolveFrom"></param>
-        /// <param name="preferredLifeCycle"></param>
-        /// <param name="parameters"></param>
-        /// <returns></returns>
-        object ResolveObject(Type typeToResolve, object resolveFrom = null,
-            LifeCycle preferredLifeCycle = LifeCycle.Default,
-            params object[] parameters);
+        void Bind(InjectIntoBindingData data);
 
         bool IsRegistered(Type abstraction);
         AssemblyContext.RegisteredObject GetRegisteredObject(Type typeToResolve);

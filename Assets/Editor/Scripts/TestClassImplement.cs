@@ -8,7 +8,6 @@ namespace UnityIoC.Editor
         [Inject] public ISomeInterface PropertyAsInterface { get; set; }
     }
 
-    [Binding(typeof(ISomeInterface), LifeCycle.Default, typeof(TestClass2))]
     public class TestClassImplement : ISomeInterface
     {
         public int SomeIntProperty { get; set; }
@@ -19,8 +18,6 @@ namespace UnityIoC.Editor
         [Inject] public ISomeInterface SomeInterface { get; set; }
     }
 
-
-    [Binding(typeof(ISomeInterface), LifeCycle.Default, typeof(AnotherTestClass))]
     public class AnotherImplement : ISomeInterface
     {
         public int SomeIntProperty { get; set; }

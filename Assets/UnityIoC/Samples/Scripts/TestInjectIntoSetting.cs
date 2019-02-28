@@ -9,8 +9,8 @@ namespace SceneTest
 {
 	public class TestInjectIntoSetting : MonoBehaviour {
 
-		[Transient] TestComponent testComponent;
 		[Transient] TestComponent2 testComponent2;
+		[Transient] TestComponent testComponent;
 
 		private void Start()
 		{

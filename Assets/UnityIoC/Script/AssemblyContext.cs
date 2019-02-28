@@ -19,7 +19,6 @@ namespace UnityIoC
     {
         #region Variables & Constants
 
-        private List<BindingAttribute> bindingAttributes = new List<BindingAttribute>();
         private List<InjectAttribute> injectAttributes = new List<InjectAttribute>();
 
         public bool requirePreRegistered = true;
@@ -27,7 +26,7 @@ namespace UnityIoC
 
         public Type TargetType { get; set; }
 
-        private IContainer container;
+        private DefaultContainer container;
 
         #endregion
 
@@ -71,7 +70,7 @@ namespace UnityIoC
             }
 
             Debug.Log("Processing assembly {0}...", CurrentAssembly.GetName().Name);
-            
+
             //try to load a default setting for context
             var BindingSetting =
                 UnityEngine.Resources.Load<InjectIntoBindingSetting>(CurrentAssembly.GetName().Name);
@@ -92,10 +91,6 @@ namespace UnityIoC
                 Debug.Log("Found binding setting for scene");
                 LoadBindingSetting(sceneBindingSetting, true);
             }
-
-            ProcessBindingAttribute();
-
-            ProcessAutomaticBinding();
 
             ProcessInjectAttributeForMonoBehaviour();
         }
@@ -182,6 +177,7 @@ namespace UnityIoC
 
         public void LoadBindingSetting(InjectIntoBindingSetting bindingSetting, bool overriden = true)
         {
+            Debug.Log("{0} settings found: ", bindingSetting.defaultSettings.Count);
             //binding for default setting 
             if (bindingSetting.defaultSettings != null)
             {
@@ -206,23 +202,13 @@ namespace UnityIoC
                     GetTypeFromCurrentAssembly(injectIntoBindingSetting.AbstractTypeHolder.name);
             }
 
-            //remove all null injectInto holder.
-            injectIntoBindingSetting.InjectIntoHolder.RemoveAll(i => !i);
-
             if (injectIntoBindingSetting.EnableInjectInto)
             {
                 if (injectIntoBindingSetting.InjectInto == null)
                 {
                     //create an empty new list for injectInto list
-                    injectIntoBindingSetting.InjectInto = new List<Type>();
-                }
-
-                var injectIntoCount = injectIntoBindingSetting.InjectIntoHolder.Count;
-
-                for (var i = 0; i < injectIntoCount; i++)
-                {
-                    injectIntoBindingSetting.InjectInto.Add(
-                        GetTypeFromCurrentAssembly(injectIntoBindingSetting.InjectIntoHolder[i].name));
+                    injectIntoBindingSetting.InjectInto =
+                        GetTypeFromCurrentAssembly(injectIntoBindingSetting.InjectIntoHolder.name);
                 }
             }
 
@@ -242,13 +228,14 @@ namespace UnityIoC
                 var registeredObject = defaultContainer.registeredObjects[i];
             }
 
-            while (defaultContainer.IsRegistered(injectIntoBindingSetting.AbstractType))
+            if (defaultContainer.IsRegistered(injectIntoBindingSetting.AbstractType))
             {
                 if (overriden)
                 {
                     var registeredObject = defaultContainer.GetRegisteredObject(injectIntoBindingSetting.AbstractType);
 
-                    if (registeredObject != null)
+                    if (registeredObject.ConcreteType == injectIntoBindingSetting.ImplementedType &&
+                        registeredObject.TypeToResolve == injectIntoBindingSetting.InjectInto)
                     {
                         Debug.Log("Unbind {0} registered for {1}", injectIntoBindingSetting.ImplementedType,
                             injectIntoBindingSetting.AbstractType);
@@ -256,66 +243,9 @@ namespace UnityIoC
                         defaultContainer.registeredTypes.Remove(injectIntoBindingSetting.AbstractType);
                     }
                 }
-                else
-                {
-                    Debug.Log("type of {0} which is already registered", injectIntoBindingSetting.AbstractType);
-                    return;
-                }
             }
 
-            var injectIntoArray = injectIntoBindingSetting.InjectInto.Where(i => i != null).ToArray();
-
-            if (overriden)
-            {
-                for (var i = 0; i < defaultContainer.registeredObjects.Count; i++)
-                {
-                    var registeredObject = defaultContainer.registeredObjects[i];
-
-                    if (registeredObject != null && registeredObject.TypeToResolve ==
-                                                 injectIntoBindingSetting.AbstractType
-                                                 && registeredObject.ConcreteType ==
-                                                 injectIntoBindingSetting.ImplementedType)
-                    {
-                        if (registeredObject.BindingAttribute == null ||
-                            registeredObject.BindingAttribute.InjectInto == null ||
-                            injectIntoBindingSetting.EnableInjectInto == false ||
-                            registeredObject.BindingAttribute.InjectInto.IsEqual(injectIntoArray))
-                        {
-                            Debug.Log("Unbind {0} registered for {1}", injectIntoBindingSetting.ImplementedType,
-                                injectIntoBindingSetting.AbstractType);
-                            defaultContainer.registeredObjects.RemoveAt(i--);
-                            defaultContainer.registeredTypes.Remove(injectIntoBindingSetting.AbstractType);
-                        }
-                    }
-                }
-
-                if (injectIntoBindingSetting.EnableInjectInto && injectIntoArray.Length > 0)
-                {
-                    bindingAttributes.RemoveAll(b =>
-                        b.TypeToResolve.Name == injectIntoBindingSetting.AbstractType.Name &&
-                        b.ConcreteType.Name == injectIntoBindingSetting.ImplementedType.Name &&
-                        b.InjectInto.SequenceEqual(injectIntoArray)
-                    );
-                }
-            }
-
-            //bind from binding setting
-            //first check injectInto to create binding attributes
-            if (injectIntoBindingSetting.EnableInjectInto && injectIntoArray.Length > 0)
-            {
-                //add to binding cache
-                var bindingAttribute = new BindingAttribute
-                {
-                    TypeToResolve = injectIntoBindingSetting.AbstractType,
-                    ConcreteType = injectIntoBindingSetting.ImplementedType,
-                    InjectInto = injectIntoArray,
-                    LifeCycle = injectIntoBindingSetting.LifeCycle
-                };
-
-                bindingAttributes.Add(bindingAttribute);
-            }
-
-            Bind(injectIntoBindingSetting.AbstractType, injectIntoBindingSetting.ImplementedType, lifeCycle);
+            defaultContainer.Bind(injectIntoBindingSetting);
         }
 
         private void BindFromSetting(BindingData bindingSetting, Type typeToInject, bool overriden = false)
@@ -339,39 +269,6 @@ namespace UnityIoC
 
             if (overriden)
             {
-                for (var i = 0; i < defaultContainer.registeredObjects.Count; i++)
-                {
-                    var registeredObject = defaultContainer.registeredObjects[i];
-
-                    if (registeredObject != null && registeredObject.TypeToResolve == bindingSetting.AbstractType
-                                                 && registeredObject.ConcreteType == bindingSetting.ImplementedType)
-                    {
-                        if (registeredObject.BindingAttribute == null ||
-                            registeredObject.BindingAttribute.InjectInto == null ||
-                            registeredObject.BindingAttribute.InjectInto.Any(inject => inject == typeToInject))
-                        {
-                            Debug.Log("Unbind {0} registered for {1}", bindingSetting.ImplementedType,
-                                bindingSetting.AbstractType);
-                            defaultContainer.registeredObjects.RemoveAt(i--);
-                            defaultContainer.registeredTypes.Remove(bindingSetting.AbstractType);
-                        }
-                    }
-                }
-
-                //remove existing binding attributes from binding setting 
-                var count = bindingAttributes.RemoveAll(b =>
-                    b.TypeToResolve.Name == bindingSetting.AbstractType.Name &&
-                    b.ConcreteType.Name == bindingSetting.ImplementedType.Name &&
-                    b.InjectInto.Any(i => i == typeToInject)
-                );
-
-                if (count > 0)
-                {
-                    Debug.Log("Removed {0} binding attribute(s) to bind {1} for {2}",
-                        count,
-                        bindingSetting.ImplementedType,
-                        bindingSetting.AbstractType);
-                }
             }
 
             Debug.Log("Bind from setting {0} for {1} by {2}",
@@ -379,23 +276,9 @@ namespace UnityIoC
                 bindingSetting.AbstractType,
                 lifeCycle.ToString());
 
-            //bind from binding setting
-            //first check injectInto to create binding attributes
-            //add to binding cache
-            var bindingAttribute = new BindingAttribute
-            {
-                TypeToResolve = bindingSetting.AbstractType,
-                ConcreteType = bindingSetting.ImplementedType,
-                InjectInto = new[] {typeToInject},
-                LifeCycle = bindingSetting.LifeCycle
-            };
-
-            bindingAttributes.Add(bindingAttribute);
-
             Bind(bindingSetting.AbstractType, bindingSetting.ImplementedType, lifeCycle);
         }
 
-       
 
         private Type GetTypeFromCurrentAssembly(string className)
         {
@@ -411,91 +294,11 @@ namespace UnityIoC
             return null;
         }
 
-        private void ProcessAutomaticBinding()
-        {
-            if (!automaticBinding)
-            {
-                return;
-            }
-
-            var concreteTypes = CurrentAssembly.GetTypes().Where(t => !(t.IsInterface || t.IsAbstract)).ToArray();
-            var abstractions = CurrentAssembly.GetTypes().Where(t => t.IsInterface || t.IsAbstract).ToArray();
-
-            foreach (var abstraction in abstractions)
-            {
-                //process for IContainer internally
-                if (abstraction == typeof(IContainer))
-                {
-                    Bind(abstraction, container);
-                    continue;
-                }
-
-                //binding attribute gives Type a higher priority than automatic binding with no attributes 
-                //Only automatically bind for classes have no binding attributes  
-                var concreteType = concreteTypes.FirstOrDefault(t =>
-                    t.GetCustomAttributes(typeof(BindingAttribute), true).Length == 0 &&
-                    (t.GetInterface(abstraction.Name) != null) || t.IsSubclassOf(abstraction));
-
-                if (concreteType == null) continue;
-
-                //won't bind existing registered typeToResolve
-                if (defaultContainer.IsRegistered(abstraction))
-                {
-                    Debug.Log("type of {0} which is already registered", abstraction);
-                    continue;
-                }
-
-                // this is low priority than binding using attributes or Bind() methods.
-                Debug.Log("Automatically Bind {0} for {1}", concreteType, abstraction);
-                Bind(abstraction, concreteType);
-            }
-        }
-
         public void Dispose()
         {
             if (container != null)
             {
                 container.Dispose();
-            }
-        }
-
-        private void ProcessBindingAttribute()
-        {
-            var myAssembly = TargetType == null ? Assembly.GetExecutingAssembly() : TargetType.Assembly;
-            foreach (Type concreteType in myAssembly.GetTypes())
-            {
-                var bindingAttributes = concreteType.GetCustomAttributes(
-                    typeof(BindingAttribute), true
-                ).Cast<BindingAttribute>();
-
-                foreach (var bindingAttribute in bindingAttributes)
-                {
-                    if (bindingAttribute != null)
-                    {
-                        var typeToResolve = bindingAttribute.TypeToResolve;
-                        var lifeCycle = bindingAttribute.LifeCycle;
-
-                        //set the conrete type back to BindingAttribute
-                        bindingAttribute.ConcreteType = concreteType;
-
-                        //add to binding cache
-                        this.bindingAttributes.Add(bindingAttribute);
-
-                        Debug.Log("Found binding " + concreteType + " for " +
-                                  (typeToResolve == null ? "itself" : typeToResolve.ToString()) + " with lifeCycle " +
-                                  lifeCycle);
-
-                        //bind
-                        if (typeToResolve != null)
-                        {
-                            Bind(typeToResolve, concreteType, lifeCycle);
-                        }
-                        else
-                        {
-                            Bind(concreteType, concreteType, lifeCycle);
-                        }
-                    }
-                }
             }
         }
 
@@ -784,7 +587,7 @@ namespace UnityIoC
             InitialProcess();
         }
 
-        public IContainer Container
+        public DefaultContainer Container
         {
             get { return container; }
         }

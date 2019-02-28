@@ -17,6 +17,5 @@ MonoBehaviour:
     ImplementedTypeHolder: {fileID: 11500000, guid: de1fc832357a34579a7009a2bbbecc61,
       type: 3}
     LifeCycle: 1
-    InjectIntoHolder:
-    - {fileID: 11500000, guid: 7f5395a6e03fa45229573ea07f8a45c2, type: 3}
-    EnableInjectInto: 1
+    InjectIntoHolder: {fileID: 0}
+    EnableInjectInto: 0

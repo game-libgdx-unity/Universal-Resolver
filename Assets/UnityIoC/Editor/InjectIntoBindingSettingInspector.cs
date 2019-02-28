@@ -107,35 +107,21 @@ namespace UnityIoC.Editor
 
                     if (data.EnableInjectInto)
                     {
-                        EditorGUILayout.BeginVertical("Box");
+                        EditorGUILayout.BeginHorizontal("Box");
                         
-                        DrawList("Inject into list", "Component", data.InjectIntoHolder, obj =>
+                        DrawLabel("Resolve from Type", GUILayout.MaxWidth(150));
+
+                        data.InjectIntoHolder = EditorGUILayout.ObjectField("",
+                            data.InjectIntoHolder, typeof(MonoScript), false,
+                            GUILayout.MaxWidth(60),
+                            GUILayout.ExpandWidth(true));
+
+                        if (data.InjectIntoHolder)
                         {
-                            EditorGUILayout.BeginHorizontal();
+                            data.InjectInto = ((MonoScript) data.InjectIntoHolder).GetClass();
+                        }
 
-                            obj = EditorGUILayout.ObjectField("Component",
-                                obj, typeof(MonoScript), false);
-
-
-                            DrawButton("X", () =>
-                                {
-                                    if (data.InjectIntoHolder.Count == 1)
-                                    {
-                                        data.InjectIntoHolder.Clear();
-                                        return;
-                                    }
-                                    
-                                    data.InjectIntoHolder.Remove(obj);
-                                },
-                                GUILayout.MaxWidth(17),
-                                GUILayout.ExpandWidth(false));
-
-                            EditorGUILayout.EndHorizontal();
-
-                            return obj;
-                        }, true);
-
-                        EditorGUILayout.EndVertical();
+                        EditorGUILayout.EndHorizontal();
                     }
 
                     return data;

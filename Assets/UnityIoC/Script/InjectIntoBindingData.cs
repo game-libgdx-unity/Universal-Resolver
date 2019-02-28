@@ -16,8 +16,8 @@ namespace UnityIoC
         [SerializeField] public LifeCycle LifeCycle;
 
 
-        [SerializeField] public List<Type> InjectInto = new List<Type>();
-        [SerializeField] public List<Object> InjectIntoHolder = new List<Object>();
+        [SerializeField] public Type InjectInto;
+        [SerializeField] public Object InjectIntoHolder;
         [SerializeField] public bool EnableInjectInto;
 
         public InjectIntoBindingData Clone()
