@@ -9,7 +9,7 @@ namespace UnityIoC.Editor
 
 		public void DoSomething()
 		{
-			Debug.Log("Hello"); 
+			MyDebug.Log("Hello"); 
 		}
 	}
 

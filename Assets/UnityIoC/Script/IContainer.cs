@@ -5,6 +5,7 @@
  * (c) Copyright by MrThanhVinh168@gmail.com
  **/
 using System;
+using System.Collections.Generic;
 
 namespace UnityIoC
 {
@@ -12,8 +13,11 @@ namespace UnityIoC
     {
         void Bind(InjectIntoBindingData data);
 
-        bool IsRegistered(Type abstraction);
-        AssemblyContext.RegisteredObject GetRegisteredObject(Type typeToResolve);
+        object ResolveObject(Type abstractType,
+            LifeCycle preferredLifeCycle = LifeCycle.Default,
+            object resolveFrom = null,
+            params object[] parameters);
+        IEnumerable<AssemblyContext.RegisteredObject> GetRegisteredObject(Type typeToResolve);
     }
 }
 

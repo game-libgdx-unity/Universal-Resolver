@@ -9,7 +9,6 @@ using System;
 using System.Linq;
 using UnityEngine;
 using UnityIoC;
-using Debug = UnityIoC.Debug;
 using Object = UnityEngine.Object;
 
 public class GetComponentAttribute : InjectAttribute, IComponentResolvable, IComponentArrayResolvable
@@ -24,22 +23,21 @@ public class GetComponentAttribute : InjectAttribute, IComponentResolvable, ICom
 
         if (type.IsSubclassOf(typeof(MonoBehaviour)))
         {
-            Debug.Log("Can't find type of {0}, create a new one on gameObject {1}", type,
+            MyDebug.Log("Can't find type of {0}, create a new one on gameObject {1}", type,
                 behaviour.gameObject.name);
 
             return behaviour.gameObject.AddComponent(type);
         }
 
         //try to search from registeredObject of this type and resolve
-        if (container.IsRegistered(type))
+        //valid when concreteType is subclass of monobehaviour
+        var obj = container.GetRegisteredObject(type)
+            .FirstOrDefault(r => r.AbstractType == type && r.ImplementedType.IsSubclassOf(typeof(Component)));
+
+        if (obj != null)
         {
-            //valid when concreteType is subclass of monobehaviour
-            var obj = container.GetRegisteredObject(type);
-            if (obj.ConcreteType.IsSubclassOf(typeof(MonoBehaviour)))
-            {
-                Debug.Log("Adding {0} is to the gameObject", obj.ConcreteType);
-                return behaviour.gameObject.AddComponent(obj.ConcreteType);
-            }
+            MyDebug.Log("Adding {0} is to the gameObject", type);
+            return behaviour.gameObject.AddComponent(type);
         }
 
         return null;
@@ -64,12 +62,12 @@ public class ChildrenAttribute : InjectAttribute, IComponentResolvable, ICompone
 
         if (type.IsSubclassOf(typeof(MonoBehaviour)))
         {
-            Debug.Log("Can't find type of {0}, create a new one on gameObject {1}", type,
+            MyDebug.Log("Can't find type of {0}, create a new one on gameObject {1}", type,
                 behaviour.gameObject.name);
             return behaviour.gameObject.AddComponent(type);
         }
 
-        Debug.Log("Unable to Get/Add non-monobehaviour {0} using on object {1}", type,
+        MyDebug.Log("Unable to Get/Add non-monobehaviour {0} using on object {1}", type,
             behaviour.gameObject.name);
         return null;
     }
@@ -92,12 +90,12 @@ public class ParentsAttribute : InjectAttribute, IComponentResolvable
 
         if (type.IsSubclassOf(typeof(MonoBehaviour)))
         {
-            Debug.Log("Can't find type of {0}, create a new one on gameObject {1}", type,
+            MyDebug.Log("Can't find type of {0}, create a new one on gameObject {1}", type,
                 behaviour.gameObject.name);
             return behaviour.gameObject.AddComponent(type);
         }
 
-        Debug.Log("Unable to Get/Add non-monobehaviour {0} using on object {1}", type,
+        MyDebug.Log("Unable to Get/Add non-monobehaviour {0} using on object {1}", type,
             behaviour.gameObject.name);
         return null;
     }
@@ -115,12 +113,12 @@ public class FindObjectOfTypeAttribute : InjectAttribute, IComponentResolvable
 
         if (type.IsSubclassOf(typeof(MonoBehaviour)))
         {
-            Debug.Log("Can't find type of {0}, create a new one on gameObject {1}", type,
+            MyDebug.Log("Can't find type of {0}, create a new one on gameObject {1}", type,
                 behaviour.gameObject.name);
             return behaviour.gameObject.AddComponent(type);
         }
 
-        Debug.Log("Unable to Get/Add non-monobehaviour {0} using on object {1}", type,
+        MyDebug.Log("Unable to Get/Add non-monobehaviour {0} using on object {1}", type,
             behaviour.gameObject.name);
         return null;
     }
@@ -150,12 +148,12 @@ public class FindGameObjectByNameAttribute : InjectAttribute, IComponentResolvab
 
         if (type.IsSubclassOf(typeof(MonoBehaviour)))
         {
-            Debug.Log("Can't find type of {0}, create a new one on gameObject {1}", type,
+            MyDebug.Log("Can't find type of {0}, create a new one on gameObject {1}", type,
                 behaviour.gameObject.name);
             return behaviour.gameObject.AddComponent(type);
         }
 
-        Debug.Log("Unable to Get/Add non-monobehaviour {0} using on object {1}", type,
+        MyDebug.Log("Unable to Get/Add non-monobehaviour {0} using on object {1}", type,
             behaviour.gameObject.name);
         return null;
     }
@@ -182,12 +180,12 @@ public class FindGameObjectsByTagAttribute : InjectAttribute, IComponentResolvab
 
         if (type.IsSubclassOf(typeof(MonoBehaviour)))
         {
-            Debug.Log("Can't find type of {0}, create a new one on gameObject {1}", type,
+            MyDebug.Log("Can't find type of {0}, create a new one on gameObject {1}", type,
                 behaviour.gameObject.name);
             return behaviour.gameObject.AddComponent(type);
         }
 
-        Debug.Log("Unable to Get/Add non-monobehaviour {0} using on object {1}", type,
+        MyDebug.Log("Unable to Get/Add non-monobehaviour {0} using on object {1}", type,
             behaviour.gameObject.name);
         return null;
     }

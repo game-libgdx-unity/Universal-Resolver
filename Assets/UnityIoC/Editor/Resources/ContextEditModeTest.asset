@@ -17,12 +17,12 @@ MonoBehaviour:
     ImplementedTypeHolder: {fileID: 11500000, guid: 7af20c48a2e614548b06b175030f21df,
       type: 3}
     LifeCycle: 0
-    InjectIntoHolder: []
+    InjectIntoHolder: {fileID: 0}
     EnableInjectInto: 0
   - AbstractTypeHolder: {fileID: 11500000, guid: ce7aabad9f7f44db69b5206bcf95f5c7,
       type: 3}
     ImplementedTypeHolder: {fileID: 11500000, guid: 65e4b8b71fb4b4071ad24ce2336c8c75,
       type: 3}
     LifeCycle: 0
-    InjectIntoHolder: []
+    InjectIntoHolder: {fileID: 0}
     EnableInjectInto: 0

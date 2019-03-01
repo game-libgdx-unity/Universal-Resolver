@@ -6,6 +6,6 @@ namespace UnityIoC
     [CreateAssetMenu(fileName = "default", menuName = "IoC/Binding Data", order = 1)]
     public class BindingSetting : ScriptableObject
     {
-        [SerializeField] public BindingData[] defaultSettings;
+        [SerializeField] public BindingData[] defaultSettings = new BindingData[]{};
     }
 }

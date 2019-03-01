@@ -17,71 +17,72 @@ namespace UnityIoC
     {
         public class RegisteredObject : IDisposable
         {
-            public Type TypeToResolve { get; private set; }
+            private readonly Logger Debug = new Logger(typeof(RegisteredObject));
+            public Type AbstractType { get; private set; }
 
-            public Type ConcreteType { get; private set; }
+            public Type ImplementedType { get; private set; }
 
             public object Instance { get; private set; }
 
             public LifeCycle LifeCycle { get; private set; }
 
-            public Type InjectFromType { get; private set; }
+            public Type InjectInto { get; private set; }
 
             public RegisteredObject(
-                Type typeToResolve,
+                Type abstractType,
                 Type concreteType,
                 AssemblyContext assemblyContext,
                 LifeCycle lifeCycle = LifeCycle.Default) :
-                this(typeToResolve, concreteType, null, lifeCycle, null)
+                this(abstractType, concreteType, null, lifeCycle, null)
             {
             }
 
             public RegisteredObject(
-                Type typeToResolve,
-                object instance,
-                AssemblyContext assemblyContext,
-                LifeCycle lifeCycle = LifeCycle.Default) :
-                this(typeToResolve, null, instance, lifeCycle)
+                Type abstractType,
+                object instance) :
+                this(abstractType, instance.GetType(), instance)
             {
             }
 
             public RegisteredObject(
-                Type typeToResolve,
+                Type abstractType,
                 Type concreteType,
                 object instance,
                 LifeCycle lifeCycle = LifeCycle.Default,
-                Type injectFromType = null
+                Type injectInto = null
             )
             {
                 Instance = instance;
-                TypeToResolve = typeToResolve;
+                AbstractType = abstractType;
 
+                LifeCycle = lifeCycle;
+                InjectInto = injectInto;
+
+                if (InjectInto != null)
+                {
+                    Debug.Log("Inject into: "+InjectInto.Name);
+                }
+                
                 if (instance != null)
                 {
-                    if (typeToResolve == null)
+                    if (abstractType == null)
                     {
-                        typeToResolve = instance.GetType();
+                        abstractType = instance.GetType();
                     }
 
-                    ConcreteType = instance.GetType();
+                    LifeCycle = LifeCycle.Singleton;
+                    ImplementedType = instance.GetType();
                 }
                 else if (concreteType != null)
                 {
-                    ConcreteType = concreteType;
+                    ImplementedType = concreteType;
                 }
                 else
                 {
                     throw new InvalidOperationException("either instance or concreteType must not be null");
                 }
-
-
-                LifeCycle = lifeCycle;
-                InjectFromType = injectFromType;
-
-                if (InjectFromType != null)
-                {
-                    Debug.Log("Inject into: "+InjectFromType.Name);
-                }
+                
+                Debug.Log("Life cycle: "+LifeCycle);
             }
 
             public object CreateInstance(AssemblyContext assemblyContext,
@@ -90,20 +91,21 @@ namespace UnityIoC
                 params object[] args)
             {
                 var objectLifeCycle = preferredLifeCycle == LifeCycle.Default ? LifeCycle : preferredLifeCycle;
+                Debug.Log("Life cycle: "+objectLifeCycle);
 
                 if (this.Instance == null || objectLifeCycle == LifeCycle.Transient ||
                     objectLifeCycle == LifeCycle.Default)
                 {
                     object instance;
-                    if (ConcreteType.IsSubclassOf(typeof(MonoBehaviour)))
+                    if (ImplementedType.IsSubclassOf(typeof(MonoBehaviour)))
                     {
                         GameObject prefab;
-                        instance = TryGetPrefab(out prefab, assemblyContext, ConcreteType, ConcreteType.Name,
+                        instance = TryGetPrefab(out prefab, assemblyContext, ImplementedType, ImplementedType.Name,
                             preferredLifeCycle, resolveFrom);
                     }
                     else
                     {
-                        instance = Activator.CreateInstance(ConcreteType, args);
+                        instance = Activator.CreateInstance(ImplementedType, args);
                     }
 
                     assemblyContext.ProcessInjectAttribute(instance);

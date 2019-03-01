@@ -1,16 +1,16 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityIoC;
 
-namespace SceneTest
+namespace UnityIoC.Editor
 {
-	public class ImplClass : AbstractClass
-	{
+	
+	public class TestClass2 : TestInterface {
 
 		public void DoSomething()
 		{
-			MyDebug.Log("This is ImplClass");
+			MyDebug.Log("Hello 2"); 
 		}
 	}
+
 }

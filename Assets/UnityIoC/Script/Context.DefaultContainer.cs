@@ -19,7 +19,10 @@ namespace UnityIoC
         public class DefaultContainer : IContainer
         {
             internal HashSet<Type> registeredTypes = new HashSet<Type>();
-            internal IList<RegisteredObject> registeredObjects = new List<RegisteredObject>();
+
+            internal List<RegisteredObject> registeredObjects = new List<RegisteredObject>();
+
+            private readonly Logger debug = new Logger(typeof(DefaultContainer));
 
             private AssemblyContext assemblyContext;
 
@@ -30,7 +33,7 @@ namespace UnityIoC
 
             public void Dispose()
             {
-                Debug.Log("Disposing container...");
+                debug.Log("Disposing container...");
                 foreach (var registeredObject in registeredObjects)
                 {
                     registeredObject.Dispose();
@@ -55,16 +58,16 @@ namespace UnityIoC
 
                 if (registeredTypes.Contains(typeToResolve))
                 {
-                    Debug.Log("{0} already registered {1} time", typeToResolve.ToString(),
-                        registeredObjects.Count(o => o.TypeToResolve == typeToResolve));
+                    debug.Log("{0} already registered {1} time", typeToResolve.ToString(),
+                        registeredObjects.Count(o => o.AbstractType == typeToResolve));
                 }
                 else
                 {
-                    Debug.Log("new type registered: " + typeToResolve + " as " + lifeCycle);
+                    debug.Log("new type registered: " + typeToResolve + " as " + lifeCycle);
                     registeredTypes.Add(typeToResolve);
                 }
 
-                Debug.Log("Add registeredObject: " + concreteType + " for " + typeToResolve + " as " + lifeCycle);
+                debug.Log("Add registeredObject: " + concreteType + " for " + typeToResolve + " as " + lifeCycle);
                 registeredObjects.Add(new RegisteredObject(typeToResolve, concreteType, assemblyContext, lifeCycle));
             }
 
@@ -77,11 +80,11 @@ namespace UnityIoC
 
                 if (registeredTypes.Contains(typeof(TTypeToResolve)))
                 {
-                    Debug.Log("Cannot register a Type twice");
+                    debug.Log("Cannot register a Type twice");
                     return;
                 }
 
-                Debug.Log("  register type: " + typeof(TTypeToResolve));
+                debug.Log("register type: " + typeof(TTypeToResolve));
                 registeredTypes.Add(typeof(TTypeToResolve));
                 registeredObjects.Add(new RegisteredObject(typeof(TTypeToResolve), typeof(TConcrete), assemblyContext,
                     lifeCycle));
@@ -94,8 +97,45 @@ namespace UnityIoC
                     throw new InvalidOperationException("Cannot bind empty object of abstract type");
                 }
 
-                Debug.Log("  register type: " + data.AbstractType);
-                registeredTypes.Add(data.AbstractType);
+                //unbind existing ones
+                for (var i = 0; i < registeredObjects.Count; i++)
+                {
+                    var registeredObject = registeredObjects[i];
+
+                    if (registeredObject.AbstractType != data.AbstractType)
+                        continue;
+
+                    if (data.EnableInjectInto)
+                    {
+                        if (registeredObject.InjectInto != null &&
+                            data.InjectInto == registeredObject.InjectInto)
+                        {
+                            debug.Log("Unbind {0} registered for {1}", data.ImplementedType,
+                                data.AbstractType);
+                            registeredObjects.RemoveAt(i);
+                            i--;
+                        }
+                    }
+                    else if (registeredObject.InjectInto == null &&
+                             data.InjectInto == null && 
+                             registeredObject.ImplementedType == data.InjectInto)
+                    {
+                        debug.Log("Unbind {0} registered for {1}", data.ImplementedType,
+                            data.AbstractType);
+                        registeredObjects.RemoveAt(i);
+                        i--;
+                    }
+                }
+
+                //add new registeredObject
+                debug.Log("register type: " + data.AbstractType + " for " + data.ImplementedType + " when inject into "
+                          + (data.InjectInto == null ? "none" : data.InjectInto.Name));
+
+                if (!registeredTypes.Contains(data.AbstractType))
+                {
+                    registeredTypes.Add(data.AbstractType);
+                }
+
                 registeredObjects.Add(
                     new RegisteredObject(
                         data.AbstractType,
@@ -103,6 +143,11 @@ namespace UnityIoC
                         null,
                         data.LifeCycle,
                         data.InjectInto));
+            }
+
+            public IEnumerable<AssemblyContext.RegisteredObject> GetRegisteredObject(Type typeToResolve)
+            {
+                return registeredObjects.Where(r => r.AbstractType == typeToResolve);
             }
 
             public void Bind(Type typeToResolve, object instance)
@@ -121,20 +166,22 @@ namespace UnityIoC
                 {
                     if (registeredTypes.Contains(typeToResolve))
                     {
-                        Debug.Log("Already registered type of " + typeToResolve);
+                        debug.Log("Already registered type of " + typeToResolve + " will unbind them first");
+                        registeredObjects.RemoveAll(r =>
+                            r.ImplementedType == typeConcrete && r.AbstractType == typeToResolve);
                     }
                     else
                     {
-                        Debug.Log("  register type: " + typeToResolve);
+                        debug.Log("register type: " + typeToResolve);
                         registeredTypes.Add(typeToResolve);
                     }
 
-                    registeredObjects.Add(new RegisteredObject(typeToResolve, instance, assemblyContext));
+                    registeredObjects.Add(new RegisteredObject(typeToResolve, instance));
                 }
                 catch (Exception ex)
                 {
-                    Debug.LogError(ex.Message);
-                    Debug.LogError(ex.StackTrace);
+                    debug.LogError(ex.Message);
+                    debug.LogError(ex.StackTrace);
                 }
             }
 
@@ -156,104 +203,95 @@ namespace UnityIoC
             public TTypeToResolve Resolve<TTypeToResolve>(LifeCycle lifeCycle = LifeCycle.Default,
                 params object[] parameters)
             {
-                return (TTypeToResolve) ResolveObject(typeof(TTypeToResolve), null, lifeCycle, parameters);
+                return (TTypeToResolve) ResolveObject(typeof(TTypeToResolve), lifeCycle, null, parameters);
             }
 
             public object Resolve(Type typeToResolve, LifeCycle lifeCycle = LifeCycle.Default,
                 params object[] parameters)
             {
-                return ResolveObject(typeToResolve, null, lifeCycle, parameters);
+                return ResolveObject(typeToResolve, lifeCycle, null, parameters);
             }
 
-            public object ResolveObject(Type typeToResolve, object resolveFrom = null,
+            public object ResolveObject(Type abstractType,
                 LifeCycle preferredLifeCycle = LifeCycle.Default,
+                object resolveFrom = null,
                 params object[] parameters)
             {
+                debug.Log("preferredLifeCycle: " + preferredLifeCycle);
                 Func<RegisteredObject, bool> filter = null;
 
-                if (assemblyContext.requirePreRegistered)
-                    filter = o => o.TypeToResolve == typeToResolve;
-                else
-                    filter = o => o.TypeToResolve == typeToResolve ||
-                                  o.ConcreteType == typeToResolve ||
-                                  o.ConcreteType.IsSubclassOf(typeToResolve) ||
-                                  o.ConcreteType.GetInterfaces().Contains(typeToResolve);
+                RegisteredObject registeredObject = null;
 
-
-                var numOfRegisters = registeredObjects.Count(filter);
-
-                if (resolveFrom == null || numOfRegisters <= 1)
+                if (resolveFrom == null)
                 {
-                    var registeredObject = registeredObjects.FirstOrDefault(filter);
+                    debug.Log("Default process for null resolveFrom");
+
+                    filter = o => o != null && o.AbstractType == abstractType && o.InjectInto == null;
+
+                    registeredObject = registeredObjects.FirstOrDefault(filter);
                     if (registeredObject == null)
                     {
-                        Debug.Log(
-                            "The type {0} has not been registered", typeToResolve.Name);
+                        debug.Log(
+                            "The type {0} has not been registered", abstractType.Name);
 
                         //if the typeToResolve is abstract, then we cannot resolve it, throw exceptions
-                        if (typeToResolve.IsAbstract || typeToResolve.IsInterface)
+                        if (abstractType.IsAbstract || abstractType.IsInterface)
                         {
                             throw new InvalidOperationException(
-                                "Cannot resolve the abstract type " + typeToResolve.Name +
+                                "Cannot resolve the abstract type " + abstractType.Name +
                                 " with no respective registeredObject!");
                         }
 
-                        Debug.Log("trying to register {0} ", typeToResolve);
+                        debug.Log("trying to register {0} ", abstractType);
 
-                        registeredObject = new RegisteredObject(typeToResolve, typeToResolve, assemblyContext,
+                        registeredObject = new RegisteredObject(
+                            abstractType,
+                            abstractType,
+                            assemblyContext,
                             preferredLifeCycle);
+
                         registeredObjects.Add(registeredObject);
                     }
 
-                    var obj = GetInstance(registeredObject, preferredLifeCycle, resolveFrom, parameters);
+                    debug.Log("resolve with null resolveFrom approach");
+                    var obj = GetInstance(registeredObject, preferredLifeCycle, null, parameters);
 
                     return obj;
                 }
 
-                //high priority process for notnull InjectInto binding attributes
-                foreach (var registeredObject in registeredObjects.Where(filter))
+                debug.Log("High priority process for notnull InjectInto registeredObjects");
+
+                filter = o => o != null && o.AbstractType == abstractType && resolveFrom.GetType() == o.InjectInto;
+
+                registeredObject = registeredObjects.FirstOrDefault(filter);
+                if (registeredObject != null)
                 {
                     //using binding attribute to filter registered objects
-                    var injectFromType = registeredObject.InjectFromType;
-                    if (injectFromType == null)
+                    var injectFromType = registeredObject.InjectInto;
+                    if (injectFromType != null)
                     {
-                        //no binding found
-                        continue;
-                    }
-
-                    Debug.Log("Binding of " + registeredObject.ConcreteType + " has inject into: " + injectFromType);
-                    var typeResolveFrom = resolveFrom.GetType();
-
-                    //get the correct registeredObject to create an instance
-                    if (injectFromType == typeResolveFrom)
-                    {
-                        Debug.Log("resolve from: " + typeResolveFrom + " by binding attributes");
+                        debug.Log("Binding of " + registeredObject.ImplementedType + " has inject into: " +
+                                  injectFromType);
+                        debug.Log("resolve from: " + registeredObject.InjectInto +
+                                  " by inject into from RegisteredObject");
+                        debug.Log("resolve with high priority approach");
                         return GetInstance(registeredObject, preferredLifeCycle, resolveFrom, parameters);
                     }
                 }
 
-                //lowest priority process for null InjectIntoType or binding attributes
-                foreach (var registeredObject in registeredObjects.Where(filter))
+                debug.Log("lower priority process for null Inject Into registeredObjects");
+
+                filter = o => o != null && o.AbstractType == abstractType && null == o.InjectInto;
+
+                registeredObject = registeredObjects.FirstOrDefault(filter);
+                if (registeredObject != null)
                 {
-                    if (registeredObject.InjectFromType == null)
-                    {
-                        return GetInstance(registeredObject, preferredLifeCycle, resolveFrom, parameters);
-                    }
+                    debug.Log("resolve with lower priority approach");
+                    return GetInstance(registeredObject, preferredLifeCycle, resolveFrom, parameters);
                 }
 
-                Debug.Log("Resolve without resolveFrom object");
-                return ResolveObject(typeToResolve, null, preferredLifeCycle, parameters);
-            }
-            
-
-            public bool IsRegistered(Type type)
-            {
-                return registeredTypes.FirstOrDefault(t => t == type) != null;
-            }
-
-            public RegisteredObject GetRegisteredObject(Type typeToResolve)
-            {
-                return registeredObjects.FirstOrDefault(t => t.TypeToResolve == typeToResolve);
+                debug.Log("Worst case happened: Resolve without referring the resolveFrom object");
+                return ResolveObject(abstractType, preferredLifeCycle, null, parameters);
             }
 
             private object GetInstance(RegisteredObject registeredObject,
@@ -282,28 +320,26 @@ namespace UnityIoC
 
                     obj = registeredObject.CreateInstance(assemblyContext, objectLifeCycle, resolveFrom, paramArray);
 
-                    Debug.Log("Successfully resolved " + registeredObject.TypeToResolve + " as " +
-                              registeredObject.ConcreteType + " by " + objectLifeCycle + " from new object");
+                    debug.Log("Successfully resolved " + registeredObject.AbstractType + " as " +
+                              registeredObject.ImplementedType + " by " + objectLifeCycle + " from new object");
                     return obj;
                 }
-                else
-                {
-                    Debug.Log("Successfully resolved " + registeredObject.TypeToResolve + " as " +
-                              registeredObject.ConcreteType + " by " + objectLifeCycle + " from cached instance");
 
-                    return registeredObject.Instance;
-                }
+                debug.Log("Successfully resolved " + registeredObject.AbstractType + " as " +
+                          registeredObject.ImplementedType + " by " + objectLifeCycle + " from cached instance");
+
+                return registeredObject.Instance;
             }
 
             private IEnumerable<object> ResolveConstructorParameters(RegisteredObject registeredObject)
             {
-                ConstructorInfo constructorInfo = registeredObject.ConcreteType.GetConstructors().FirstOrDefault();
+                ConstructorInfo constructorInfo = registeredObject.ImplementedType.GetConstructors().FirstOrDefault();
 
                 if (constructorInfo == null)
                 {
-                    Debug.Log(
+                    debug.Log(
                         "No constructor to resolve object of {0} found, will use the default constructor",
-                        registeredObject.ConcreteType);
+                        registeredObject.ImplementedType);
                     yield break;
                 }
 

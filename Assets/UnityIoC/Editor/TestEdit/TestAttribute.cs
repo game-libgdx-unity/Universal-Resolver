@@ -6,9 +6,9 @@ using SceneTest;
 namespace UnityIoC.Editor
 {
     [TestFixture]
-    public class AttributeTests
+    public class TestAttribute : TestBase
     {
-        [Test]
+        [NUnit.Framework.Test]
         public void t1_automatic_bind_component_attribute()
         {
             var assemblyContext = new AssemblyContext(this, true);
@@ -17,18 +17,18 @@ namespace UnityIoC.Editor
             Assert.IsInstanceOf<TestClass>(testClass);
         }
 
-        [Test]
+        [NUnit.Framework.Test]
         public void t2_resolve_component_attribute()
         {
-            var assemblyContext = new AssemblyContext(this);
+            var assemblyContext = new AssemblyContext(typeof(AbstractClass));
             var component = assemblyContext.Resolve<TestComponent>();
             Assert.IsInstanceOf(typeof(ImplClass), component.abstractClass);
         }
 
-        [Test]
+        [NUnit.Framework.Test]
         public void t3_resolve_array_of_components_as_variable_from_prefab()
         {
-            var assemblyContext = new AssemblyContext(this);
+            var assemblyContext = new AssemblyContext(typeof(AbstractClass));
             var arrayOfComponent = assemblyContext.Resolve<ArrayOfComponent>();
 
             Assert.IsNotNull(arrayOfComponent);
@@ -36,10 +36,10 @@ namespace UnityIoC.Editor
             Assert.AreEqual(3, arrayOfComponent.SomeComponents.Length);
         }
 
-        [Test]
+        [NUnit.Framework.Test]
         public void t4_resolve_array_of_components_as_property_from_prefab()
         {
-            var assemblyContext = new AssemblyContext(this);
+            var assemblyContext = new AssemblyContext(typeof(AbstractClass));
             var arrayOfComponent = assemblyContext.Resolve<ArrayOfComponent>();
 
             Assert.IsNotNull(arrayOfComponent);
@@ -48,10 +48,10 @@ namespace UnityIoC.Editor
         }
 
 
-        [Test]
+        [NUnit.Framework.Test]
         public void t5_resolve_array_of_components_from_children_as_variable_by_prefab()
         {
-            var assemblyContext = new AssemblyContext(this);
+            var assemblyContext = new AssemblyContext(typeof(AbstractClass));
             var arrayOfComponent = assemblyContext.Resolve<ArrayOfComponentFromChildren>();
 
             Assert.IsNotNull(arrayOfComponent);
@@ -59,10 +59,10 @@ namespace UnityIoC.Editor
             Assert.AreEqual(5, arrayOfComponent.SomeComponents.Length);
         }
 
-        [Test]
+        [NUnit.Framework.Test]
         public void t6_resolve_array_of_components_from_children_as_property_by_prefab()
         {
-            var assemblyContext = new AssemblyContext(this);
+            var assemblyContext = new AssemblyContext(typeof(AbstractClass));
             var arrayOfComponent = assemblyContext.Resolve<ArrayOfComponentFromChildren>();
 
             Assert.IsNotNull(arrayOfComponent);

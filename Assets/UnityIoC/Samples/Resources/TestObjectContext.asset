@@ -8,8 +8,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b83a85f05d1da403fa31867b4ebd45cb, type: 3}
-  m_Name: custom_setting
+  m_Script: {fileID: 11500000, guid: f4a6570c63044476959842e9c6414681, type: 3}
+  m_Name: TestObjectContext
   m_EditorClassIdentifier: 
   defaultSettings:
   - AbstractTypeHolder: {fileID: 11500000, guid: ce7aabad9f7f44db69b5206bcf95f5c7,
@@ -17,5 +17,3 @@ MonoBehaviour:
     ImplementedTypeHolder: {fileID: 11500000, guid: de1fc832357a34579a7009a2bbbecc61,
       type: 3}
     LifeCycle: 0
-    InjectIntoHolder: {fileID: 0}
-    EnableInjectInto: 0

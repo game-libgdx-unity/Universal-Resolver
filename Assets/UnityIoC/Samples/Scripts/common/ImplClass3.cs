@@ -3,12 +3,12 @@ using UnityIoC;
 
 namespace SceneTest
 {
-    public class ImplClass2 : AbstractClass
+    public class ImplClass3 : AbstractClass
     {
 
         public void DoSomething()
         {
-            MyDebug.Log("This is ImplClass2");
+            MyDebug.Log("This is ImplClass3");
         }
     }
 }

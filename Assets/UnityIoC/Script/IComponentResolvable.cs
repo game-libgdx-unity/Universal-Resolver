@@ -13,7 +13,7 @@ public interface IComponentResolvable
     /// Try to get the component out of a MonoBehaviour, return null if not found
     /// </summary>
     /// <param name="behaviour">the MonoBehaviour</param>
-    /// <param name="type">typf of the component</param>
+    /// <param name="type">type of the component</param>
     /// <returns>the component</returns>
     Component GetComponent(MonoBehaviour behaviour, Type type);
 }

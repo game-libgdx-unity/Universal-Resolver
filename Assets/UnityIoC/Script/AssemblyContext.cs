@@ -19,6 +19,8 @@ namespace UnityIoC
     {
         #region Variables & Constants
 
+        private readonly Logger debug = new Logger(typeof(AssemblyContext));
+
         private List<InjectAttribute> injectAttributes = new List<InjectAttribute>();
 
         public bool requirePreRegistered = true;
@@ -65,11 +67,11 @@ namespace UnityIoC
         {
             if (container == null)
             {
-                Debug.LogError("You need to call Initialize before call this method");
+                debug.LogError("You need to call Initialize before call this method");
                 return;
             }
 
-            Debug.Log("Processing assembly {0}...", CurrentAssembly.GetName().Name);
+            debug.Log("Processing assembly {0}...", CurrentAssembly.GetName().Name);
 
             //try to load a default setting for context
             var BindingSetting =
@@ -77,7 +79,7 @@ namespace UnityIoC
 
             if (BindingSetting)
             {
-                Debug.Log("Found binding setting for assembly");
+                debug.Log("Found binding setting for assembly");
                 LoadBindingSetting(BindingSetting, false);
             }
 
@@ -88,7 +90,7 @@ namespace UnityIoC
 
             if (sceneBindingSetting)
             {
-                Debug.Log("Found binding setting for scene");
+                debug.Log("Found binding setting for scene");
                 LoadBindingSetting(sceneBindingSetting, true);
             }
 
@@ -102,40 +104,50 @@ namespace UnityIoC
         /// <typeparam name="T">Type to inject</typeparam>
         public void LoadBindingSettingForType<T>(BindingSetting bindingSetting = null)
         {
+            LoadBindingSettingForType(typeof(T), bindingSetting);
+        }
+
+        /// <summary>
+        /// Load binding setting to inject for a type T in a scene
+        /// </summary>
+        /// <param name="bindingSetting">custom setting</param>
+        /// <typeparam name="T">Type to inject</typeparam>
+        public void LoadBindingSettingForType(Type type, BindingSetting bindingSetting = null)
+        {
             if (!bindingSetting)
             {
-                Debug.Log("Load binding setting for {0} from resources folders", typeof(T).Name);
+                debug.Log("Try to load binding setting for {0} from resources folders", type.Name);
 
                 //try to load setting by name format: type_scene
                 bindingSetting = Resources.Load<BindingSetting>("{0}_{1}"
-                    , typeof(T).Name
+                    , type.Name
                     , CurrentSceneName);
 
                 if (!bindingSetting)
                 {
                     //try to load setting by name format: type
-                    bindingSetting = Resources.Load<BindingSetting>(typeof(T).Name);
+                    bindingSetting = Resources.Load<BindingSetting>(type.Name);
                     if (bindingSetting)
                     {
-                        Debug.Log("Found default setting for type {0}", typeof(T).Name);
+                        debug.Log("Found default setting for type {0}", type.Name);
                     }
                 }
                 else
                 {
-                    Debug.Log("Found default setting for type {0} in scene {1}", typeof(T).Name
+                    debug.Log("Found default setting for type {0} in scene {1}", type.Name
                         , CurrentSceneName);
                 }
             }
 
             if (!bindingSetting)
             {
-                Debug.Log("Binding setting for {0} must not be null!", typeof(T).Name);
+                debug.Log("Not found default Binding setting for {0}!", type.Name);
                 return;
             }
 
             foreach (var setting in bindingSetting.defaultSettings)
             {
-                BindFromSetting(setting, typeof(T), true);
+                BindFromSetting(setting, type, true);
             }
         }
 
@@ -147,27 +159,27 @@ namespace UnityIoC
         {
             if (!bindingSetting)
             {
-                Debug.Log("Load binding setting for type from resources folders");
+                debug.Log("Load binding setting for type from resources folders");
 
                 //try to load setting by name format: type_scene
                 bindingSetting = Resources.Load<InjectIntoBindingSetting>(CurrentSceneName);
 
                 if (bindingSetting)
                 {
-                    Debug.Log("Found default setting for scene {0}", CurrentSceneName);
+                    debug.Log("Found default setting for scene {0}", CurrentSceneName);
                 }
             }
 
             if (!bindingSetting)
             {
-                Debug.Log("Binding setting must not be null!");
+                debug.Log("Binding setting should not be null!");
                 return;
             }
 
             //binding for default setting 
             if (bindingSetting.defaultSettings != null)
             {
-                Debug.Log("Process binding from default setting");
+                debug.Log("Process binding from default setting");
                 foreach (var setting in bindingSetting.defaultSettings)
                 {
                     BindFromSetting(setting, true);
@@ -177,7 +189,7 @@ namespace UnityIoC
 
         public void LoadBindingSetting(InjectIntoBindingSetting bindingSetting, bool overriden = true)
         {
-            Debug.Log("{0} settings found: ", bindingSetting.defaultSettings.Count);
+            debug.Log("{0} settings found: ", bindingSetting.defaultSettings.Count);
             //binding for default setting 
             if (bindingSetting.defaultSettings != null)
             {
@@ -194,12 +206,25 @@ namespace UnityIoC
             {
                 injectIntoBindingSetting.ImplementedType =
                     GetTypeFromCurrentAssembly(injectIntoBindingSetting.ImplementedTypeHolder.name);
+
+
+                if (injectIntoBindingSetting.ImplementedType == null)
+                {
+                    debug.Log("bindingSetting.ImplementedType should not null!");
+                    return;
+                }
             }
 
             if (injectIntoBindingSetting.AbstractType == null)
             {
                 injectIntoBindingSetting.AbstractType =
                     GetTypeFromCurrentAssembly(injectIntoBindingSetting.AbstractTypeHolder.name);
+
+                if (injectIntoBindingSetting.AbstractType == null)
+                {
+                    debug.Log("bindingSetting.AbstractType should not null!");
+                    return;
+                }
             }
 
             if (injectIntoBindingSetting.EnableInjectInto)
@@ -209,61 +234,57 @@ namespace UnityIoC
                     //create an empty new list for injectInto list
                     injectIntoBindingSetting.InjectInto =
                         GetTypeFromCurrentAssembly(injectIntoBindingSetting.InjectIntoHolder.name);
-                }
-            }
 
-            Debug.Assert(injectIntoBindingSetting.ImplementedType != null, "bind data must not null");
-            Debug.Assert(injectIntoBindingSetting.AbstractType != null, "bind data must not null");
-
-            var lifeCycle = injectIntoBindingSetting.LifeCycle;
-
-            Debug.Log("Bind from setting {0} for {1} by {2}",
-                injectIntoBindingSetting.ImplementedType,
-                injectIntoBindingSetting.AbstractType,
-                lifeCycle.ToString());
-
-            //try to unbind or stop binding if the overriden is set as true
-            for (var i = 0; i < defaultContainer.registeredObjects.Count; i++)
-            {
-                var registeredObject = defaultContainer.registeredObjects[i];
-            }
-
-            if (defaultContainer.IsRegistered(injectIntoBindingSetting.AbstractType))
-            {
-                if (overriden)
-                {
-                    var registeredObject = defaultContainer.GetRegisteredObject(injectIntoBindingSetting.AbstractType);
-
-                    if (registeredObject.ConcreteType == injectIntoBindingSetting.ImplementedType &&
-                        registeredObject.TypeToResolve == injectIntoBindingSetting.InjectInto)
+                    if (injectIntoBindingSetting.InjectInto == null)
                     {
-                        Debug.Log("Unbind {0} registered for {1}", injectIntoBindingSetting.ImplementedType,
-                            injectIntoBindingSetting.AbstractType);
-                        defaultContainer.registeredObjects.Remove(registeredObject);
-                        defaultContainer.registeredTypes.Remove(injectIntoBindingSetting.AbstractType);
+                        debug.Log("bindingSetting.InjectInto should not null!");
                     }
                 }
             }
 
+            var lifeCycle = injectIntoBindingSetting.LifeCycle;
+
+            if (injectIntoBindingSetting.EnableInjectInto)
+
+                debug.Log("Bind from setting {0} for {1} by {2} when inject into {3}",
+                    injectIntoBindingSetting.ImplementedType,
+                    injectIntoBindingSetting.AbstractType,
+                    lifeCycle.ToString(),
+                    injectIntoBindingSetting.InjectInto.Name);
+            else
+                debug.Log("Bind from setting {0} for {1} by {2}",
+                    injectIntoBindingSetting.ImplementedType,
+                    injectIntoBindingSetting.AbstractType,
+                    lifeCycle.ToString());
+
             defaultContainer.Bind(injectIntoBindingSetting);
         }
 
-        private void BindFromSetting(BindingData bindingSetting, Type typeToInject, bool overriden = false)
+        private void BindFromSetting(BindingData bindingSetting, Type InjectIntoType, bool overriden = false)
         {
             if (bindingSetting.ImplementedType == null)
             {
                 bindingSetting.ImplementedType =
                     GetTypeFromCurrentAssembly(bindingSetting.ImplementedTypeHolder.name);
+
+                if (bindingSetting.ImplementedType == null)
+                {
+                    debug.LogError("bindingSetting.ImplementedType should not null!");
+                    return;
+                }
             }
 
             if (bindingSetting.AbstractType == null)
             {
                 bindingSetting.AbstractType =
                     GetTypeFromCurrentAssembly(bindingSetting.AbstractTypeHolder.name);
-            }
 
-            Debug.Assert(bindingSetting.ImplementedType != null, "bind data must not null");
-            Debug.Assert(bindingSetting.AbstractType != null, "bind data must not null");
+                if (bindingSetting.AbstractType == null)
+                {
+                    debug.LogError("bindingSetting.AbstractType should not null!");
+                    return;
+                }
+            }
 
             var lifeCycle = bindingSetting.LifeCycle;
 
@@ -271,11 +292,25 @@ namespace UnityIoC
             {
             }
 
-            Debug.Log("Bind from setting {0} for {1} by {2}",
+            debug.Log("Bind from setting {0} for {1} by {2} when inject into {3}",
                 bindingSetting.ImplementedType,
                 bindingSetting.AbstractType,
-                lifeCycle.ToString());
+                lifeCycle.ToString(),
+                InjectIntoType != null ? InjectIntoType.Name : "Null");
 
+            //bind it with inject into type
+            if (InjectIntoType != null)
+            {
+                var injectIntoBindingSetting = new InjectIntoBindingData();
+                injectIntoBindingSetting.ImplementedType = bindingSetting.ImplementedType;
+                injectIntoBindingSetting.AbstractType = bindingSetting.AbstractType;
+                injectIntoBindingSetting.LifeCycle = bindingSetting.LifeCycle;
+                injectIntoBindingSetting.InjectInto = InjectIntoType;
+                defaultContainer.Bind(injectIntoBindingSetting);
+                return;
+            }
+
+            //bind it without inject into type
             Bind(bindingSetting.AbstractType, bindingSetting.ImplementedType, lifeCycle);
         }
 
@@ -290,7 +325,7 @@ namespace UnityIoC
                 }
             }
 
-            Debug.Log("Cannot get type {0} from assembly {1}", className, CurrentAssembly.GetName().Name);
+            debug.Log("Cannot get type {0} from assembly {1}", className, CurrentAssembly.GetName().Name);
             return null;
         }
 
@@ -306,7 +341,7 @@ namespace UnityIoC
         {
             var behaviours = Object.FindObjectsOfType<MonoBehaviour>();
 
-            Debug.Log("Found behavior: " + behaviours.Length);
+            debug.Log("Found behavior: " + behaviours.Length);
 
             foreach (var mono in behaviours)
             {
@@ -334,7 +369,7 @@ namespace UnityIoC
 
             if (methods.Length <= 0) return;
 
-            Debug.Log(string.Format("Found {0} method to process", methods.Length));
+            debug.Log(string.Format("Found {0} method to process", methods.Length));
 
             foreach (var method in methods)
             {
@@ -354,9 +389,9 @@ namespace UnityIoC
             var parameters = method.GetParameters();
             var paramObjects = Array.ConvertAll(parameters, p =>
             {
-                Debug.Log("Para: " + p.Name + " " + p.ParameterType);
-                return container.ResolveObject(p.ParameterType, mono,
-                    inject == null ? LifeCycle.Default : inject.LifeCycle);
+                debug.Log("Para: " + p.Name + " " + p.ParameterType);
+                return container.ResolveObject(p.ParameterType,
+                    inject == null ? LifeCycle.Default : inject.LifeCycle, mono);
             });
             method.Invoke(mono, paramObjects);
         }
@@ -371,7 +406,7 @@ namespace UnityIoC
 
             if (properties.Length <= 0) return;
 
-            Debug.Log(string.Format("Found {0} property to process", properties.Length));
+            debug.Log(string.Format("Found {0} property to process", properties.Length));
 
             foreach (var property in properties)
             {
@@ -406,7 +441,7 @@ namespace UnityIoC
                     }
                 }
 
-                Debug.Log("IComponentResolvable attribute fails to resolve {0}", property.PropertyType);
+                debug.Log("IComponentResolvable attribute fails to resolve {0}", property.PropertyType);
                 //resolve object as [Singleton], [Transient] or [AsComponent] if component attribute fails to resolve
                 ProcessMethodInfo(mono, method, inject);
             }
@@ -421,7 +456,7 @@ namespace UnityIoC
                 .ToArray();
 
             if (fieldInfos.Length > 0)
-                Debug.Log(string.Format("Found {0} fieldInfo to process", fieldInfos.Length));
+                debug.Log(string.Format("Found {0} fieldInfo to process", fieldInfos.Length));
 
             foreach (var field in fieldInfos)
             {
@@ -466,12 +501,12 @@ namespace UnityIoC
                 }
 
 
-                Debug.Log("IComponentResolvable attribute fails to resolve {0}", field.FieldType);
+                debug.Log("IComponentResolvable attribute fails to resolve {0}", field.FieldType);
 
                 //resolve object as [Singleton], [Transient] or [AsComponent] if component attribute fails to resolve
                 field.SetValue(mono,
-                    container.ResolveObject(field.FieldType, mono,
-                        inject == null ? LifeCycle.Default : inject.LifeCycle));
+                    container.ResolveObject(field.FieldType,
+                        inject == null ? LifeCycle.Default : inject.LifeCycle, mono));
             }
         }
 
@@ -519,7 +554,7 @@ namespace UnityIoC
                 //unable to get it from gameObject
                 if (component == null)
                 {
-                    Debug.Log("Unable to resolve component of {0} for {1}", type, behaviour.name);
+                    debug.Log("Unable to resolve component of {0} for {1}", type, behaviour.name);
                 }
             }
 
@@ -562,7 +597,7 @@ namespace UnityIoC
             //unable to get it from gameObject
             if (components == null || components.Length == 0)
             {
-                Debug.Log("Unable to resolve components of {0} for {1}, found {2} elements",
+                debug.Log("Unable to resolve components of {0} for {1}, found {2} elements",
                     type.GetElementType(), behaviour.name, components != null ? components.Length : 0);
             }
 
@@ -622,17 +657,23 @@ namespace UnityIoC
             container.Bind<TTypeToResolve>(lifeCycle);
         }
 
-        public TTypeToResolve Resolve<TTypeToResolve>(object resolveFrom = null,
+        public TTypeToResolve Resolve<TTypeToResolve>(
             LifeCycle lifeCycle = LifeCycle.Default,
+            object resolveFrom = null,
             params object[] parameters)
         {
-            return (TTypeToResolve) Resolve(typeof(TTypeToResolve), resolveFrom, lifeCycle, parameters);
+            return (TTypeToResolve) Resolve(typeof(TTypeToResolve), lifeCycle, resolveFrom, parameters);
         }
 
-        public object Resolve(Type typeToResolve, object resolveFrom = null, LifeCycle lifeCycle = LifeCycle.Default,
+        public object Resolve(
+            Type typeToResolve,
+            LifeCycle lifeCycle = LifeCycle.Default,
+            object resolveFrom = null,
             params object[] parameters)
         {
-            return container.ResolveObject(typeToResolve, resolveFrom, lifeCycle, parameters);
+            debug.Log("Start resolve type of {0}", typeToResolve);
+            debug.Log("resolveFrom: " + (resolveFrom ?? "None"));
+            return container.ResolveObject(typeToResolve, lifeCycle, resolveFrom, parameters);
         }
 
         #endregion
@@ -663,13 +704,13 @@ namespace UnityIoC
         public static object ResolveObject(Type typeToResolve, LifeCycle lifeCycle = LifeCycle.Default,
             object resolveFrom = null, params object[] parameters)
         {
-            return _defaultInstance.Container.ResolveObject(typeToResolve, resolveFrom, lifeCycle, parameters);
+            return _defaultInstance.Container.ResolveObject(typeToResolve, lifeCycle, resolveFrom, parameters);
         }
 
         public static T ResolveObject<T>(LifeCycle lifeCycle = LifeCycle.Default, object resolveFrom = null,
             params object[] parameters)
         {
-            return (T) _defaultInstance.Container.ResolveObject(typeof(T), resolveFrom, lifeCycle, parameters);
+            return (T) _defaultInstance.Container.ResolveObject(typeof(T), lifeCycle, resolveFrom, parameters);
         }
 
         public static void SetPropertyValue(object inputObject, string propertyName, object propertyVal)

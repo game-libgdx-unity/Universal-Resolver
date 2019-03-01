@@ -137,10 +137,5 @@ namespace UnityIoC.Editor
             //make sure styles are default after finishing your custom inspector
             Revert();
         }
-
-        void OnLostFocus()
-        {
-            Debug.Log("Choose go back");
-        }
     }
 }

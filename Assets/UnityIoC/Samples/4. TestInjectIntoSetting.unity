@@ -216,5 +216,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   isPersistent: 0
   maxLength: 3000
+  fontSize: 20
   logSystem: 1
   logType: 3

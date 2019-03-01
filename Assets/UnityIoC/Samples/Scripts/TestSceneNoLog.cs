@@ -18,7 +18,7 @@ namespace SceneTest
 		void Start () {
 			
 			//disable context logs to console
-			UnityIoC.Debug.EnableLogging = false;
+			UnityIoC.MyDebug.EnableLogging = false;
 			
 			//create context with automatic binding is enable
 			assemblyContext = new AssemblyContext(GetType());

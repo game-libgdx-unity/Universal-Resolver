@@ -11,19 +11,9 @@ namespace SceneTest
 		
 		private void Start()
 		{
-			var context = new ObjectContext(this);
-			var obj = context.Resolve<AbstractClass>();
+			var objectContext = new ObjectContext(this);
+			var obj = objectContext.Resolve<AbstractClass>();
 			obj.DoSomething();
-		}
-
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-		static void Init()
-		{
-			if (SceneManager.GetActiveScene().name == "6. TestObjectContext")
-			{
-				UnityIoC.Debug.EnableLogging = true;
-				AssemblyContext.GetDefaultInstance(typeof(TestObjectContext));
-			}
 		}
 	}
 }

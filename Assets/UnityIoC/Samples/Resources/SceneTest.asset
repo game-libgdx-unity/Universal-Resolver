@@ -26,3 +26,10 @@ MonoBehaviour:
     LifeCycle: 1
     InjectIntoHolder: {fileID: 11500000, guid: 234f316cee08f4e988a38e375ce22f34, type: 3}
     EnableInjectInto: 1
+  - AbstractTypeHolder: {fileID: 11500000, guid: ce7aabad9f7f44db69b5206bcf95f5c7,
+      type: 3}
+    ImplementedTypeHolder: {fileID: 11500000, guid: 2bc60193bfa194006b06174af2b11875,
+      type: 3}
+    LifeCycle: 0
+    InjectIntoHolder: {fileID: 0}
+    EnableInjectInto: 0
