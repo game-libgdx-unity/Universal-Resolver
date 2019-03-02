@@ -8,18 +8,21 @@
 using System;
 using UnityEngine;
 using System.Collections;
+using System.Diagnostics;
 using System.Text;
 using Firebase.Database;
 using UniRx;
+using Debug = UnityEngine.Debug;
 
 public class MyLog : SingletonBehaviour<MyLog>
 {
     StringBuilder myLog = new StringBuilder();
     Queue myLogQueue = new Queue();
 
-    [SerializeField] public Color ScreenColor = Color.black;
+    [SerializeField] public Color screenColor = Color.black;
     [SerializeField] public int maxLength = 3000;
     [SerializeField] public int fontSize = 40;
+    [SerializeField] public bool autoScroll = true;
     [SerializeField] public bool logSystem = true;
     [SerializeField] public LogType logType = LogType.Error;
 
@@ -30,7 +33,7 @@ public class MyLog : SingletonBehaviour<MyLog>
     {
         if (logSystem) Application.logMessageReceived += HandleLog;
 
-        Camera.main.backgroundColor = ScreenColor;
+        Camera.main.backgroundColor = screenColor;
     }
 
     void OnDisable()
@@ -40,8 +43,11 @@ public class MyLog : SingletonBehaviour<MyLog>
 
     public void HandleLog(string logString, string stackTrace = null, LogType type = LogType.Log)
     {
+        var stackTrace2 = new StackTrace(true);
+        var frame = stackTrace2.FrameCount;
+        
         //filter logs
-        if (type != LogType.Exception && type > logType)
+        if (type != LogType.Exception && (int)type > (int)logType)
         {
             return;
         }
@@ -67,6 +73,9 @@ public class MyLog : SingletonBehaviour<MyLog>
                 break;
             }
         }
+
+        if (autoScroll)
+            scrollPosition.y = Mathf.Infinity;
 
         if (overloaded)
             Clear();

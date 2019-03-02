@@ -116,9 +116,7 @@ namespace UnityIoC
                             i--;
                         }
                     }
-                    else if (registeredObject.InjectInto == null &&
-                             data.InjectInto == null && 
-                             registeredObject.ImplementedType == data.InjectInto)
+                    else if (data.InjectInto == null && registeredObject.InjectInto == null)
                     {
                         debug.Log("Unbind {0} registered for {1}", data.ImplementedType,
                             data.AbstractType);
@@ -131,11 +129,13 @@ namespace UnityIoC
                 debug.Log("register type: " + data.AbstractType + " for " + data.ImplementedType + " when inject into "
                           + (data.InjectInto == null ? "none" : data.InjectInto.Name));
 
+                //add registered Type
                 if (!registeredTypes.Contains(data.AbstractType))
                 {
                     registeredTypes.Add(data.AbstractType);
                 }
 
+                //add registered Object
                 registeredObjects.Add(
                     new RegisteredObject(
                         data.AbstractType,
@@ -217,14 +217,15 @@ namespace UnityIoC
                 object resolveFrom = null,
                 params object[] parameters)
             {
+                debug.Log("Start Resolve type: " + abstractType);
                 debug.Log("preferredLifeCycle: " + preferredLifeCycle);
                 Func<RegisteredObject, bool> filter = null;
 
                 RegisteredObject registeredObject = null;
 
-                if (resolveFrom == null)
+                if (resolveFrom == null || (preferredLifeCycle & LifeCycle.Component) == LifeCycle.Component)
                 {
-                    debug.Log("Default process for null resolveFrom");
+                    debug.Log("Try default process to resolve");
 
                     filter = o => o != null && o.AbstractType == abstractType && o.InjectInto == null;
 
@@ -253,13 +254,13 @@ namespace UnityIoC
                         registeredObjects.Add(registeredObject);
                     }
 
-                    debug.Log("resolve with null resolveFrom approach");
-                    var obj = GetInstance(registeredObject, preferredLifeCycle, null, parameters);
+                    debug.Log("resolve with default approach");
+                    var obj = GetInstance(registeredObject, preferredLifeCycle, resolveFrom, parameters);
 
                     return obj;
                 }
-
-                debug.Log("High priority process for notnull InjectInto registeredObjects");
+                debug.Log("ResolveFrom is not null");
+                debug.Log("Try high priority process for notnull InjectInto registeredObject");
 
                 filter = o => o != null && o.AbstractType == abstractType && resolveFrom.GetType() == o.InjectInto;
 
@@ -278,8 +279,8 @@ namespace UnityIoC
                         return GetInstance(registeredObject, preferredLifeCycle, resolveFrom, parameters);
                     }
                 }
-
-                debug.Log("lower priority process for null Inject Into registeredObjects");
+                debug.Log("High priority process is failed");
+                debug.Log("Try lower priority process for null Inject Into registeredObject");
 
                 filter = o => o != null && o.AbstractType == abstractType && null == o.InjectInto;
 
@@ -289,7 +290,7 @@ namespace UnityIoC
                     debug.Log("resolve with lower priority approach");
                     return GetInstance(registeredObject, preferredLifeCycle, resolveFrom, parameters);
                 }
-
+                debug.Log("Lower priority process is failed");
                 debug.Log("Worst case happened: Resolve without referring the resolveFrom object");
                 return ResolveObject(abstractType, preferredLifeCycle, null, parameters);
             }

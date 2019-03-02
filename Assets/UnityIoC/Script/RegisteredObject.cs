@@ -166,7 +166,7 @@ namespace UnityIoC
                         TypeName);
 
                     var monoBehaviour = resolveFrom as Component;
-                    if ((lifeCycle & LifeCycle.Component) == LifeCycle.Component && monoBehaviour != null)
+                    if ( monoBehaviour != null && (lifeCycle & LifeCycle.Component) == LifeCycle.Component)
                     {
                         instance = monoBehaviour.gameObject.AddComponent(concreteType);
                     }

@@ -20,10 +20,13 @@ namespace SceneTest
 			//disable context logs to console
 			UnityIoC.MyDebug.EnableLogging = false;
 			
-			//create context with automatic binding is enable
+			
+			//create a context with automatic load binding setting from current assembly name
+			//in this case, please refer to SceneTest setting from the resources folder.
 			assemblyContext = new AssemblyContext(GetType());
 			
 			//try to resolve the object by setting in default setting of this SceneTest assembly
+			//just no logs in console.
 			var testI = assemblyContext.Resolve<AbstractClass>();
 			testI.DoSomething();
 		}

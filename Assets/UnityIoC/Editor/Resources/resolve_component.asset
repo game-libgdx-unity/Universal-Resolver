@@ -9,12 +9,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b83a85f05d1da403fa31867b4ebd45cb, type: 3}
-  m_Name: not_default
+  m_Name: resolve_component
   m_EditorClassIdentifier: 
   defaultSettings:
   - AbstractTypeHolder: {fileID: 11500000, guid: 29d387bd8529940c79f22aed5e11e17f,
       type: 3}
-    ImplementedTypeHolder: {fileID: 11500000, guid: 7af20c48a2e614548b06b175030f21df,
+    ImplementedTypeHolder: {fileID: 11500000, guid: be742b9f4d69a443489320366eb629fa,
       type: 3}
     LifeCycle: 0
     InjectIntoHolder: {fileID: 0}

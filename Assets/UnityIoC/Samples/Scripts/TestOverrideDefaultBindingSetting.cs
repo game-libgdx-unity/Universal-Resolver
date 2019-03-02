@@ -9,18 +9,23 @@ public class TestOverrideDefaultBindingSetting : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		//create context with automatic binding is enable
+
+		//create a context with automatic load binding setting from current assembly name
+		//in this case, please refer to SceneTest setting from the resources folder.
 		var assemblyContext = new AssemblyContext(GetType());
 			
 		//try to resolve the object by setting in default setting of this SceneTest assembly
 		var test1 = assemblyContext.Resolve<AbstractClass>();
+		//will display a message on console
 		test1.DoSomething(); 
 		
 		//override default setting by a custom one loaded from resources folder
 		assemblyContext.LoadBindingSetting(Resources.Load<InjectIntoBindingSetting>("custom_setting"));
 		
-		//try to resolve the object by setting in default setting of this SceneTest assembly
+		//try to resolve the object by the new setting which this assemblyContext just loaded.
 		var test2 = assemblyContext.Resolve<AbstractClass>();
+		
+		//will display another message on console		
 		test2.DoSomething();
 	}
 }

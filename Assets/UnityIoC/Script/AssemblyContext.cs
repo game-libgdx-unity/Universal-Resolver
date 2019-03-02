@@ -186,6 +186,12 @@ namespace UnityIoC
                 }
             }
         }
+        
+        
+        public void LoadBindingSetting(string resolveComponent, bool overriden = true)
+        {
+            LoadBindingSetting(UnityIoC.Resources.Load<InjectIntoBindingSetting>(resolveComponent), overriden);
+        }
 
         public void LoadBindingSetting(InjectIntoBindingSetting bindingSetting, bool overriden = true)
         {
@@ -505,8 +511,10 @@ namespace UnityIoC
 
                 //resolve object as [Singleton], [Transient] or [AsComponent] if component attribute fails to resolve
                 field.SetValue(mono,
-                    container.ResolveObject(field.FieldType,
-                        inject == null ? LifeCycle.Default : inject.LifeCycle, mono));
+                    container.ResolveObject(
+                        field.FieldType,
+                        inject == null ? LifeCycle.Default : inject.LifeCycle, 
+                        mono));
             }
         }
 
@@ -682,6 +690,10 @@ namespace UnityIoC
 
         private static AssemblyContext _defaultInstance;
 
+        public static AssemblyContext GetDefaultInstance(object context, bool recreate = false)
+        {
+            return GetDefaultInstance(context.GetType(), recreate);
+        }
         public static AssemblyContext GetDefaultInstance(Type type = null, bool recreate = false)
         {
             if (_defaultInstance == null || recreate)
@@ -737,5 +749,6 @@ namespace UnityIoC
         }
 
         #endregion
+
     }
 }

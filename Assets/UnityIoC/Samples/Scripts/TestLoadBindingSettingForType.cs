@@ -8,16 +8,29 @@ namespace SceneTest
 {
 	public class TestLoadBindingSettingForType : MonoBehaviour
 	{
-		// Use this for initialization
 		void Start()
 		{
-			var context = new AssemblyContext(typeof(TestInjectIntoSetting));
+			//create a context with automatic load binding setting from current assembly name
+			//in this case, please refer to SceneTest setting from the resources folder.
+			var context = new AssemblyContext(this);
 			
+			//load a custom binding setting from this TestComponent
+			//in this case, please refer to SceneTest setting from the resources folder.
 			context.LoadBindingSettingForType<TestComponent>();
+			
+			
+			//load a custom binding setting from this TestComponent2
+			//in this case, please refer to SceneTest setting from the resources folder.
 			context.LoadBindingSettingForType<TestComponent2>();
 			
+			//try to resolve each component
+			
+			//you should see a log in console
 			context.Resolve<TestComponent>();
+			
+			//you should see another log in console
 			context.Resolve<TestComponent2>();
+			
 			context.Resolve<TestComponent>();
 		}
 	}

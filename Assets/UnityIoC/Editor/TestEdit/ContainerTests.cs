@@ -42,5 +42,22 @@ namespace UnityIoC.Editor
             var obj2 = context.Resolve<TestInterface>();
             Assert.AreSame(obj,obj2);
         }
+        
+        //this test can't be done due to "Can't add script behaviour ComponentTest because it is an editor script."
+        //please check the samples for resolving unity components
+        //if you know how to work around it, please email me at mrthanhvinh168@gmail.com
+        /*
+        
+        [NUnit.Framework.Test]
+        public void t4_resolve_binding_setting_for_component()
+        {
+            var context = new AssemblyContext(this);
+            context.LoadBindingSetting("resolve_component");
+            
+            var obj = context.Resolve<TestInterface>();
+            Assert.IsInstanceOf<ComponentTest>(obj);
+        }
+        
+        */
     }
 }
