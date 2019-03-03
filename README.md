@@ -1,25 +1,29 @@
 # Unity-IoC
 Implements for Unity in fields of IoC, Reactive programming, Firebase, Photon Server, etc.
 
-This project is under an active development and subjected to be changed, got bugs fixing and maybe many unknown threats. Using source code from this project is at your own risk!
+Unity3d Resolver is an Unity3d IoC Framework comes with combine of binding settings from UnityProject. C# Attributes allow to resolve your fields, constructors, methods or properties as [Component], [Singleton] and [Transient].
 
-You can read a nice format full version at https://docs.google.com/document/d/1xVOoFa0KxrTnqfogQ_s9qoCgWL5meJnlkENV4_WaylE/edit?usp=sharing
+There are a lot of test scenes in the sample folder. Also I developed a minesweeper game using this framework, inside the sampleGame folder.
 
-I also made some videos for this on my youtube channel, 
-https://www.youtube.com/playlist?list=PLrxnIke4BNsTyVk2piv7PclE5aDadmfIB 
+This asset supports for
 
-Free chat on Discord
-https://discord.gg/QWrveUQ
-
-(my voice isn’t clear, so sorry about that)
-
-Unity IoC User's Guide
+- Resolve both C# & Unity Component objects
+- Build games on Editor, Standalone, iOS, Android
+- Write loose-couple and testable C# code.
+- Using scriptable setting files to do binding, it means you don't need to change the code to change the behavior
+- You just need to change setting files and run or restart your game to have changes applied.
 
 Programmer & Document writer: Vinh Vu Thanh
 
 Contact email: Mrthanhvinh168@gmail.com
 
 My public repositories: https://github.com/game-libgdx-unity 
+
+You can read a nice format full version at https://goo.gl/h8GWSA
+
+
+I also made some videos for this on my youtube channel, 
+https://www.youtube.com/playlist?list=PLrxnIke4BNsTyVk2piv7PclE5aDadmfIB 
 
 What is IoC?
 
