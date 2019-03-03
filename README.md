@@ -8,9 +8,6 @@ You can read a nice format full version at https://docs.google.com/document/d/1x
 I also made some videos for this on my youtube channel, 
 https://www.youtube.com/playlist?list=PLrxnIke4BNsTyVk2piv7PclE5aDadmfIB 
 
-Free chat on Discord
-https://discord.gg/QWrveUQ
-
 (my voice isn’t clear, so sorry about that)
 
 Unity IoC User's Guide
