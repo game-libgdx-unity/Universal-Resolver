@@ -25,18 +25,6 @@ You can read a nice format full version at https://goo.gl/h8GWSA
 I also made some videos for this on my youtube channel, 
 https://www.youtube.com/playlist?list=PLrxnIke4BNsTyVk2piv7PclE5aDadmfIB 
 
-(my voice isn’t clear, so sorry about that)
-
-Unity IoC User's Guide
-
-Programmer & Document writer: Vinh Vu Thanh
-
-Contact email: Mrthanhvinh168@gmail.com
-
-My public repositories: https://github.com/game-libgdx-unity 
-
-You can read a nice format full version at https://goo.gl/h8GWSA
-
 What is IoC?
 
 I found an answer on stackoverflow
