@@ -15,6 +15,18 @@ namespace UnityIoC
         [SerializeField] public Object ImplementedTypeHolder;
         [SerializeField] public LifeCycle LifeCycle;
 
+        public InjectIntoBindingData()
+        {
+        }
+
+        public InjectIntoBindingData(Type abstractType, Type implementedType, LifeCycle lifeCycle, Type injectInto, bool enableInjectInto)
+        {
+            AbstractType = abstractType;
+            ImplementedType = implementedType;
+            LifeCycle = lifeCycle;
+            InjectInto = injectInto;
+            EnableInjectInto = enableInjectInto;
+        }
 
         [SerializeField] public Type InjectInto;
         [SerializeField] public Object InjectIntoHolder;

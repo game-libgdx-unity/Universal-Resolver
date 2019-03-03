@@ -1,0 +1,11 @@
+{
+    "name": "GameDll",
+    "references": [
+        "UniRx",
+        "UnityIoC"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false
+}

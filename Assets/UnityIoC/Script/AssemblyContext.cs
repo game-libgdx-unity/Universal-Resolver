@@ -73,25 +73,46 @@ namespace UnityIoC
 
             debug.Log("Processing assembly {0}...", CurrentAssembly.GetName().Name);
 
-            //try to load a default setting for context
-            var BindingSetting =
+            //try to load a default InjectIntoBindingSetting setting for context
+            var injectIntoBindingSetting =
                 UnityEngine.Resources.Load<InjectIntoBindingSetting>(CurrentAssembly.GetName().Name);
 
-            if (BindingSetting)
+            if (injectIntoBindingSetting)
             {
-                debug.Log("Found binding setting for assembly");
-                LoadBindingSetting(BindingSetting, false);
+                debug.Log("Found InjectIntoBindingSetting for assembly");
+                LoadBindingSetting(injectIntoBindingSetting);
             }
 
-            //try to get the default binding setting for current scene
-            var sceneBindingSetting = UnityEngine.Resources.Load<InjectIntoBindingSetting>(
+            //try to get the default InjectIntoBindingSetting setting for current scene
+            var sceneInjectIntoBindingSetting = UnityEngine.Resources.Load<InjectIntoBindingSetting>(
+                string.Format("{0}_{1}", CurrentAssembly.GetName().Name, SceneManager.GetActiveScene().name)
+            );
+
+            if (sceneInjectIntoBindingSetting)
+            {
+                debug.Log("Found InjectIntoBindingSetting for scene");
+                LoadBindingSetting(sceneInjectIntoBindingSetting);
+            }
+
+            //try to load a default BindingSetting setting for context
+            var bindingSetting =
+                UnityEngine.Resources.Load<BindingSetting>(CurrentAssembly.GetName().Name);
+
+            if (bindingSetting)
+            {
+                debug.Log("Found binding setting for assembly");
+                LoadBindingSetting(bindingSetting);
+            }
+
+            //try to get the default BindingSetting setting for current scene
+            var sceneBindingSetting = UnityEngine.Resources.Load<BindingSetting>(
                 string.Format("{0}_{1}", CurrentAssembly.GetName().Name, SceneManager.GetActiveScene().name)
             );
 
             if (sceneBindingSetting)
             {
                 debug.Log("Found binding setting for scene");
-                LoadBindingSetting(sceneBindingSetting, true);
+                LoadBindingSetting(sceneBindingSetting);
             }
 
             ProcessInjectAttributeForMonoBehaviour();
@@ -147,7 +168,7 @@ namespace UnityIoC
 
             foreach (var setting in bindingSetting.defaultSettings)
             {
-                BindFromSetting(setting, type, true);
+                BindFromSetting(setting, type);
             }
         }
 
@@ -182,91 +203,104 @@ namespace UnityIoC
                 debug.Log("Process binding from default setting");
                 foreach (var setting in bindingSetting.defaultSettings)
                 {
-                    BindFromSetting(setting, true);
+                    BindFromSetting(setting);
                 }
             }
         }
-        
-        
-        public void LoadBindingSetting(string resolveComponent, bool overriden = true)
+
+
+        public void LoadBindingSetting(string settingName)
         {
-            LoadBindingSetting(UnityIoC.Resources.Load<InjectIntoBindingSetting>(resolveComponent), overriden);
+            LoadBindingSetting(UnityIoC.Resources.Load<InjectIntoBindingSetting>(settingName));
         }
 
-        public void LoadBindingSetting(InjectIntoBindingSetting bindingSetting, bool overriden = true)
+        public void LoadBindingSetting(InjectIntoBindingSetting bindingSetting)
         {
-            debug.Log("{0} settings found: ", bindingSetting.defaultSettings.Count);
+            debug.Log("From InjectIntoBindingSetting, {0} settings found: ", bindingSetting.defaultSettings.Count);
             //binding for default setting 
             if (bindingSetting.defaultSettings != null)
             {
                 foreach (var setting in bindingSetting.defaultSettings)
                 {
-                    BindFromSetting(setting, overriden);
+                    BindFromSetting(setting);
                 }
             }
         }
 
-        private void BindFromSetting(InjectIntoBindingData injectIntoBindingSetting, bool overriden = false)
+        private void LoadBindingSetting(BindingSetting bindingSetting)
         {
-            if (injectIntoBindingSetting.ImplementedType == null)
+            debug.Log("From BindingSetting, {0} settings found: ", bindingSetting.defaultSettings.Length);
+            //binding for default setting 
+            if (bindingSetting.defaultSettings != null)
             {
-                injectIntoBindingSetting.ImplementedType =
-                    GetTypeFromCurrentAssembly(injectIntoBindingSetting.ImplementedTypeHolder.name);
+                foreach (var setting in bindingSetting.defaultSettings)
+                {
+                    BindFromSetting(setting);
+                }
+            }
+        }
+
+        private void BindFromSetting(InjectIntoBindingData injectIntoBindingData)
+        {
+            if (injectIntoBindingData.ImplementedType == null)
+            {
+                injectIntoBindingData.ImplementedType =
+                    GetTypeFromCurrentAssembly(injectIntoBindingData.ImplementedTypeHolder.name);
 
 
-                if (injectIntoBindingSetting.ImplementedType == null)
+                if (injectIntoBindingData.ImplementedType == null)
                 {
                     debug.Log("bindingSetting.ImplementedType should not null!");
                     return;
                 }
             }
 
-            if (injectIntoBindingSetting.AbstractType == null)
+            if (injectIntoBindingData.AbstractType == null)
             {
-                injectIntoBindingSetting.AbstractType =
-                    GetTypeFromCurrentAssembly(injectIntoBindingSetting.AbstractTypeHolder.name);
+                injectIntoBindingData.AbstractType =
+                    GetTypeFromCurrentAssembly(injectIntoBindingData.AbstractTypeHolder.name);
 
-                if (injectIntoBindingSetting.AbstractType == null)
+                if (injectIntoBindingData.AbstractType == null)
                 {
                     debug.Log("bindingSetting.AbstractType should not null!");
                     return;
                 }
             }
 
-            if (injectIntoBindingSetting.EnableInjectInto)
+            if (injectIntoBindingData.EnableInjectInto)
             {
-                if (injectIntoBindingSetting.InjectInto == null)
+                if (injectIntoBindingData.InjectInto == null)
                 {
                     //create an empty new list for injectInto list
-                    injectIntoBindingSetting.InjectInto =
-                        GetTypeFromCurrentAssembly(injectIntoBindingSetting.InjectIntoHolder.name);
+                    injectIntoBindingData.InjectInto =
+                        GetTypeFromCurrentAssembly(injectIntoBindingData.InjectIntoHolder.name);
 
-                    if (injectIntoBindingSetting.InjectInto == null)
+                    if (injectIntoBindingData.InjectInto == null)
                     {
                         debug.Log("bindingSetting.InjectInto should not null!");
                     }
                 }
             }
 
-            var lifeCycle = injectIntoBindingSetting.LifeCycle;
+            var lifeCycle = injectIntoBindingData.LifeCycle;
 
-            if (injectIntoBindingSetting.EnableInjectInto)
+            if (injectIntoBindingData.EnableInjectInto)
 
                 debug.Log("Bind from setting {0} for {1} by {2} when inject into {3}",
-                    injectIntoBindingSetting.ImplementedType,
-                    injectIntoBindingSetting.AbstractType,
+                    injectIntoBindingData.ImplementedType,
+                    injectIntoBindingData.AbstractType,
                     lifeCycle.ToString(),
-                    injectIntoBindingSetting.InjectInto.Name);
+                    injectIntoBindingData.InjectInto.Name);
             else
                 debug.Log("Bind from setting {0} for {1} by {2}",
-                    injectIntoBindingSetting.ImplementedType,
-                    injectIntoBindingSetting.AbstractType,
+                    injectIntoBindingData.ImplementedType,
+                    injectIntoBindingData.AbstractType,
                     lifeCycle.ToString());
 
-            defaultContainer.Bind(injectIntoBindingSetting);
+            defaultContainer.Bind(injectIntoBindingData);
         }
 
-        private void BindFromSetting(BindingData bindingSetting, Type InjectIntoType, bool overriden = false)
+        private void BindFromSetting(BindingData bindingSetting, Type InjectIntoType = null)
         {
             if (bindingSetting.ImplementedType == null)
             {
@@ -294,9 +328,6 @@ namespace UnityIoC
 
             var lifeCycle = bindingSetting.LifeCycle;
 
-            if (overriden)
-            {
-            }
 
             debug.Log("Bind from setting {0} for {1} by {2} when inject into {3}",
                 bindingSetting.ImplementedType,
@@ -305,19 +336,13 @@ namespace UnityIoC
                 InjectIntoType != null ? InjectIntoType.Name : "Null");
 
             //bind it with inject into type
-            if (InjectIntoType != null)
-            {
-                var injectIntoBindingSetting = new InjectIntoBindingData();
-                injectIntoBindingSetting.ImplementedType = bindingSetting.ImplementedType;
-                injectIntoBindingSetting.AbstractType = bindingSetting.AbstractType;
-                injectIntoBindingSetting.LifeCycle = bindingSetting.LifeCycle;
-                injectIntoBindingSetting.InjectInto = InjectIntoType;
-                defaultContainer.Bind(injectIntoBindingSetting);
-                return;
-            }
-
-            //bind it without inject into type
-            Bind(bindingSetting.AbstractType, bindingSetting.ImplementedType, lifeCycle);
+            var injectIntoBindingSetting = new InjectIntoBindingData();
+            injectIntoBindingSetting.ImplementedType = bindingSetting.ImplementedType;
+            injectIntoBindingSetting.AbstractType = bindingSetting.AbstractType;
+            injectIntoBindingSetting.LifeCycle = bindingSetting.LifeCycle;
+            injectIntoBindingSetting.EnableInjectInto = InjectIntoType != null;
+            injectIntoBindingSetting.InjectInto = InjectIntoType;
+            defaultContainer.Bind(injectIntoBindingSetting);
         }
 
 
@@ -513,7 +538,7 @@ namespace UnityIoC
                 field.SetValue(mono,
                     container.ResolveObject(
                         field.FieldType,
-                        inject == null ? LifeCycle.Default : inject.LifeCycle, 
+                        inject == null ? LifeCycle.Default : inject.LifeCycle,
                         mono));
             }
         }
@@ -694,6 +719,7 @@ namespace UnityIoC
         {
             return GetDefaultInstance(context.GetType(), recreate);
         }
+
         public static AssemblyContext GetDefaultInstance(Type type = null, bool recreate = false)
         {
             if (_defaultInstance == null || recreate)
@@ -749,6 +775,5 @@ namespace UnityIoC
         }
 
         #endregion
-
     }
 }
