@@ -7,29 +7,10 @@ using Object = UnityEngine.Object;
 namespace UnityIoC
 {
     [Serializable]
-    public class InjectIntoBindingData : ICloneable<InjectIntoBindingData>
+    public class InjectIntoBindingData : BindingData, ICloneable<InjectIntoBindingData>
     {
-        [SerializeField] public Type AbstractType;
-        [SerializeField] public Type ImplementedType;
-        [SerializeField] public Object AbstractTypeHolder;
-        [SerializeField] public Object ImplementedTypeHolder;
-        [SerializeField] public LifeCycle LifeCycle;
-
-        public InjectIntoBindingData()
-        {
-        }
-
-        public InjectIntoBindingData(Type abstractType, Type implementedType, LifeCycle lifeCycle, Type injectInto, bool enableInjectInto)
-        {
-            AbstractType = abstractType;
-            ImplementedType = implementedType;
-            LifeCycle = lifeCycle;
-            InjectInto = injectInto;
-            EnableInjectInto = enableInjectInto;
-        }
-
         [SerializeField] public Type InjectInto;
-        [SerializeField] public Object InjectIntoHolder;
+        [SerializeField] public Object[] InjectIntoHolder = new Object[]{};
         [SerializeField] public bool EnableInjectInto;
 
         public InjectIntoBindingData Clone()

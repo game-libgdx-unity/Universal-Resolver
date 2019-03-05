@@ -271,7 +271,6 @@ namespace UnityIoC
             {
                 if (injectIntoBindingData.InjectInto == null)
                 {
-                    //create an empty new list for injectInto list
                     injectIntoBindingData.InjectInto =
                         GetTypeFromCurrentAssembly(injectIntoBindingData.InjectIntoHolder.name);
 
@@ -334,6 +333,8 @@ namespace UnityIoC
                 bindingSetting.AbstractType,
                 lifeCycle.ToString(),
                 InjectIntoType != null ? InjectIntoType.Name : "Null");
+            
+            
 
             //bind it with inject into type
             var injectIntoBindingSetting = new InjectIntoBindingData();

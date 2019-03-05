@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -107,22 +108,31 @@ namespace UnityIoC.Editor
 
                     if (data.EnableInjectInto)
                     {
-                        EditorGUILayout.BeginHorizontal("Box");
+                        EditorGUILayout.BeginVertical("Box");
                         
-                        DrawLabel("Resolve from Type", GUILayout.MaxWidth(150));
-
-                        data.InjectIntoHolder = EditorGUILayout.ObjectField("",
-                            data.InjectIntoHolder, typeof(MonoScript), false,
-                            GUILayout.MaxWidth(60),
-                            GUILayout.ExpandWidth(true));
-
-                        if (data.InjectIntoHolder)
+                        data.InjectIntoHolder=  DrawList("Inject into list", "Component", data.InjectIntoHolder.ToList(), obj =>
                         {
-                            data.InjectInto = ((MonoScript) data.InjectIntoHolder).GetClass();
-                        }
+                            EditorGUILayout.BeginHorizontal();
 
-                        EditorGUILayout.EndHorizontal();
+                            obj = EditorGUILayout.ObjectField("Component",
+                                obj, typeof(MonoScript), false);
+
+
+                            DrawButton("X", () =>
+                                {   
+                                    data.InjectIntoHolder.Remove(obj);
+                                },
+                                GUILayout.MaxWidth(17),
+                                GUILayout.ExpandWidth(false));
+
+                            EditorGUILayout.EndHorizontal();
+
+                            return obj;
+                        }, true).ToArray();
+
+                        EditorGUILayout.EndVertical();
                     }
+
 
                     return data;
                 }

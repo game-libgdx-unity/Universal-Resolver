@@ -8,7 +8,8 @@ namespace UnityIoC
         Default = 0,
         Transient = 1 << 0,
         Singleton = 1 << 1,
-        Component = 1 << 2
+        Component = 1 << 2,
+        SingletonComponent = Singleton | Component
     }
 
     public static class LifeCycleExtension
