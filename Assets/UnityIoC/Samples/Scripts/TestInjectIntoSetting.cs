@@ -7,19 +7,26 @@ using UnityIoC;
 
 namespace SceneTest
 {
-	public class TestInjectIntoSetting : MonoBehaviour {
+    public class TestInjectIntoSetting : MonoBehaviour
+    {
+        
+        //refer to SceneTest setting to see what kind of type, the field AbstractClass inside will be resolved 
+        [Transient] TestComponent2 testComponent2;
+        
+        //refer to SceneTest setting to see what kind of type, the field AbstractClass inside will be resolved 
+        [Transient] TestComponent testComponent;
 
-		//refer to SceneTest setting to see what kind of type, the field AbstractClass inside will be resolved 
-		[Transient] TestComponent2 testComponent2;
-		
-		//refer to SceneTest setting to see what kind of type, the field AbstractClass inside will be resolved 
-		[Transient] TestComponent testComponent;
+        //refer to SceneTest setting to see what kind of type, the field AbstractClass inside will be resolved 
+        [Transient] TestComponent3 testComponent3;
+        
+        //refer to SceneTest setting to see what kind of type, the field AbstractClass inside will be resolved 
+        [Transient] TestComponent4 testComponent4;
 
-		private void Start()
-		{
-			//create context with automatic load binding setting from assembly name
-			//in this case, please refer to SceneTest setting from the resources folder.
-			new AssemblyContext(this);
-		}
-	}
+        private void Start()
+        {
+            //create context with automatic load binding setting from assembly name
+            //in this case, please refer to SceneTest setting from the resources folder.
+            new AssemblyContext(this);
+        }
+    }
 }

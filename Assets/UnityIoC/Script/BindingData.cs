@@ -1,22 +1,27 @@
 using System;
 using UnityEngine;
-using UnityIoC;
 using Object = UnityEngine.Object;
 
 namespace UnityIoC
 {
     [Serializable]
-    public class BindingData : ICloneable<BindingData>
+    public class BindingData
     {
         [SerializeField] public Type AbstractType;
         [SerializeField] public Type ImplementedType;
+        [SerializeField] public LifeCycle LifeCycle;
+    }
+    
+    
+    [Serializable]
+    public class BindingDataAsset : BindingData, ICloneable<BindingDataAsset>
+    {
         [SerializeField] public Object AbstractTypeHolder;
         [SerializeField] public Object ImplementedTypeHolder;
-        [SerializeField] public LifeCycle LifeCycle;
 
-        public BindingData Clone()
+        public BindingDataAsset Clone()
         {
-            var output = new BindingData();
+            var output = new BindingDataAsset();
             output.AbstractTypeHolder = AbstractTypeHolder;
             output.ImplementedTypeHolder = ImplementedTypeHolder;
             output.AbstractType = AbstractType;

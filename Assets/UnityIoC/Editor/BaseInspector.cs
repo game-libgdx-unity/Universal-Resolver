@@ -181,7 +181,6 @@ namespace UnityIoC.Editor
             }
             catch (ArgumentOutOfRangeException ex)
             {
-                MyDebug.Log(ex.Message);
             }
 
             return objects;

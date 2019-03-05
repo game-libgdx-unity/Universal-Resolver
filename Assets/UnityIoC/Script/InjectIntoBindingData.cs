@@ -1,21 +1,27 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityIoC;
 using Object = UnityEngine.Object;
 
 namespace UnityIoC
 {
     [Serializable]
-    public class InjectIntoBindingData : BindingData, ICloneable<InjectIntoBindingData>
+    public class InjectIntoBindingData : BindingData
     {
         [SerializeField] public Type InjectInto;
-        [SerializeField] public Object[] InjectIntoHolder = new Object[]{};
         [SerializeField] public bool EnableInjectInto;
+    }
 
-        public InjectIntoBindingData Clone()
+    [Serializable]
+    public class InjectIntoBindingAsset : InjectIntoBindingData, ICloneable<InjectIntoBindingAsset>
+    {
+        [SerializeField] public List<Object> InjectIntoHolder = new List<Object>();
+        [SerializeField] public Object AbstractTypeHolder;
+        [SerializeField] public Object ImplementedTypeHolder;
+
+        public InjectIntoBindingAsset Clone()
         {
-            InjectIntoBindingData output = new InjectIntoBindingData();
+            InjectIntoBindingAsset output = new InjectIntoBindingAsset();
             output.AbstractTypeHolder = AbstractTypeHolder;
             output.InjectIntoHolder = InjectIntoHolder;
             output.AbstractType = AbstractType;

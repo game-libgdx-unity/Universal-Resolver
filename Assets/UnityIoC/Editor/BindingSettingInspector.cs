@@ -80,7 +80,7 @@ namespace UnityIoC.Editor
                     data.AbstractTypeHolder = EditorGUILayout.ObjectField("",
                         data.AbstractTypeHolder, typeof(MonoScript), false,
                         GUILayout.MaxWidth(60),
-                        GUILayout.ExpandWidth(false));
+                        GUILayout.ExpandWidth(true));
 
                     if (data.AbstractTypeHolder)
                     {

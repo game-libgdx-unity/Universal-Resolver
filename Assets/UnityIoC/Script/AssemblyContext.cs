@@ -240,66 +240,71 @@ namespace UnityIoC
             }
         }
 
-        private void BindFromSetting(InjectIntoBindingData injectIntoBindingData)
+        private void BindFromSetting(InjectIntoBindingAsset bindingSetting)
         {
-            if (injectIntoBindingData.ImplementedType == null)
+            if (bindingSetting.ImplementedType == null)
             {
-                injectIntoBindingData.ImplementedType =
-                    GetTypeFromCurrentAssembly(injectIntoBindingData.ImplementedTypeHolder.name);
+                bindingSetting.ImplementedType =
+                    GetTypeFromCurrentAssembly(bindingSetting.ImplementedTypeHolder.name);
 
 
-                if (injectIntoBindingData.ImplementedType == null)
+                if (bindingSetting.ImplementedType == null)
                 {
                     debug.Log("bindingSetting.ImplementedType should not null!");
                     return;
                 }
             }
 
-            if (injectIntoBindingData.AbstractType == null)
+            if (bindingSetting.AbstractType == null)
             {
-                injectIntoBindingData.AbstractType =
-                    GetTypeFromCurrentAssembly(injectIntoBindingData.AbstractTypeHolder.name);
+                bindingSetting.AbstractType =
+                    GetTypeFromCurrentAssembly(bindingSetting.AbstractTypeHolder.name);
 
-                if (injectIntoBindingData.AbstractType == null)
+                if (bindingSetting.AbstractType == null)
                 {
                     debug.Log("bindingSetting.AbstractType should not null!");
                     return;
                 }
             }
 
-            if (injectIntoBindingData.EnableInjectInto)
+            //bind it with inject into type
+            var injectIntoBindingSetting = new InjectIntoBindingData();
+            injectIntoBindingSetting.ImplementedType = bindingSetting.ImplementedType;
+            injectIntoBindingSetting.AbstractType = bindingSetting.AbstractType;
+            injectIntoBindingSetting.LifeCycle = bindingSetting.LifeCycle;
+            injectIntoBindingSetting.EnableInjectInto = bindingSetting.EnableInjectInto && bindingSetting.InjectIntoHolder.Count > 0;
+            
+            //binding with inject into
+            if (injectIntoBindingSetting.EnableInjectInto)
             {
-                if (injectIntoBindingData.InjectInto == null)
+                foreach (var injectIntoHolder in bindingSetting.InjectIntoHolder)
                 {
-                    injectIntoBindingData.InjectInto =
-                        GetTypeFromCurrentAssembly(injectIntoBindingData.InjectIntoHolder.name);
-
-                    if (injectIntoBindingData.InjectInto == null)
+                    if (injectIntoHolder != null)
                     {
-                        debug.Log("bindingSetting.InjectInto should not null!");
+                        var injectIntoType = GetTypeFromCurrentAssembly(injectIntoHolder.name);
+
+                        if (injectIntoType != null)
+                        {
+                            debug.Log("Bind from setting {0} for {1} by {2} when injectInto {3}",
+                                bindingSetting.ImplementedType,
+                                bindingSetting.AbstractType,
+                                bindingSetting.LifeCycle.ToString(),
+                                injectIntoHolder.name);
+
+                            injectIntoBindingSetting.InjectInto = injectIntoType;
+                            defaultContainer.Bind(injectIntoBindingSetting);
+                        }
                     }
                 }
             }
-
-            var lifeCycle = injectIntoBindingData.LifeCycle;
-
-            if (injectIntoBindingData.EnableInjectInto)
-
-                debug.Log("Bind from setting {0} for {1} by {2} when inject into {3}",
-                    injectIntoBindingData.ImplementedType,
-                    injectIntoBindingData.AbstractType,
-                    lifeCycle.ToString(),
-                    injectIntoBindingData.InjectInto.Name);
+            //binding without inject into
             else
-                debug.Log("Bind from setting {0} for {1} by {2}",
-                    injectIntoBindingData.ImplementedType,
-                    injectIntoBindingData.AbstractType,
-                    lifeCycle.ToString());
-
-            defaultContainer.Bind(injectIntoBindingData);
+            {
+                defaultContainer.Bind(injectIntoBindingSetting);
+            }
         }
 
-        private void BindFromSetting(BindingData bindingSetting, Type InjectIntoType = null)
+        private void BindFromSetting(BindingDataAsset bindingSetting, Type InjectIntoType = null)
         {
             if (bindingSetting.ImplementedType == null)
             {
@@ -333,8 +338,7 @@ namespace UnityIoC
                 bindingSetting.AbstractType,
                 lifeCycle.ToString(),
                 InjectIntoType != null ? InjectIntoType.Name : "Null");
-            
-            
+
 
             //bind it with inject into type
             var injectIntoBindingSetting = new InjectIntoBindingData();

@@ -2,6 +2,7 @@
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace UnityIoC.Editor
 {
@@ -28,8 +29,8 @@ namespace UnityIoC.Editor
                     //delete it
                     ((InjectIntoBindingSetting) target).defaultSettings.RemoveAt(i--);
                     continue;
-                }   
-                
+                }
+
                 if (setting.ImplementedTypeHolder == null)
                 {
                     if (EditorUtility.DisplayDialog("Failed validation", "From fields must not be null", "Go back",
@@ -42,7 +43,7 @@ namespace UnityIoC.Editor
 
                     //delete it
                     ((InjectIntoBindingSetting) target).defaultSettings.RemoveAt(i--);
-                }    
+                }
             }
         }
 
@@ -79,7 +80,7 @@ namespace UnityIoC.Editor
                     data.AbstractTypeHolder = EditorGUILayout.ObjectField("",
                         data.AbstractTypeHolder, typeof(MonoScript), false,
                         GUILayout.MaxWidth(60),
-                        GUILayout.ExpandWidth(false));
+                        GUILayout.ExpandWidth(true));
 
                     if (data.AbstractTypeHolder)
                     {
@@ -106,33 +107,64 @@ namespace UnityIoC.Editor
 
                     EditorGUILayout.EndHorizontal();
 
+//                    if (data.EnableInjectInto)
+//                    {
+//                        EditorGUILayout.BeginHorizontal("Box");
+//                        
+//                        DrawLabel("When Inject into", GUILayout.MaxWidth(150));
+//
+//                        data.InjectIntoHolder = EditorGUILayout.ObjectField("",
+//                            data.InjectIntoHolder, typeof(MonoScript), false,
+//                            GUILayout.MaxWidth(60),
+//                            GUILayout.ExpandWidth(true));
+//
+//                        if (data.InjectIntoHolder)
+//                        {
+//                            data.InjectInto = ((MonoScript) data.InjectIntoHolder).GetClass(); 
+//                        }
+//
+//                        EditorGUILayout.EndHorizontal();
+//                    }
+
                     if (data.EnableInjectInto)
                     {
                         EditorGUILayout.BeginVertical("Box");
-                        
-                        data.InjectIntoHolder=  DrawList("Inject into list", "Component", data.InjectIntoHolder.ToList(), obj =>
+
+                        //auto add 1 element if the array data is empty 
+                        if (data.InjectIntoHolder.Count == 0)
                         {
-                            EditorGUILayout.BeginHorizontal();
+                            data.InjectIntoHolder.Add(null);
+                        }
 
-                            obj = EditorGUILayout.ObjectField("Component",
-                                obj, typeof(MonoScript), false);
+                        DrawList("Inject into list", "Component",
+                            data.InjectIntoHolder,
+                            obj =>
+                            {
+                                EditorGUILayout.BeginHorizontal();
+
+                                obj = EditorGUILayout.ObjectField("Component",
+                                    obj, typeof(MonoScript), false);
 
 
-                            DrawButton("X", () =>
-                                {   
-                                    data.InjectIntoHolder.Remove(obj);
-                                },
-                                GUILayout.MaxWidth(17),
-                                GUILayout.ExpandWidth(false));
+                                DrawButton("X", () =>
+                                    {
+                                        data.InjectIntoHolder.Remove(obj);
+                                        //update enable injectInto setting
+                                        if (data.InjectIntoHolder.Count == 0)
+                                        {
+                                            data.EnableInjectInto = false;
+                                        }
+                                    },
+                                    GUILayout.MaxWidth(17),
+                                    GUILayout.ExpandWidth(false));
 
-                            EditorGUILayout.EndHorizontal();
+                                EditorGUILayout.EndHorizontal();
 
-                            return obj;
-                        }, true).ToArray();
+                                return obj;
+                            }, false);
 
                         EditorGUILayout.EndVertical();
                     }
-
 
                     return data;
                 }
