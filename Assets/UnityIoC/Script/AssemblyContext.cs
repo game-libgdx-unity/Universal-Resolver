@@ -731,7 +731,6 @@ namespace UnityIoC
             {
                 _defaultInstance = new AssemblyContext(type);
             }
-
             return _defaultInstance;
         }
 

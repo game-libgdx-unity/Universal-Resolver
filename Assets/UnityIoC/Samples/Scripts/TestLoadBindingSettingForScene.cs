@@ -9,7 +9,7 @@ public class TestLoadBindingSettingForScene : MonoBehaviour {
 	// Use this for initialization
 	void Start ()
 	{
-		//create context with automatic load binding setting from assembly name
+		//create context which will automatically load binding setting by the assembly name
 		//in this case, please refer to SceneTest setting from the resources folder.
 		var context = new AssemblyContext(this);
 		//you should see a log in unity console

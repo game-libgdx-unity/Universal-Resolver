@@ -17,8 +17,11 @@ namespace UnityIoC.Editor
                 Assert.Inconclusive("Previous test failed");
             }
 
-            Debug.ClearDeveloperConsole();
+            ClearConsole();
+        }
 
+        public static void ClearConsole()
+        {
             //reflection api will call a method from unity editor object
             //ref: https://github.com/Unity-Technologies/UnityCsReference/blob/master/Editor/Mono/LogEntries.bindings.cs
             var assembly = Assembly.GetAssembly(typeof(UnityEditor.ActiveEditorTracker));

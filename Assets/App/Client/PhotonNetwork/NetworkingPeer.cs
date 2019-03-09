@@ -3002,7 +3002,7 @@ internal class NetworkingPeer : LoadBalancingPeer, IPhotonPeerListener
                 if (mInfo.Name.Equals(inMethodName))
                 {
                     foundMethods++;
-                    ParameterInfo[] pArray = mInfo.GetCachedParemeters();
+                    ParameterInfo[] pArray = mInfo.GetCachedParemeters2();
 
                     if (pArray.Length == argTypes.Length)
                     {

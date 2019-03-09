@@ -30,6 +30,10 @@ public static class ArrayExtensions {
 
 		return source;
 	}
+	public static T[] Where<T>(this T[] source, Predicate<T> func)
+	{
+		return Array.FindAll(source, func);
+	}
 	
 	public static bool IsEqual<T>(this T[] a, T[] b)
 	{

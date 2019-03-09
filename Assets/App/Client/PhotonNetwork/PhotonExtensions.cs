@@ -19,11 +19,11 @@ using SupportClassPun = ExitGames.Client.Photon.SupportClass;
 /// <summary>
 /// This static class defines some useful extension methods for several existing classes (e.g. Vector3, float and others).
 /// </summary>
-public static class Extensions
+public static class PhotonExtensions
 {
 
     public static Dictionary<MethodInfo, ParameterInfo[]> ParametersOfMethods = new Dictionary<MethodInfo, ParameterInfo[]>();
-    public static ParameterInfo[] GetCachedParemeters(this MethodInfo mo)
+    public static ParameterInfo[] GetCachedParemeters2(this MethodInfo mo)
     {
         ParameterInfo[] result;
         bool cached= ParametersOfMethods.TryGetValue(mo, out result);

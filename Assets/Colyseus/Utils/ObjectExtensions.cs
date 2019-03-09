@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Colyseus.Utils
+namespace Colyseus
 {
     public static class ObjectExtensions
     {

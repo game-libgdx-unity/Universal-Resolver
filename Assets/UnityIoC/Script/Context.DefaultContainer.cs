@@ -254,7 +254,7 @@ namespace UnityIoC
                         registeredObjects.Add(registeredObject);
                     }
 
-                    debug.Log("resolve with default approach");
+                    debug.Log("resolved with default approach");
                     var obj = GetInstance(registeredObject, preferredLifeCycle, resolveFrom, parameters);
 
                     return obj;
@@ -275,7 +275,7 @@ namespace UnityIoC
                                   injectFromType);
                         debug.Log("resolve from: " + registeredObject.InjectInto +
                                   " by inject into from RegisteredObject");
-                        debug.Log("resolve with high priority approach");
+                        debug.Log("resolved by high priority approach");
                         return GetInstance(registeredObject, preferredLifeCycle, resolveFrom, parameters);
                     }
                 }
@@ -287,7 +287,7 @@ namespace UnityIoC
                 registeredObject = registeredObjects.FirstOrDefault(filter);
                 if (registeredObject != null)
                 {
-                    debug.Log("resolve with lower priority approach");
+                    debug.Log("resolved with lower priority approach");
                     return GetInstance(registeredObject, preferredLifeCycle, resolveFrom, parameters);
                 }
                 debug.Log("Lower priority process is failed");

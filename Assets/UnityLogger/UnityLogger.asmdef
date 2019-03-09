@@ -1,9 +1,8 @@
 {
-    "name": "Colyseus",
+    "name": "UnityLogger",
     "references": [
-        "UnityIoC",
-        "UniRx",
-        "MyAssembly"
+        "ContextEditModeTest",
+        "UnityIoC"
     ],
     "optionalUnityReferences": [],
     "includePlatforms": [],

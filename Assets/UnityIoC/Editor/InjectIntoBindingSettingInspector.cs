@@ -98,7 +98,7 @@ namespace UnityIoC.Editor
                         GUILayout.MaxWidth(17),
                         GUILayout.ExpandWidth(false));
 
-                    DrawButton("C", () => { ((InjectIntoBindingSetting) target).defaultSettings.Add(data.Clone()); },
+                    DrawButton("C", () => { ((InjectIntoBindingSetting) target).defaultSettings.Add(data.JsonClone()); },
                         GUILayout.MaxWidth(20),
                         GUILayout.ExpandWidth(false));
 
@@ -106,7 +106,8 @@ namespace UnityIoC.Editor
                     DrawLabel("Inject", GUILayout.MaxWidth(50f));
 
                     EditorGUILayout.EndHorizontal();
-
+                    
+//                    For non-array injectInto inspector
 //                    if (data.EnableInjectInto)
 //                    {
 //                        EditorGUILayout.BeginHorizontal("Box");
