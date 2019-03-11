@@ -20,7 +20,8 @@ namespace UnityIoC
         {
             if (EnableLogging && logger.enableLogging)
             {
-                UnityEngine.Debug.LogFormat("{0}\t{1}", logger.context.Name, string.Format(s.CapitalizeFirstChar(), param));
+                UnityEngine.Debug.LogFormat("{0}\t{1}", logger.context.Name,
+                    string.Format(s.CapitalizeFirstChar(), param));
             }
         }
 
@@ -29,7 +30,8 @@ namespace UnityIoC
         {
             if (EnableLogging && logger.enableLogging)
             {
-                UnityEngine.Debug.LogErrorFormat("{0}\t{1}", logger.context.Name, string.Format(s.CapitalizeFirstChar(), param));
+                UnityEngine.Debug.LogErrorFormat("{0}\t{1}", logger.context.Name,
+                    string.Format(s.CapitalizeFirstChar(), param));
             }
         }
 
@@ -79,9 +81,10 @@ namespace UnityIoC
             {
                 return input;
             }
-            
+
             return input.First().ToString().ToUpper() + input.Substring(1);
         }
+
         private static string TabAndCapitalizeFirstChar(this string input)
         {
             return "\t\t" + input.First().ToString().ToUpper() + input.Substring(1);
@@ -94,13 +97,14 @@ namespace UnityIoC
         [SerializeField] public bool enableLogging = true;
         [HideInInspector] public Type context;
 
-        public Logger(object context)
+        public Logger(object context):this(context.GetType())
         {
             this.context = context.GetType();
         }
 
-        public Logger(Type context)
+        public Logger(Type context, bool enableLogging = false)
         {
+            this.enableLogging = enableLogging;
             this.context = context;
         }
     }

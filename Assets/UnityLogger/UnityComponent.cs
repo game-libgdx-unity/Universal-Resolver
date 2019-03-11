@@ -2,10 +2,18 @@ using UnityEngine;
 
 public class UnityComponent : MonoBehaviour
 {
-    [Log]
+    
+    [LogParams("{0}")]
+    public void DoIt3(string msg)
+    {
+    }
+    [LogParams()]
     public void DoIt(string msg)
     {
-        Debug.Log(msg);
+    }
+    [Log()]
+    public void DoIt2(string msg)
+    {
     }
 //    [Log]
 //    public void DoIt()
@@ -16,6 +24,14 @@ public class UnityComponent : MonoBehaviour
 
     public void Start()
     {
-        DoIt("sasa");
+        DoIt("method 1");
+    }
+    public void Start2()
+    {
+        DoIt2("method 2");
+    }
+    public void Start3()
+    {
+        DoIt3("method 3");
     }
 }
