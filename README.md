@@ -5,7 +5,7 @@ Unity3d Resolver is an Unity3d IoC Framework comes with combine of binding setti
 
 There are a lot of test scenes in the sample folder. Also I developed a minesweeper game using this framework, inside the sampleGame folder.
 
-This asset supports for
+This asset supports
 
 - Resolve both C# & Unity Component objects
 - Build games on Editor, Standalone, iOS, Android
