@@ -100,7 +100,7 @@ namespace UnityIoC
                     if (ImplementedType.IsSubclassOf(typeof(MonoBehaviour)))
                     {
                         GameObject prefab;
-                        instance = TryGetPrefab(out prefab, assemblyContext, ImplementedType, ImplementedType.Name,
+                        instance = TryGetGameObject(out prefab, assemblyContext, ImplementedType, ImplementedType.Name,
                             preferredLifeCycle, resolveFrom);
                     }
                     else
@@ -124,11 +124,21 @@ namespace UnityIoC
                 return Instance;
             }
 
-            private object TryGetPrefab(out GameObject prefab, AssemblyContext assemblyContext, Type concreteType,
+            private object TryGetGameObject(out GameObject prefab, AssemblyContext assemblyContext, Type concreteType,
                 string TypeName, LifeCycle lifeCycle, object resolveFrom)
             {
                 Component instance;
-                //search for templates from resources path folders
+                
+                //try to get component from an existing one in current scene
+                instance = Object.FindObjectOfType(concreteType) as Component;
+                if (instance)
+                {
+                    Debug.Log("Found component for {0} from current scene", TypeName);
+                    prefab = instance.gameObject;
+                    return instance;
+                }
+                
+                //search for prefabs of this component type from resources path folders
                 prefab = Resources.Load<GameObject>(string.Format("prefabs/scenes/{0}", TypeName));
                 if (!prefab) prefab = Resources.Load<GameObject>(string.Format("scenes/{0}", TypeName));
                 if (!prefab) prefab = Resources.Load<GameObject>(string.Format("prefabs/{0}", TypeName));
