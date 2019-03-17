@@ -20,7 +20,13 @@ public class MapGenerator : MonoBehaviour
     [Singleton] private List<Cell> cells;
     [Singleton] private List<CellData> cellData;
     [Singleton] private GameSolver gameSolver;
-    [Singleton] private ReactiveProperty<GameStatus> gameStatus;
+    
+    private ReactiveProperty<GameStatus> gameStatus = new ReactiveProperty<GameStatus>();
+
+    private void Awake()
+    {
+        AssemblyContext.GetDefaultInstance(this);
+    }
 
     public void Start()
     {
@@ -40,11 +46,7 @@ public class MapGenerator : MonoBehaviour
         {
             btnRestart.gameObject.SetActive(false);
             btnRestart.OnClickAsObservable()
-                .Subscribe(unit =>
-                {
-                    AssemblyContext.DisposeDefaultInstance();
-                    SceneManager.LoadScene(0); //restart the game
-                })
+                .Subscribe(unit => { StartCoroutine(RestartRoutine()); })
                 .AddTo(gameObject);
         }
 
@@ -67,5 +69,12 @@ public class MapGenerator : MonoBehaviour
         //solve the game
         Observable.FromCoroutine(_ => gameSolver.Solve(1f)).Subscribe(_ => { print("Finished"); })
             .AddTo(this);
+    }
+
+    IEnumerator RestartRoutine()
+    {
+        AssemblyContext.DisposeDefaultInstance();
+        yield return null;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name); //restart the game
     }
 }

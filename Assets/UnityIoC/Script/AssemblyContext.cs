@@ -367,9 +367,13 @@ namespace UnityIoC
 
         public void Dispose()
         {
+            injectAttributes.Clear();
+            TargetType = null;
+            
             if (container != null)
             {
                 container.Dispose();
+                container = null;
             }
         }
 
@@ -568,11 +572,11 @@ namespace UnityIoC
         private Component GetComponentFromGameObject(object mono, Type type, InjectAttribute injectAttribute)
         {
             //not supported for transient or singleton injections
-            if (injectAttribute.LifeCycle == LifeCycle.Transient ||
-                injectAttribute.LifeCycle == LifeCycle.Singleton)
-            {
-                return null;
-            }
+//            if (injectAttribute.LifeCycle == LifeCycle.Transient ||
+//                injectAttribute.LifeCycle == LifeCycle.Singleton)
+//            {
+//                return null;
+//            }
 
             var behaviour = mono as MonoBehaviour;
 
@@ -607,11 +611,11 @@ namespace UnityIoC
         private Component[] GetComponentsFromGameObject(object mono, Type type, InjectAttribute injectAttribute)
         {
             //not supported for transient or singleton injections
-            if (injectAttribute.LifeCycle == LifeCycle.Transient ||
-                injectAttribute.LifeCycle == LifeCycle.Singleton)
-            {
-                return null;
-            }
+//            if (injectAttribute.LifeCycle == LifeCycle.Transient ||
+//                injectAttribute.LifeCycle == LifeCycle.Singleton)
+//            {
+//                return null;
+//            }
 
             var behaviour = mono as MonoBehaviour;
 

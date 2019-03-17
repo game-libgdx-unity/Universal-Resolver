@@ -7,9 +7,10 @@ using UnityEngine.SceneManagement;
 
 public class MineSweeper : MonoBehaviour
 {
-    private void Start()
+    private void Awake()
     {
         Debug.Log("Initializing.........");
+        MyDebug.EnableLogging = true;
         var context = AssemblyContext.GetDefaultInstance(typeof(MineSweeper));
         context.Resolve<MapGenerator>(LifeCycle.Singleton);
     }

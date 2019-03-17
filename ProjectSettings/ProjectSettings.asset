@@ -783,7 +783,7 @@ PlayerSettings:
   webGLCompressionFormat: 1
   webGLLinkerTarget: 1
   scriptingDefineSymbols:
-    1: USE_LINQ_TO_GAMEOBJECT
+    1: USE_LINQ_TO_GAMEOBJECT;USE_LOG_DEFAULT_TEST
   platformArchitecture: {}
   scriptingBackend: {}
   il2cppCompilerConfiguration: {}

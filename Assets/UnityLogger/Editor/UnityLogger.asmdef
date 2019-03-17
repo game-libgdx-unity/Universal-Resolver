@@ -1,0 +1,13 @@
+{
+    "name": "UnityLogger",
+    "references": [
+        "ContextEditModeTest",
+        "UnityIoC"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false
+}

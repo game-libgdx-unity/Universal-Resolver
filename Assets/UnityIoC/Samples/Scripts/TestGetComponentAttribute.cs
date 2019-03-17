@@ -8,7 +8,7 @@ public class TestGetComponentAttribute : MonoBehaviour
 {
 
 	//This attribute do the work as "Add Or GetComponent" from this GameObject
-	[GetComponent] private TestComponent[] testComponents;
+	[Component] private TestComponent[] testComponents;
 	// Use this for initialization
 	void Awake ()
 	{

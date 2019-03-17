@@ -60,9 +60,9 @@ namespace UnityIoC
 
                 if (InjectInto != null)
                 {
-                    Debug.Log("Inject into: "+InjectInto.Name);
+                    Debug.Log("Inject into: " + InjectInto.Name);
                 }
-                
+
                 if (instance != null)
                 {
                     if (abstractType == null)
@@ -81,8 +81,8 @@ namespace UnityIoC
                 {
                     throw new InvalidOperationException("either instance or concreteType must not be null");
                 }
-                
-                Debug.Log("Life cycle: "+LifeCycle);
+
+                Debug.Log("Life cycle: " + LifeCycle);
             }
 
             public object CreateInstance(AssemblyContext assemblyContext,
@@ -91,7 +91,7 @@ namespace UnityIoC
                 params object[] args)
             {
                 var objectLifeCycle = preferredLifeCycle == LifeCycle.Default ? LifeCycle : preferredLifeCycle;
-                Debug.Log("Life cycle: "+objectLifeCycle);
+                Debug.Log("Life cycle: " + objectLifeCycle);
 
                 if (this.Instance == null || objectLifeCycle == LifeCycle.Transient ||
                     objectLifeCycle == LifeCycle.Default)
@@ -99,8 +99,7 @@ namespace UnityIoC
                     object instance;
                     if (ImplementedType.IsSubclassOf(typeof(MonoBehaviour)))
                     {
-                        GameObject prefab;
-                        instance = TryGetGameObject(out prefab, assemblyContext, ImplementedType, ImplementedType.Name,
+                        instance = TryGetGameObject(assemblyContext, ImplementedType, ImplementedType.Name,
                             preferredLifeCycle, resolveFrom);
                     }
                     else
@@ -124,20 +123,55 @@ namespace UnityIoC
                 return Instance;
             }
 
-            private object TryGetGameObject(out GameObject prefab, AssemblyContext assemblyContext, Type concreteType,
+            private object TryGetGameObject(AssemblyContext assemblyContext, Type concreteType,
                 string TypeName, LifeCycle lifeCycle, object resolveFrom)
             {
+                GameObject prefab = null;
                 Component instance;
-                
+
                 //try to get component from an existing one in current scene
-                instance = Object.FindObjectOfType(concreteType) as Component;
+                if (Instance == null)
+                {
+                    //todo: cache object on scene to reduce this call:
+                    instance = Object.FindObjectOfType(concreteType) as Component;
+                    
+                    //don't use cloned components
+                    if (instance && instance.gameObject.name.Contains("(Clone)"))
+                    {
+                        instance = null;
+                    }
+                    Instance = instance;
+                }
+                else
+                {
+                    instance = Instance as Component;
+                }
+
                 if (instance)
                 {
-                    Debug.Log("Found component for {0} from current scene", TypeName);
-                    prefab = instance.gameObject;
-                    return instance;
+                    if (lifeCycle == LifeCycle.Singleton || (lifeCycle & LifeCycle.Singleton) == LifeCycle.Singleton)
+                    {
+                        Debug.Log("Found {0} component on gameObject {1} as {2} from current scene",
+                            TypeName,
+                            instance.gameObject.name,
+                            lifeCycle);
+
+                        return instance;
+                    }
+
+                    if (lifeCycle == LifeCycle.Transient || (lifeCycle & LifeCycle.Transient) == LifeCycle.Transient || 
+                        lifeCycle == LifeCycle.Default || (lifeCycle & LifeCycle.Default) == LifeCycle.Default)
+                    {
+                        Debug.Log("Found {0} component on gameObject {1} as {2} from current scene",
+                            TypeName,
+                            instance.gameObject.name,
+                            lifeCycle);
+                        
+                        var cloneObj = Object.Instantiate(instance);
+                        return cloneObj;
+                    }
                 }
-                
+
                 //search for prefabs of this component type from resources path folders
                 prefab = Resources.Load<GameObject>(string.Format("prefabs/scenes/{0}", TypeName));
                 if (!prefab) prefab = Resources.Load<GameObject>(string.Format("scenes/{0}", TypeName));
@@ -176,7 +210,7 @@ namespace UnityIoC
                         TypeName);
 
                     var monoBehaviour = resolveFrom as Component;
-                    if ( monoBehaviour != null && (lifeCycle & LifeCycle.Component) == LifeCycle.Component)
+                    if (monoBehaviour != null && (lifeCycle & LifeCycle.Component) == LifeCycle.Component)
                     {
                         instance = monoBehaviour.gameObject.AddComponent(concreteType);
                     }

@@ -4,6 +4,7 @@
  * https://github.com/game-libgdx-unity/UnityEngine.IoC
  * (c) Copyright by MrThanhVinh168@gmail.com
  **/
+
 using System;
 using UnityIoC;
 
@@ -12,12 +13,13 @@ using UnityIoC;
 public class InjectAttribute : Attribute
 {
     public IContainer container { get; set; }
+
     public InjectAttribute(LifeCycle lifeCycle = LifeCycle.Default)
     {
         LifeCycle = lifeCycle;
     }
 
-    public InjectAttribute():this(LifeCycle.Default)
+    public InjectAttribute() : this(LifeCycle.Default)
     {
     }
 
@@ -31,6 +33,7 @@ public class SingletonAttribute : InjectAttribute
     {
     }
 }
+
 public class TransientAttribute : InjectAttribute
 {
     public TransientAttribute()
@@ -38,18 +41,7 @@ public class TransientAttribute : InjectAttribute
     {
     }
 }
-public class ComponentAttribute : InjectAttribute
-{
-    public ComponentAttribute()
-        : base(LifeCycle.Component | LifeCycle.Default)
-    {
-    }
-    
-    public ComponentAttribute(LifeCycle lifeCycle)
-        : base(LifeCycle.Component | lifeCycle)
-    {
-    }
-}
+
 public class ComponentSingletonAttribute : InjectAttribute
 {
     public ComponentSingletonAttribute()

@@ -102,7 +102,7 @@ namespace UnityIoC
             this.context = context.GetType();
         }
 
-        public Logger(Type context, bool enableLogging = false)
+        public Logger(Type context, bool enableLogging = true)
         {
             this.enableLogging = enableLogging;
             this.context = context;
