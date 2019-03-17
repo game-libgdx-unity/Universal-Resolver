@@ -272,8 +272,9 @@ namespace UnityIoC
             injectIntoBindingSetting.ImplementedType = bindingSetting.ImplementedType;
             injectIntoBindingSetting.AbstractType = bindingSetting.AbstractType;
             injectIntoBindingSetting.LifeCycle = bindingSetting.LifeCycle;
-            injectIntoBindingSetting.EnableInjectInto = bindingSetting.EnableInjectInto && bindingSetting.InjectIntoHolder.Count > 0;
-            
+            injectIntoBindingSetting.EnableInjectInto =
+                bindingSetting.EnableInjectInto && bindingSetting.InjectIntoHolder.Count > 0;
+
             //binding with inject into
             if (injectIntoBindingSetting.EnableInjectInto)
             {
@@ -369,7 +370,7 @@ namespace UnityIoC
         {
             injectAttributes.Clear();
             TargetType = null;
-            
+
             if (container != null)
             {
                 container.Dispose();
@@ -394,6 +395,11 @@ namespace UnityIoC
 
         public void ProcessInjectAttribute(object mono)
         {
+            if (mono == null)
+            {
+                return;
+            }
+            
             ProcessMethod(mono);
             ProcessProperties(mono);
             ProcessVariables(mono);
@@ -552,13 +558,18 @@ namespace UnityIoC
             }
         }
 
-        private static Array ConvertComponentArrayTo(Type typeOfArray, Component[] components)
+        private Array ConvertComponentArrayTo(Type typeOfArray, Component[] components)
         {
             var array = Array.CreateInstance(typeOfArray, components.Length);
             for (var i = 0; i < components.Length; i++)
             {
                 var component = components[i];
-                array.SetValue(component, i);
+
+                if (component)
+                {
+                    ProcessInjectAttribute(component);
+                    array.SetValue(component, i);
+                }
             }
 
             return array;
@@ -599,7 +610,13 @@ namespace UnityIoC
                     debug.Log("Unable to resolve component of {0} for {1}", type, behaviour.name);
                 }
             }
-
+            
+//            var lifeCycle = injectAttribute.LifeCycle;
+//            if (lifeCycle == LifeCycle.Singleton || (lifeCycle & LifeCycle.Singleton) == LifeCycle.Singleton)
+//            {
+//            }
+            
+            ProcessInjectAttribute(component);
             return component;
         }
 
@@ -735,6 +752,7 @@ namespace UnityIoC
             {
                 _defaultInstance = new AssemblyContext(type);
             }
+
             return _defaultInstance;
         }
 

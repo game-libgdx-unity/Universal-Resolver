@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.37311947, g: 0.38074005, b: 0.35872722, a: 1}
+  m_IndirectSpecularColor: {r: 0.37311992, g: 0.38074034, b: 0.35872713, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -216,7 +216,7 @@ GameObject:
   - component: {fileID: 1606697190}
   m_Layer: 0
   m_Name: child
-  m_TagString: MainCamera
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -245,6 +245,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7f5395a6e03fa45229573ea07f8a45c2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Afield: 3
 --- !u!114 &1606697191
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -256,6 +257,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7f5395a6e03fa45229573ea07f8a45c2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Afield: 4
 --- !u!114 &1606697192
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -267,6 +269,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7f5395a6e03fa45229573ea07f8a45c2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  Afield: 5
 --- !u!1 &1666767948
 GameObject:
   m_ObjectHideFlags: 0

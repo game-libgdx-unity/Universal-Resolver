@@ -9,7 +9,9 @@ public class TestGetComponentAttributeByPath : MonoBehaviour
 
 	//This attribute do the work as "Add Or GetComponent" from this GameObject
 	[Component("child/child")] private TestComponent[] testComponents;
-	[Component("child/child")] private TestComponent aTestComponent;
+	[Component("child/child")] private TestComponent testComponent;
+	[Transient] private TestComponent aTestComponen;
+	[Singleton] private TestComponent sTestComponen;
 	// Use this for initialization
 	void Awake ()
 	{
@@ -21,7 +23,6 @@ public class TestGetComponentAttributeByPath : MonoBehaviour
 	private void Start()
 	{
 		print("Number of test components: "+testComponents.Length);
-		
-		aTestComponent.abstractClass.DoSomething();
+		print("Afield " + testComponent.Afield);
 	}
 }

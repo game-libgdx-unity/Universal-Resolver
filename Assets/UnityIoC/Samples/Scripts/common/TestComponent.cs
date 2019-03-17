@@ -7,6 +7,7 @@ namespace SceneTest
 {
 	public class TestComponent : MonoBehaviour
 	{
+		[SerializeField] public int Afield;
 		[Transient] public AbstractClass abstractClass;
 		// Use this for initialization
 		void Start () {

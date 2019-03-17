@@ -51,23 +51,14 @@ public class GetComponentAttribute : InjectAttribute, IComponentResolvable, ICom
 
 public class ComponentAttribute : InjectAttribute, IComponentResolvable, IComponentArrayResolvable
 {
-    public string Path { get; private set; }
-
     public ComponentAttribute()
-        : this(LifeCycle.Component | LifeCycle.Default, null)
+        : base(LifeCycle.Component | LifeCycle.Default, null)
     {
     }
 
     public ComponentAttribute(string path = null)
-        : this(LifeCycle.Component | LifeCycle.Default, path)
+        : base(LifeCycle.Component | LifeCycle.Default, path)
     {
-        Path = path;
-    }
-
-    public ComponentAttribute(LifeCycle lifeCycle, string path)
-        : base(LifeCycle.Component | lifeCycle)
-    {
-        Path = path;
     }
 
     public Component GetComponent(MonoBehaviour behaviour, Type type)

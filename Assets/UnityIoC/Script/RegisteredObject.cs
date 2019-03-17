@@ -84,7 +84,7 @@ namespace UnityIoC
 
                 Debug.Log("Life cycle: " + LifeCycle);
             }
-
+            
             public object CreateInstance(AssemblyContext assemblyContext,
                 LifeCycle preferredLifeCycle = LifeCycle.Default,
                 object resolveFrom = null,
@@ -129,48 +129,41 @@ namespace UnityIoC
                 GameObject prefab = null;
                 Component instance;
 
-                //try to get component from an existing one in current scene
-                if (Instance == null)
-                {
-                    //todo: cache object on scene to reduce this call:
-                    instance = Object.FindObjectOfType(concreteType) as Component;
-                    
-                    //don't use cloned components
-                    if (instance && instance.gameObject.name.Contains("(Clone)"))
-                    {
-                        instance = null;
-                    }
-                    Instance = instance;
-                }
-                else
-                {
-                    instance = Instance as Component;
-                }
-
-                if (instance)
-                {
-                    if (lifeCycle == LifeCycle.Singleton || (lifeCycle & LifeCycle.Singleton) == LifeCycle.Singleton)
-                    {
-                        Debug.Log("Found {0} component on gameObject {1} as {2} from current scene",
-                            TypeName,
-                            instance.gameObject.name,
-                            lifeCycle);
-
-                        return instance;
-                    }
-
-                    if (lifeCycle == LifeCycle.Transient || (lifeCycle & LifeCycle.Transient) == LifeCycle.Transient || 
-                        lifeCycle == LifeCycle.Default || (lifeCycle & LifeCycle.Default) == LifeCycle.Default)
-                    {
-                        Debug.Log("Found {0} component on gameObject {1} as {2} from current scene",
-                            TypeName,
-                            instance.gameObject.name,
-                            lifeCycle);
-                        
-                        var cloneObj = Object.Instantiate(instance);
-                        return cloneObj;
-                    }
-                }
+//                //try to get component from an existing one in current scene
+//                if (Instance == null)
+//                {
+//                    instance = Object.FindObjectOfType(concreteType) as Component;
+//                    Instance = instance;
+//                }
+//                else
+//                {
+//                    instance = Instance as Component;
+//                }
+//
+//                if (instance)
+//                {
+//                    if (lifeCycle == LifeCycle.Singleton || (lifeCycle & LifeCycle.Singleton) == LifeCycle.Singleton)
+//                    {
+//                        Debug.Log("Found {0} component on gameObject {1} as {2} from current scene",
+//                            TypeName,
+//                            instance.gameObject.name,
+//                            lifeCycle);
+//
+//                        return instance;
+//                    }
+//
+//                    if (lifeCycle == LifeCycle.Transient || (lifeCycle & LifeCycle.Transient) == LifeCycle.Transient || 
+//                        lifeCycle == LifeCycle.Default || (lifeCycle & LifeCycle.Default) == LifeCycle.Default)
+//                    {
+//                        Debug.Log("Found {0} component on gameObject {1} as {2} from current scene",
+//                            TypeName,
+//                            instance.gameObject.name,
+//                            lifeCycle);
+//                        
+//                        var cloneObj = Object.Instantiate(instance);
+//                        return cloneObj;
+//                    }
+//                }
 
                 //search for prefabs of this component type from resources path folders
                 prefab = Resources.Load<GameObject>(string.Format("prefabs/scenes/{0}", TypeName));
