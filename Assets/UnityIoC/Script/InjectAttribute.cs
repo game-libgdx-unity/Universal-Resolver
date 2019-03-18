@@ -48,7 +48,8 @@ public class InjectAttribute : Attribute, IComponentResolvable, IComponentArrayR
             if (LifeCycle == LifeCycle.Transient || (LifeCycle & LifeCycle.Transient) == LifeCycle.Transient ||
                 LifeCycle == LifeCycle.Default || (LifeCycle & LifeCycle.Default) == LifeCycle.Default)
             {
-                var clone = CopyComponent(componentFromGameObject, new GameObject());
+//                var clone = componentFromGameObject.CopyComponent(new GameObject());
+                var clone = Object.Instantiate(componentFromGameObject);
                 return clone;
             }
 
@@ -57,33 +58,6 @@ public class InjectAttribute : Attribute, IComponentResolvable, IComponentArrayR
         }
 
         return null;
-    }
-
-    T CopyComponent<T>(T original, GameObject destination) where T : Component
-    {
-        Type type = original.GetType();
-        var dst = destination.GetComponent(type) as T;
-        if (!dst) dst = destination.AddComponent(type) as T;
-
-        //Declare Binding Flags
-        BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Default
-                             | BindingFlags.DeclaredOnly | BindingFlags.FlattenHierarchy;
-
-        var fields = type.GetFields(flags);
-        foreach (var field in fields)
-        {
-            if (field.IsStatic) continue;
-            field.SetValue(dst, field.GetValue(original));
-        }
-
-        var props = type.GetProperties(flags);
-        foreach (var prop in props)
-        {
-            if (!prop.CanWrite || !prop.CanWrite || prop.Name == "name") continue;
-            prop.SetValue(dst, prop.GetValue(original, null), null);
-        }
-
-        return dst as T;
     }
 
     public Component[] GetComponents(MonoBehaviour behaviour, Type type)

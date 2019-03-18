@@ -5,10 +5,10 @@ namespace UnityIoC
    [Flags]
     public enum LifeCycle : byte
     {
-        Default = 1 << 0,
-        Transient = 1 << 1,
-        Singleton = 1 << 2,
-        Component = 1 << 3,
+        Default = 0,
+        Transient = 1 << 0,
+        Singleton = 1 << 1,
+        Component = 1 << 2,
         SingletonComponent = Singleton | Component
     }
 

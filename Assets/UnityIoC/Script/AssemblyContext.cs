@@ -21,7 +21,11 @@ namespace UnityIoC
 
         private readonly Logger debug = new Logger(typeof(AssemblyContext));
 
+        //cache inject attributes
         private List<InjectAttribute> injectAttributes = new List<InjectAttribute>();
+
+        //cache objects from scene
+        private Dictionary<Type, MonoBehaviour> monoScripts = new Dictionary<Type, MonoBehaviour>();
 
         public bool requirePreRegistered = true;
         public bool automaticBinding = false;
@@ -34,12 +38,12 @@ namespace UnityIoC
 
         #region Constructors
 
-        public AssemblyContext(object target, bool automaticBinding = false)
+        public AssemblyContext(object target, bool automaticBinding = true)
         {
             Initialize(target.GetType(), automaticBinding);
         }
 
-        public AssemblyContext(Type typeInTargetedAssembly, bool automaticBinding = false)
+        public AssemblyContext(Type typeInTargetedAssembly, bool automaticBinding = true)
         {
             Initialize(typeInTargetedAssembly, automaticBinding);
         }
@@ -68,6 +72,11 @@ namespace UnityIoC
             if (container == null)
             {
                 debug.LogError("You need to call Initialize before call this method");
+                return;
+            }
+
+            if (!automaticBinding)
+            {
                 return;
             }
 
@@ -115,117 +124,9 @@ namespace UnityIoC
                 LoadBindingSetting(sceneBindingSetting);
             }
 
-            ProcessInjectAttributeForMonoBehaviour();
+            ProcessInjectAttributeForMonoBehaviours();
         }
 
-        /// <summary>
-        /// Load binding setting to inject for a type T in a scene
-        /// </summary>
-        /// <param name="bindingSetting">custom setting</param>
-        /// <typeparam name="T">Type to inject</typeparam>
-        public void LoadBindingSettingForType<T>(BindingSetting bindingSetting = null)
-        {
-            LoadBindingSettingForType(typeof(T), bindingSetting);
-        }
-
-        /// <summary>
-        /// Load binding setting to inject for a type T in a scene
-        /// </summary>
-        /// <param name="bindingSetting">custom setting</param>
-        /// <typeparam name="T">Type to inject</typeparam>
-        public void LoadBindingSettingForType(Type type, BindingSetting bindingSetting = null)
-        {
-            if (!bindingSetting)
-            {
-                debug.Log("Try to load binding setting for {0} from resources folders", type.Name);
-
-                //try to load setting by name format: type_scene
-                bindingSetting = Resources.Load<BindingSetting>("{0}_{1}"
-                    , type.Name
-                    , CurrentSceneName);
-
-                if (!bindingSetting)
-                {
-                    //try to load setting by name format: type
-                    bindingSetting = Resources.Load<BindingSetting>(type.Name);
-                    if (bindingSetting)
-                    {
-                        debug.Log("Found default setting for type {0}", type.Name);
-                    }
-                }
-                else
-                {
-                    debug.Log("Found default setting for type {0} in scene {1}", type.Name
-                        , CurrentSceneName);
-                }
-            }
-
-            if (!bindingSetting)
-            {
-                debug.Log("Not found default Binding setting for {0}!", type.Name);
-                return;
-            }
-
-            foreach (var setting in bindingSetting.defaultSettings)
-            {
-                BindFromSetting(setting, type);
-            }
-        }
-
-        /// <summary>
-        /// load binding setting for current scene
-        /// </summary>
-        /// <param name="bindingSetting">custom setting</param>
-        public void LoadBindingSettingForScene(InjectIntoBindingSetting bindingSetting = null)
-        {
-            if (!bindingSetting)
-            {
-                debug.Log("Load binding setting for type from resources folders");
-
-                //try to load setting by name format: type_scene
-                bindingSetting = Resources.Load<InjectIntoBindingSetting>(CurrentSceneName);
-
-                if (bindingSetting)
-                {
-                    debug.Log("Found default setting for scene {0}", CurrentSceneName);
-                }
-            }
-
-            if (!bindingSetting)
-            {
-                debug.Log("Binding setting should not be null!");
-                return;
-            }
-
-            //binding for default setting 
-            if (bindingSetting.defaultSettings != null)
-            {
-                debug.Log("Process binding from default setting");
-                foreach (var setting in bindingSetting.defaultSettings)
-                {
-                    BindFromSetting(setting);
-                }
-            }
-        }
-
-
-        public void LoadBindingSetting(string settingName)
-        {
-            LoadBindingSetting(UnityIoC.Resources.Load<InjectIntoBindingSetting>(settingName));
-        }
-
-        public void LoadBindingSetting(InjectIntoBindingSetting bindingSetting)
-        {
-            debug.Log("From InjectIntoBindingSetting, {0} settings found: ", bindingSetting.defaultSettings.Count);
-            //binding for default setting 
-            if (bindingSetting.defaultSettings != null)
-            {
-                foreach (var setting in bindingSetting.defaultSettings)
-                {
-                    BindFromSetting(setting);
-                }
-            }
-        }
 
         private void LoadBindingSetting(BindingSetting bindingSetting)
         {
@@ -366,40 +267,38 @@ namespace UnityIoC
             return null;
         }
 
-        public void Dispose()
+        private void Dispose()
         {
+            monoScripts.Clear();
             injectAttributes.Clear();
             TargetType = null;
 
             if (container != null)
             {
                 container.Dispose();
-                container = null;
             }
         }
 
-        private void ProcessInjectAttributeForMonoBehaviour()
-        {
-            var behaviours = Object.FindObjectsOfType<MonoBehaviour>();
-
-            debug.Log("Found behavior: " + behaviours.Length);
-
-            foreach (var mono in behaviours)
-            {
-                if (mono)
-                {
-                    ProcessInjectAttribute(mono);
-                }
-            }
-        }
-
-        public void ProcessInjectAttribute(object mono)
+        private void ProcessInjectAttribute(object mono)
         {
             if (mono == null)
             {
                 return;
             }
-            
+
+            var gameObj = mono as GameObject;
+            if (gameObj)
+            {
+                foreach (var component in gameObj.GetComponents(typeof(MonoBehaviour)))
+                {
+                    ProcessMethod(component);
+                    ProcessProperties(component);
+                    ProcessVariables(component);
+                }
+                
+                return;
+            }
+
             ProcessMethod(mono);
             ProcessProperties(mono);
             ProcessVariables(mono);
@@ -482,6 +381,12 @@ namespace UnityIoC
                     var component = GetComponentFromGameObject(mono, property.PropertyType, inject);
                     if (component)
                     {
+                        if (inject.LifeCycle == LifeCycle.Singleton ||
+                            (inject.LifeCycle & LifeCycle.Singleton) == LifeCycle.Singleton)
+                        {
+                            container.Bind(property.PropertyType, component);
+                        }
+
                         property.SetValue(mono, component, null);
                         continue;
                     }
@@ -506,6 +411,15 @@ namespace UnityIoC
 
             foreach (var field in fieldInfos)
             {
+                bool ignoreSetValue = false;
+                //only serialize if the field is not set yet
+                var value = field.GetValue(mono);
+                if (value != value.DefaultValue())
+                {
+                    debug.Log(string.Format("Don't set value for field {0} due to non-default value", field.Name));
+                    ignoreSetValue = true;
+                }
+
                 var inject =
                     field.GetCustomAttributes(typeof(InjectAttribute), true).FirstOrDefault() as InjectAttribute;
 
@@ -514,7 +428,7 @@ namespace UnityIoC
                 //pass container to injectAttribute
                 inject.container = Container;
 
-                if (field.FieldType.IsArray)
+                if (field.FieldType.IsArray && !ignoreSetValue)
                 {
                     //check if field type is array for particular processing
                     var injectComponentArray = inject as IComponentArrayResolvable;
@@ -530,7 +444,6 @@ namespace UnityIoC
                     if (components != null && components.Length > 0)
                     {
                         var array = ConvertComponentArrayTo(field.FieldType.GetElementType(), components);
-
                         field.SetValue(mono, array);
                         continue;
                     }
@@ -541,7 +454,17 @@ namespace UnityIoC
                     var component = GetComponentFromGameObject(mono, field.FieldType, inject);
                     if (component)
                     {
-                        field.SetValue(mono, component);
+                        if (inject.LifeCycle == LifeCycle.Singleton ||
+                            (inject.LifeCycle & LifeCycle.Singleton) == LifeCycle.Singleton)
+                        {
+                            container.Bind(field.FieldType, component);
+                        }
+
+                        if (!ignoreSetValue)
+                        {
+                            field.SetValue(mono, component);
+                        }
+
                         continue;
                     }
                 }
@@ -550,11 +473,14 @@ namespace UnityIoC
                 debug.Log("IComponentResolvable attribute fails to resolve {0}", field.FieldType);
 
                 //resolve object as [Singleton], [Transient] or [AsComponent] if component attribute fails to resolve
-                field.SetValue(mono,
-                    container.ResolveObject(
-                        field.FieldType,
-                        inject == null ? LifeCycle.Default : inject.LifeCycle,
-                        mono));
+                if (!ignoreSetValue)
+                {
+                    field.SetValue(mono,
+                        container.ResolveObject(
+                            field.FieldType,
+                            inject == null ? LifeCycle.Default : inject.LifeCycle,
+                            mono));
+                }
             }
         }
 
@@ -567,7 +493,6 @@ namespace UnityIoC
 
                 if (component)
                 {
-                    ProcessInjectAttribute(component);
                     array.SetValue(component, i);
                 }
             }
@@ -603,20 +528,17 @@ namespace UnityIoC
             if (injectComponent != null)
             {
                 component = injectComponent.GetComponent(behaviour, type);
-
                 //unable to get it from gameObject
-                if (component == null)
+                if (component != null)
+                {
+                    ProcessInjectAttribute(component.gameObject);
+                }
+                else
                 {
                     debug.Log("Unable to resolve component of {0} for {1}", type, behaviour.name);
                 }
             }
-            
-//            var lifeCycle = injectAttribute.LifeCycle;
-//            if (lifeCycle == LifeCycle.Singleton || (lifeCycle & LifeCycle.Singleton) == LifeCycle.Singleton)
-//            {
-//            }
-            
-            ProcessInjectAttribute(component);
+
             return component;
         }
 
@@ -659,20 +581,19 @@ namespace UnityIoC
                 debug.Log("Unable to resolve components of {0} for {1}, found {2} elements",
                     type.GetElementType(), behaviour.name, components != null ? components.Length : 0);
             }
+            else
+            {
+                foreach (var component in components)
+                {
+                    ProcessInjectAttribute(component);
+                }
+            }
 
             return components;
         }
 
-        #endregion
 
-        #region Public members
-
-        private DefaultContainer defaultContainer
-        {
-            get { return (DefaultContainer) container; }
-        }
-
-        public void Initialize(Type target = null, bool automaticBinding = false)
+        private void Initialize(Type target = null, bool automaticBinding = false)
         {
             this.automaticBinding = automaticBinding;
             this.TargetType = target;
@@ -680,6 +601,166 @@ namespace UnityIoC
 
             InitialProcess();
         }
+
+        #endregion
+
+        #region Public members
+
+        /// <summary>
+        /// Process inject attributes in every mono behaviour in scene
+        /// </summary>
+        public void ProcessInjectAttributeForMonoBehaviours()
+        {
+            var behaviours = Object.FindObjectsOfType<MonoBehaviour>();
+
+            debug.Log("Found behavior: " + behaviours.Length);
+
+            foreach (var mono in behaviours)
+            {
+                if (mono)
+                {
+                    ProcessInjectAttribute(mono);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Process an unity Object for resolving every inject attributes inside
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <param name="parent"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public T Copy<T>(T obj, Transform parent = null) where T : Object
+        {
+            var clone = Object.Instantiate(obj, parent);
+
+            var gameObject = clone as GameObject;
+            if (gameObject)
+            {
+                foreach (var mono in gameObject.GetComponents(typeof(MonoBehaviour)))
+                {
+                    ProcessInjectAttribute(mono);
+                }
+            }
+
+            return clone;
+        }
+
+
+        /// <summary>
+        /// Load binding setting to inject for a type T in a scene
+        /// </summary>
+        /// <param name="bindingSetting">custom setting</param>
+        /// <typeparam name="T">Type to inject</typeparam>
+        public void LoadBindingSettingForType<T>(BindingSetting bindingSetting = null)
+        {
+            LoadBindingSettingForType(typeof(T), bindingSetting);
+        }
+
+        /// <summary>
+        /// Load binding setting to inject for a type T in a scene
+        /// </summary>
+        /// <param name="bindingSetting">custom setting</param>
+        /// <typeparam name="T">Type to inject</typeparam>
+        public void LoadBindingSettingForType(Type type, BindingSetting bindingSetting = null)
+        {
+            if (!bindingSetting)
+            {
+                debug.Log("Try to load binding setting for {0} from resources folders", type.Name);
+
+                //try to load setting by name format: type_scene
+                bindingSetting = Resources.Load<BindingSetting>("{0}_{1}"
+                    , type.Name
+                    , CurrentSceneName);
+
+                if (!bindingSetting)
+                {
+                    //try to load setting by name format: type
+                    bindingSetting = Resources.Load<BindingSetting>(type.Name);
+                    if (bindingSetting)
+                    {
+                        debug.Log("Found default setting for type {0}", type.Name);
+                    }
+                }
+                else
+                {
+                    debug.Log("Found default setting for type {0} in scene {1}", type.Name
+                        , CurrentSceneName);
+                }
+            }
+
+            if (!bindingSetting)
+            {
+                debug.Log("Not found default Binding setting for {0}!", type.Name);
+                return;
+            }
+
+            foreach (var setting in bindingSetting.defaultSettings)
+            {
+                BindFromSetting(setting, type);
+            }
+        }
+
+        /// <summary>
+        /// load binding setting for current scene
+        /// </summary>
+        /// <param name="bindingSetting">custom setting</param>
+        public void LoadBindingSettingForScene(InjectIntoBindingSetting bindingSetting = null)
+        {
+            if (!bindingSetting)
+            {
+                debug.Log("Load binding setting for type from resources folders");
+
+                //try to load setting by name format: type_scene
+                bindingSetting = Resources.Load<InjectIntoBindingSetting>(CurrentSceneName);
+
+                if (bindingSetting)
+                {
+                    debug.Log("Found default setting for scene {0}", CurrentSceneName);
+                }
+            }
+
+            if (!bindingSetting)
+            {
+                debug.Log("Binding setting should not be null!");
+                return;
+            }
+
+            //binding for default setting 
+            if (bindingSetting.defaultSettings != null)
+            {
+                debug.Log("Process binding from default setting");
+                foreach (var setting in bindingSetting.defaultSettings)
+                {
+                    BindFromSetting(setting);
+                }
+            }
+        }
+
+        public void LoadBindingSetting(string settingName)
+        {
+            LoadBindingSetting(UnityIoC.Resources.Load<InjectIntoBindingSetting>(settingName));
+        }
+
+        public void LoadBindingSetting(InjectIntoBindingSetting bindingSetting)
+        {
+            debug.Log("From InjectIntoBindingSetting, {0} settings found: ", bindingSetting.defaultSettings.Count);
+            //binding for default setting 
+            if (bindingSetting.defaultSettings != null)
+            {
+                foreach (var setting in bindingSetting.defaultSettings)
+                {
+                    BindFromSetting(setting);
+                }
+            }
+        }
+
+        private DefaultContainer defaultContainer
+        {
+            get { return (DefaultContainer) container; }
+        }
+
 
         public DefaultContainer Container
         {
@@ -740,6 +821,16 @@ namespace UnityIoC
         #region Static members
 
         private static AssemblyContext _defaultInstance;
+
+        public static AssemblyContext DefaultInstance
+        {
+            get { return GetDefaultInstance(); }
+        }
+
+        public static T Instantiate<T>(T origin, Transform parent = null) where T : Component
+        {
+            return parent == null ? DefaultInstance.Copy(origin) : _defaultInstance.Copy(origin, parent);
+        }
 
         public static AssemblyContext GetDefaultInstance(object context, bool recreate = false)
         {

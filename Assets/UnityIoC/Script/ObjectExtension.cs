@@ -12,10 +12,40 @@ using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 
 public static class ObjectExtension
-
 {
-    public static T BinaryClone<T>(this T objSource)
+    public static T DefaultValue<T>(this T t)
+    {
+        return default(T);
+    }
+    
+    public static T CopyComponent<T>(this T original, GameObject destination) where T : Component
+    {
+        Type type = original.GetType();
+        var dst = destination.GetComponent(type) as T;
+        if (!dst) dst = destination.AddComponent(type) as T;
 
+        //Declare Binding Flags
+        BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Default
+                             | BindingFlags.DeclaredOnly | BindingFlags.FlattenHierarchy;
+
+        var fields = type.GetFields(flags);
+        foreach (var field in fields)
+        {
+            if (field.IsStatic) continue;
+            field.SetValue(dst, field.GetValue(original));
+        }
+
+        var props = type.GetProperties(flags);
+        foreach (var prop in props)
+        {
+            if (!prop.CanWrite || !prop.CanWrite || prop.Name == "name") continue;
+            prop.SetValue(dst, prop.GetValue(original, null), null);
+        }
+
+        return dst as T;
+    }
+    
+    public static T BinaryClone<T>(this T objSource)
     {
         if (objSource == null)
         {

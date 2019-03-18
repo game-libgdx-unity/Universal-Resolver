@@ -9,8 +9,9 @@ public class TestGetComponentAttributeByPath : MonoBehaviour
 
 	//This attribute do the work as "Add Or GetComponent" from this GameObject
 	[Component("child/child")] private TestComponent[] testComponents;
-	[Component("child/child")] private TestComponent testComponent;
-	[Transient] private TestComponent aTestComponen;
+	[Component] private TestComponent internalTestComponent;	
+	[Singleton("child/child")] private TestComponent testComponent;
+	[Transient("child/child")] private TestComponent aTestComponen;
 	[Singleton] private TestComponent sTestComponen;
 	// Use this for initialization
 	void Awake ()
@@ -18,6 +19,8 @@ public class TestGetComponentAttributeByPath : MonoBehaviour
 		//create context which will automatically load binding setting by the assembly name
 		//in this case, please refer to SceneTest setting from the resources folder.
 		 new AssemblyContext(this);
+		
+		internalTestComponent.abstractClass.DoSomething();
 	}
 
 	private void Start()
