@@ -15,6 +15,7 @@ using Object = UnityEngine.Object;
 
 namespace UnityIoC
 {
+    
     public partial class AssemblyContext
     {
         #region Variables & Constants

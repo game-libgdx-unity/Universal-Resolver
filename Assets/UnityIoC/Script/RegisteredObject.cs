@@ -6,9 +6,7 @@
  **/
 
 using System;
-using System.Linq;
 using UnityEngine;
-using UnityIoC;
 using Object = UnityEngine.Object;
 
 namespace UnityIoC
@@ -93,38 +91,84 @@ namespace UnityIoC
                 var objectLifeCycle = preferredLifeCycle == LifeCycle.Default ? LifeCycle : preferredLifeCycle;
                 Debug.Log("Life cycle: " + objectLifeCycle);
 
-                if (this.Instance == null || objectLifeCycle == LifeCycle.Transient ||
-                    objectLifeCycle == LifeCycle.Default)
+
+                var isTransient = objectLifeCycle.IsEqual(LifeCycle.Transient) ||
+                                  (objectLifeCycle & LifeCycle.Transient) == LifeCycle.Transient;
+
+
+                var isSingleton = objectLifeCycle == LifeCycle.Singleton ||
+                                  (objectLifeCycle & LifeCycle.Singleton) == LifeCycle.Singleton;
+
+
+                if (Instance == null)
                 {
-                    object instance;
-                    if (ImplementedType.IsSubclassOf(typeof(MonoBehaviour)))
+                    if (ImplementedType.IsSubclassOf(typeof(Component)))
                     {
-                        instance = TryGetGameObject(assemblyContext, ImplementedType, ImplementedType.Name,
-                            preferredLifeCycle, resolveFrom);
+                        //cache 
+                        if (Instance == null)
+                        {
+                            Instance = TryGetGameObject(assemblyContext, ImplementedType, ImplementedType.Name,
+                                preferredLifeCycle, resolveFrom);
+
+                            assemblyContext.ProcessInjectAttribute(Instance);
+
+                            if (isTransient)
+                            {
+                                (Instance as Component).gameObject.SetActive(false);
+                            }
+                        }
                     }
                     else
                     {
-                        instance = Activator.CreateInstance(ImplementedType, args);
+                        Instance = Activator.CreateInstance(ImplementedType, args);
+                        assemblyContext.ProcessInjectAttribute(Instance);
                     }
+                }
 
-                    assemblyContext.ProcessInjectAttribute(instance);
+                if (isTransient)
+                {
+                    object instance;
 
-                    if (Instance != null) return instance;
-
-                    if (objectLifeCycle == LifeCycle.Singleton ||
-                        (objectLifeCycle & LifeCycle.Singleton) == LifeCycle.Singleton)
+                    if (ImplementedType.IsSubclassOf(typeof(Component)))
                     {
-                        Instance = instance;
+                        var component = Instance as Component;
+
+                        //instantiate
+                        var monoBehaviour = resolveFrom as Component;
+
+                        if ((preferredLifeCycle & LifeCycle.Component) == LifeCycle.Component && monoBehaviour != null)
+                        {
+                            instance = Object.Instantiate(component, monoBehaviour.transform);
+                        }
+                        else
+                        {
+                            instance = Object.Instantiate(component);
+                        }
+
+                        //activate
+                        (instance as Component).gameObject.SetActive(true);
+                    }
+                    else
+                    {
+                        //instance below should be cloned from Instance
+                        instance = Activator.CreateInstance(ImplementedType, args);
+                        assemblyContext.ProcessInjectAttribute(Instance);
                     }
 
                     return instance;
                 }
 
-                return Instance;
+                if (isSingleton)
+                {
+                    return Instance;
+                }
+
+                Debug.LogError("RegisterObject failed to resolve type " + AbstractType.Name);
+                return null;
             }
 
 
-            private object TryGetGameObject(AssemblyContext assemblyContext, Type concreteType,
+            private Component TryGetGameObject(AssemblyContext assemblyContext, Type concreteType,
                 string TypeName, LifeCycle lifeCycle, object resolveFrom)
             {
                 GameObject prefab = null;
@@ -132,7 +176,7 @@ namespace UnityIoC
 
                 //if resolve as singleton, try to get component from an existing one in current scene or from cached
                 if ((lifeCycle == LifeCycle.Singleton ||
-                    (lifeCycle & LifeCycle.Singleton) == LifeCycle.Singleton) &&
+                     (lifeCycle & LifeCycle.Singleton) == LifeCycle.Singleton) &&
                     concreteType.IsSubclassOf(typeof(MonoBehaviour)))
                 {
                     //try to get from caches first                    
@@ -171,22 +215,12 @@ namespace UnityIoC
                 prefab = Resources.Load<GameObject>(string.Format("prefabs/scenes/{0}", TypeName));
                 if (!prefab) prefab = Resources.Load<GameObject>(string.Format("scenes/{0}", TypeName));
                 if (!prefab) prefab = Resources.Load<GameObject>(string.Format("prefabs/{0}", TypeName));
-                if (!prefab) prefab = Resources.Load<GameObject>(TypeName.ToString());
+                if (!prefab) prefab = Resources.Load<GameObject>(TypeName);
 
                 if (prefab)
                 {
                     Debug.Log("Found prefab for {0} .......", TypeName);
-                    GameObject prefabInstance = null;
-                    var monoBehaviour = resolveFrom as Component;
-
-                    if ((lifeCycle & LifeCycle.Component) == LifeCycle.Component && monoBehaviour != null)
-                    {
-                        prefabInstance = Object.Instantiate(prefab, monoBehaviour.transform);
-                    }
-                    else
-                    {
-                        prefabInstance = Object.Instantiate(prefab);
-                    }
+                    GameObject prefabInstance = Object.Instantiate(prefab);
 
                     if (prefabInstance.GetComponent(TypeName) == null)
                     {

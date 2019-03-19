@@ -17,8 +17,8 @@ public class MapGenerator : MonoBehaviour
     [SerializeField] private RectTransform container;
 
     [Singleton("/Cell")] private Cell cellPrefab;
-    [Singleton] private List<Cell> cells = new List<Cell>();
-    [Singleton] private List<CellData> cellData = new List<CellData>();
+    [Singleton] private List<Cell> cells ;
+    [Singleton] private List<CellData> cellData;
     [Singleton] private IGameSolver gameSolver;
     [Singleton] private IGameBoard gameBoard;
     
