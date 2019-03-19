@@ -12,8 +12,13 @@ MonoBehaviour:
   m_Name: GameDll
   m_EditorClassIdentifier: 
   defaultSettings:
-  - AbstractTypeHolder: {fileID: 11500000, guid: 0a1e2c43384962244bdf26e0eba43d70,
+  - LifeCycle: 2
+    AbstractTypeHolder: {fileID: 11500000, guid: 0a1e2c43384962244bdf26e0eba43d70,
       type: 3}
     ImplementedTypeHolder: {fileID: 11500000, guid: 8cd7272677517bd42ae1ea40997b6453,
       type: 3}
-    LifeCycle: 2
+  - LifeCycle: 2
+    AbstractTypeHolder: {fileID: 11500000, guid: 06419612376981d42951ce08233f9d20,
+      type: 3}
+    ImplementedTypeHolder: {fileID: 11500000, guid: f176487e540a98145be936fc60afb19e,
+      type: 3}

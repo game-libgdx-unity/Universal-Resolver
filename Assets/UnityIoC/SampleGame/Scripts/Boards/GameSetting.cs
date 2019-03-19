@@ -11,8 +11,8 @@ namespace App.Scripts.Boards
     [Serializable]
     public class GameSetting
     {
-        public int Width = 100;
-        public int Height = 100;
-        public int MineCount = 200;
+        public int Width = 10;
+        public int Height = 10;
+        public int MineCount = 9;
     }
 }

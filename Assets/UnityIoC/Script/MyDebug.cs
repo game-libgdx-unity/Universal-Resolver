@@ -102,6 +102,13 @@ namespace UnityIoC
         {
             this.type = context.GetType();
             this.context = context;
+            
+            //doesn't allow to log in production code
+            #if !UNITY_EDITOR && !DEVELOPMENT_BUILD
+            
+            enableLogging = false;
+            
+            #endif
         }
 
         public Logger(Type type, bool enableLogging = true)

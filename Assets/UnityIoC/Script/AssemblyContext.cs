@@ -295,7 +295,7 @@ namespace UnityIoC
                     ProcessProperties(component);
                     ProcessVariables(component);
                 }
-                
+
                 return;
             }
 
@@ -355,10 +355,33 @@ namespace UnityIoC
 
             foreach (var property in properties)
             {
-                var method = property.GetSetMethod(true);
                 var inject = property
                     .GetCustomAttributes(typeof(InjectAttribute), true)
                     .FirstOrDefault() as InjectAttribute;
+                
+                if (inject == null)
+                {
+                    continue;
+                }
+
+                //only process a property if the property's value is not set yet
+                var value = property.GetValue(mono, null);
+                if (value != value.DefaultValue())
+                {
+                    debug.Log(string.Format("Don't set value for property {0} due to non-default value",
+                        property.Name));
+
+                    //check to bind this instance
+                    if (inject.LifeCycle == LifeCycle.Singleton ||
+                        (inject.LifeCycle & LifeCycle.Singleton) == LifeCycle.Singleton)
+                    {
+                        container.Bind(property.PropertyType, value);
+                    }
+
+                    continue;
+                }
+
+                var setMethod = property.GetSetMethod(true);
 
                 //pass container to injectAttribute
                 // ReSharper disable once PossibleNullReferenceException
@@ -394,7 +417,7 @@ namespace UnityIoC
 
                 debug.Log("IComponentResolvable attribute fails to resolve {0}", property.PropertyType);
                 //resolve object as [Singleton], [Transient] or [AsComponent] if component attribute fails to resolve
-                ProcessMethodInfo(mono, method, inject);
+                ProcessMethodInfo(mono, setMethod, inject);
             }
         }
 
@@ -411,24 +434,37 @@ namespace UnityIoC
 
             foreach (var field in fieldInfos)
             {
-                bool ignoreSetValue = false;
-                //only serialize if the field is not set yet
+                var inject =
+                    field.GetCustomAttributes(typeof(InjectAttribute), true).FirstOrDefault() as InjectAttribute;
+
+                if (inject == null)
+                {
+                    continue;
+                }
+                
+                //only process a field if the field's value is not set yet
                 var value = field.GetValue(mono);
                 if (value != value.DefaultValue())
                 {
                     debug.Log(string.Format("Don't set value for field {0} due to non-default value", field.Name));
-                    ignoreSetValue = true;
-                }
 
-                var inject =
-                    field.GetCustomAttributes(typeof(InjectAttribute), true).FirstOrDefault() as InjectAttribute;
+                    //check to bind this instance
+                    if (inject.LifeCycle == LifeCycle.Singleton ||
+                        (inject.LifeCycle & LifeCycle.Singleton) == LifeCycle.Singleton)
+                    {
+                        debug.Log(string.Format("Bind instance for field {0}", field.Name));
+                        container.Bind(field.FieldType, value);
+                    }
+
+                    continue;
+                }
 
                 injectAttributes.Add(inject);
 
                 //pass container to injectAttribute
                 inject.container = Container;
 
-                if (field.FieldType.IsArray && !ignoreSetValue)
+                if (field.FieldType.IsArray)
                 {
                     //check if field type is array for particular processing
                     var injectComponentArray = inject as IComponentArrayResolvable;
@@ -439,7 +475,7 @@ namespace UnityIoC
                             "You must apply injectAttribute implementing IComponentArrayResolvable field to resolve the array of components");
                     }
 
-                    //try to resolve as monoBehaviour first
+                    //try to resolve as monoBehaviour
                     var components = GetComponentsFromGameObject(mono, field.FieldType, inject);
                     if (components != null && components.Length > 0)
                     {
@@ -454,16 +490,14 @@ namespace UnityIoC
                     var component = GetComponentFromGameObject(mono, field.FieldType, inject);
                     if (component)
                     {
+                        //if the life cycle is singleton, bind the instance of the Type with this component
                         if (inject.LifeCycle == LifeCycle.Singleton ||
                             (inject.LifeCycle & LifeCycle.Singleton) == LifeCycle.Singleton)
                         {
                             container.Bind(field.FieldType, component);
                         }
 
-                        if (!ignoreSetValue)
-                        {
-                            field.SetValue(mono, component);
-                        }
+                        field.SetValue(mono, component);
 
                         continue;
                     }
@@ -473,14 +507,11 @@ namespace UnityIoC
                 debug.Log("IComponentResolvable attribute fails to resolve {0}", field.FieldType);
 
                 //resolve object as [Singleton], [Transient] or [AsComponent] if component attribute fails to resolve
-                if (!ignoreSetValue)
-                {
-                    field.SetValue(mono,
-                        container.ResolveObject(
-                            field.FieldType,
-                            inject == null ? LifeCycle.Default : inject.LifeCycle,
-                            mono));
-                }
+                field.SetValue(mono,
+                    container.ResolveObject(
+                        field.FieldType,
+                        inject.LifeCycle,
+                        mono));
             }
         }
 
@@ -611,15 +642,49 @@ namespace UnityIoC
         /// </summary>
         public void ProcessInjectAttributeForMonoBehaviours()
         {
-            var behaviours = Object.FindObjectsOfType<MonoBehaviour>();
+            var allBehaviours = Object.FindObjectsOfType<MonoBehaviour>();
 
-            debug.Log("Found behavior: " + behaviours.Length);
-
-            foreach (var mono in behaviours)
+            var ignoredUnityEngineScripts = allBehaviours.Where(m =>
             {
-                if (mono)
+                var ns = m.GetType().Namespace;
+                return ns == null || !ns.StartsWith("UnityEngine");
+            }).ToArray();
+
+            var sortableBehaviours = Array.FindAll(ignoredUnityEngineScripts,
+                b => b.GetType().GetCustomAttributes(typeof(ProcessingOrderAttribute), true).Any());
+
+            var nonSortableBehaviours = ignoredUnityEngineScripts.Except(sortableBehaviours);
+
+            if (sortableBehaviours.Any())
+            {
+                debug.Log("Found sortableBehaviours behavior: " + sortableBehaviours.Count());
+                
+                Array.Sort(sortableBehaviours);
+
+                foreach (var mono in sortableBehaviours)
                 {
-                    ProcessInjectAttribute(mono);
+                    if (mono)
+                    {
+                        ProcessInjectAttribute(mono);
+                    }
+                }
+            }
+
+            if (nonSortableBehaviours.Any())
+            {
+                debug.Log("Found nonSortableBehaviours behavior: " + nonSortableBehaviours.Count());
+
+                if (debug.enableLogging)
+                {
+                    nonSortableBehaviours.Select(m => m.GetType().Name).Do(m=>debug.Log(m));
+                }
+
+                foreach (var mono in nonSortableBehaviours)
+                {
+                    if (mono)
+                    {
+                        ProcessInjectAttribute(mono);
+                    }
                 }
             }
         }

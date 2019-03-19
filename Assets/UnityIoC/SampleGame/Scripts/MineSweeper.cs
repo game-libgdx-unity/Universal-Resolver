@@ -19,6 +19,7 @@ public class MineSweeper : MonoBehaviour
         MyDebug.EnableLogging = false;
         
         Stopwatch stopWatch = new Stopwatch();
+        stopWatch.Reset();
         stopWatch.Start();
         
         var context = AssemblyContext.GetDefaultInstance(typeof(MineSweeper));
@@ -32,4 +33,9 @@ public class MineSweeper : MonoBehaviour
             ts.Milliseconds / 10);
         Debug.Log("RunTime " + elapsedTime);
     }
+}
+
+public class Benmark
+{
+    
 }

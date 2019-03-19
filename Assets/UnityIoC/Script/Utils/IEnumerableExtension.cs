@@ -9,6 +9,16 @@ public static class IEnumerableExtension {
 	
 	//usage: var seq = new List<int> { 1, 3, 12, 19, 33 };
 	//       var transformed = seq.Scan(((state, item) => state + item), 0).Skip(1);
+	public static void Do<T>(this IEnumerable<T> input, Action<T> next) {
+		var enumerator = input.GetEnumerator();
+		while (enumerator.MoveNext())
+		{
+			next(enumerator.Current);
+		}
+	}
+	
+	//usage: var seq = new List<int> { 1, 3, 12, 19, 33 };
+	//       var transformed = seq.Scan(((state, item) => state + item), 0).Skip(1);
 	public static IEnumerable<U> Scan<T, U>(this IEnumerable<T> input, Func<U, T, U> next, U state) {
 		yield return state;
 		foreach(var item in input) {

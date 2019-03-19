@@ -6,11 +6,28 @@
  **/
 
 using System;
+using System.Collections;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using UnityIoC;
 using Object = UnityEngine.Object;
+
+[AttributeUsage(AttributeTargets.Class)]
+public class ProcessingOrderAttribute : Attribute, IComparer
+{
+    public int Order { get; set; }
+
+    public ProcessingOrderAttribute(int order = 10)
+    {
+        this.Order = order;
+    }
+
+    public int Compare(object x, object y)
+    {
+        return (x as ProcessingOrderAttribute).Order - (y as ProcessingOrderAttribute).Order;
+    }
+}
 
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Constructor |
                 AttributeTargets.Field)]
@@ -143,6 +160,7 @@ public class ComponentSingletonAttribute : InjectAttribute
         : base(LifeCycle.SingletonComponent, path)
     {
     }
+
     public ComponentSingletonAttribute()
         : base(LifeCycle.SingletonComponent)
     {

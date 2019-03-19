@@ -9,6 +9,7 @@ using UnityEngine.UI;
 using UnityIoC;
 
 
+[ProcessingOrder(1)]
 public class MapGenerator : MonoBehaviour
 {
     [SerializeField] private GridLayoutGroup gridLayout;
@@ -16,12 +17,12 @@ public class MapGenerator : MonoBehaviour
     [SerializeField] private RectTransform container;
 
     [Singleton("/Cell")] private Cell cellPrefab;
-    [Singleton] private GameSetting gameSetting;
+    [Singleton] private List<Cell> cells = new List<Cell>();
+    [Singleton] private List<CellData> cellData = new List<CellData>();
+    [Singleton] private IGameSolver gameSolver;
     [Singleton] private IGameBoard gameBoard;
-    [Singleton] private List<Cell> cells;
-    [Singleton] private List<CellData> cellData;
-    [Singleton] private GameSolver gameSolver;
-
+    
+    private GameSetting gameSetting = new GameSetting();
     private ReactiveProperty<GameStatus> gameStatus = new ReactiveProperty<GameStatus>();
 
     private void Awake()
