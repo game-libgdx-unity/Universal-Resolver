@@ -27,7 +27,7 @@ namespace UnityIoC
             output.AbstractType = AbstractType;
             output.ImplementedType = ImplementedType;
             output.LifeCycle = LifeCycle;
-
+            output.Prefab = Prefab;
             output.ImplementedTypeHolder = ImplementedTypeHolder;
             output.InjectInto = InjectInto;
             output.EnableInjectInto = EnableInjectInto;

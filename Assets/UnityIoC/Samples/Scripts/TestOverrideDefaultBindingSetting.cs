@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using SceneTest;
 using UnityEngine;
 using UnityIoC;
-using Resources = UnityIoC.Resources;
 
 public class TestOverrideDefaultBindingSetting : MonoBehaviour {
 
@@ -20,7 +19,7 @@ public class TestOverrideDefaultBindingSetting : MonoBehaviour {
 		test1.DoSomething(); 
 		
 		//override default setting by a custom one loaded from resources folder
-		assemblyContext.LoadBindingSetting(Resources.Load<InjectIntoBindingSetting>("custom_setting"));
+		assemblyContext.LoadBindingSetting(MyResources.Load<InjectIntoBindingSetting>("custom_setting"));
 		
 		//try to resolve the object by the new setting which this assemblyContext just loaded.
 		var test2 = assemblyContext.Resolve<AbstractClass>();

@@ -3,7 +3,6 @@ using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityIoC.Editor;
 using Object = UnityEngine.Object;
 
 
@@ -17,7 +16,7 @@ public static class AutoLogProcesser
         if (SceneManager.GetActiveScene().name != "TestLogScene")
             return;
 //clear console, take extra care cause it can remove logs from previous run
-        TestBase.ClearConsole();
+//        TestBase.ClearConsole();
 
 //        customType = CustomType.AddMethods();
         var assembly = Assembly.GetExecutingAssembly();

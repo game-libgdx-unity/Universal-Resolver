@@ -5,10 +5,13 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/UnityIoC/Samples/1. TestDefaultBindingSetting.unity
     guid: 301338f899a8247c3ae7b7027f20baf6
   - enabled: 0
-    path: Assets/UnityIoC/SampleGame/Scenes/Game.unity
+    path: Assets/SampleGame/Scenes/GameLoadFromPrefab.unity
     guid: a75896dd470133142add73453db644b5
+  - enabled: 1
+    path: Assets/SampleGame/Scenes/GameLoadFromScene.unity
+    guid: 15badeebed2b74f53b00120b1c214964
   m_configObjects: {}

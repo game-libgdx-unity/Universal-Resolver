@@ -27,9 +27,9 @@ public class TestComponentSingletonAttribute : MonoBehaviour
 	//after creating AssemblyContext, it will resolve this component because you added [Component] attribute
 	//you should see a log of this action in unity console
 	//this component will be resolved as singleton and attached to current gameObject
-	[ComponentSingleton] private TestComponent2 testComp2;
+	[SingletonComponent] private TestComponent2 testComp2;
 	
 	//after creating AssemblyContext, it will resolve this component because you added [Component] attribute
 	//you should see a log of this action in unity console
-	[ComponentSingleton] private TestComponent testComp;
+	[SingletonComponent] private TestComponent testComp;
 }

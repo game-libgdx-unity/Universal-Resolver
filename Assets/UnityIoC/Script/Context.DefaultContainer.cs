@@ -9,7 +9,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -123,7 +122,7 @@ namespace UnityIoC
 
             public void Bind(Type typeToResolve, Type concreteType, LifeCycle lifeCycle = LifeCycle.Default)
             {
-                if (concreteType.IsAbstract || concreteType.IsInterface)
+                if (concreteType.IsAbstract)
                 {
                     throw new InvalidOperationException("Cannot bind to concrete class by an abstract type " +
                                                         concreteType);
@@ -146,7 +145,7 @@ namespace UnityIoC
 
             public void Bind<TTypeToResolve, TConcrete>(LifeCycle lifeCycle)
             {
-                if (typeof(TConcrete).IsAbstract || typeof(TConcrete).IsInterface)
+                if (typeof(TConcrete).IsAbstract)
                 {
                     throw new InvalidOperationException("Cannot bind empty object of abstract type");
                 }
@@ -165,7 +164,7 @@ namespace UnityIoC
 
             public void Bind(InjectIntoBindingData data)
             {
-                if (data.ImplementedType.IsAbstract || data.ImplementedType.IsInterface)
+                if (data.ImplementedType.IsAbstract)
                 {
                     throw new InvalidOperationException("Cannot bind empty object of abstract type");
                 }
@@ -185,6 +184,8 @@ namespace UnityIoC
                         {
                             debug.Log("Unbind {0} registered for {1}", data.ImplementedType,
                                 data.AbstractType);
+                            
+                            RemoveRegisteredObjectFromCache(registeredObject);
                             registeredObjects.RemoveAt(i);
                             i--;
                         }
@@ -193,6 +194,8 @@ namespace UnityIoC
                     {
                         debug.Log("Unbind {0} registered for {1}", data.ImplementedType,
                             data.AbstractType);
+                        
+                        RemoveRegisteredObjectFromCache(registeredObject);
                         registeredObjects.RemoveAt(i);
                         i--;
                     }
@@ -218,6 +221,14 @@ namespace UnityIoC
                         data.InjectInto));
             }
 
+            private void RemoveRegisteredObjectFromCache(RegisteredObject registeredObject)
+            {
+                foreach (var item in CachedResolveResults.Where(kvp => kvp.Value == registeredObject).ToList())
+                {
+                    CachedResolveResults.Remove(item.Key);
+                }
+            }
+
             public IEnumerable<AssemblyContext.RegisteredObject> GetRegisteredObject(Type typeToResolve)
             {
                 return registeredObjects.Where(r => r.AbstractType == typeToResolve);
@@ -230,7 +241,7 @@ namespace UnityIoC
 
             public void Bind(Type typeToResolve, Type typeConcrete, object instance)
             {
-                if (instance == null && (typeConcrete.IsAbstract || typeConcrete.IsInterface))
+                if (instance == null && (typeConcrete.IsAbstract))
                 {
                     throw new InvalidOperationException("Cannot bind null object of abstract type");
                 }
@@ -240,6 +251,8 @@ namespace UnityIoC
                     if (registeredTypes.Contains(typeToResolve))
                     {
                         debug.Log("Already registered type of " + typeToResolve + " will unbind them first");
+                        
+//                        RemoveRegisteredObjectFromCache(registeredObject);
                         registeredObjects.RemoveAll(r =>
                             r.ImplementedType == typeConcrete && r.AbstractType == typeToResolve);
                     }
@@ -331,7 +344,7 @@ namespace UnityIoC
                             "The type {0} has not been registered", abstractType.Name);
 
                         //if the typeToResolve is abstract, then we cannot resolve it, throw exceptions
-                        if (abstractType.IsAbstract || abstractType.IsInterface)
+                        if (abstractType.IsAbstract)
                         {
                             throw new InvalidOperationException(
                                 "Cannot resolve the abstract type " + abstractType.Name +

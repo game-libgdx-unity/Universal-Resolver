@@ -27,6 +27,8 @@ namespace SceneTest
 
             //you should see a log of this action in unity console
             obj.DoSomething();
+            
+            //check ReferenceEquals, should be true
             Debug.Log("OKKKKK: " + ReferenceEquals(obj, obj2));
             Debug.Log("OKKKKK: " + !ReferenceEquals(obj3, obj2));
         }

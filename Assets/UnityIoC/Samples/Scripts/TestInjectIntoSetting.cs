@@ -22,7 +22,7 @@ namespace SceneTest
         //refer to SceneTest setting to see what kind of type, the field AbstractClass inside will be resolved 
         [Transient] TestComponent4 testComponent4;
 
-        private void Start()
+        private void Awake()
         {
             //create context which will automatically load binding setting by the assembly name
             //in this case, please refer to SceneTest setting from the resources folder.

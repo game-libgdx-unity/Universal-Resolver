@@ -9,6 +9,7 @@ namespace UnityIoC
     {
         [SerializeField] public Type AbstractType;
         [SerializeField] public Type ImplementedType;
+        [SerializeField] public GameObject Prefab;
         [SerializeField] public LifeCycle LifeCycle;
     }
     
@@ -26,8 +27,8 @@ namespace UnityIoC
             output.ImplementedTypeHolder = ImplementedTypeHolder;
             output.AbstractType = AbstractType;
             output.ImplementedType = ImplementedType;
+            output.Prefab = Prefab;
             output.LifeCycle = LifeCycle;
-
             return output;
         }
     }

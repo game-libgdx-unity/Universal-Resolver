@@ -20,6 +20,11 @@ namespace UnityIoC
 
             public Type ImplementedType { get; private set; }
 
+            /// <summary>
+            /// Prefab can be loaded instead of loading of ImplementType from bindingSetting files
+            /// </summary>
+            public GameObject Prefab { get; set; }
+
             public object Instance { get; private set; }
 
             public LifeCycle LifeCycle { get; private set; }
@@ -102,19 +107,40 @@ namespace UnityIoC
 
                 if (Instance == null)
                 {
-                    if (ImplementedType.IsSubclassOf(typeof(Component)))
+                    if (Prefab || ImplementedType.IsSubclassOf(typeof(Component)))
                     {
                         //cache 
                         if (Instance == null)
                         {
-                            Instance = TryGetGameObject(assemblyContext, ImplementedType, ImplementedType.Name,
-                                preferredLifeCycle, resolveFrom);
+                            //resolve by registeredObject's prefab
+                            if (Prefab)
+                            {
+                                GameObject instance;
+                                var monoBehaviour = resolveFrom as Component;
+                                if ((preferredLifeCycle & LifeCycle.Component) == LifeCycle.Component &&
+                                    monoBehaviour != null)
+                                {
+                                    instance = Object.Instantiate(Prefab, monoBehaviour.transform);
+                                }
+                                else
+                                {
+                                    instance = Object.Instantiate(Prefab);
+                                }
 
-                            assemblyContext.ProcessInjectAttribute(Instance);
+                                Instance = instance.GetComponent(AbstractType);
+                            }
+
+                            //resolve by Prefab from resources or asset bundles
+                            if (Instance == null)
+                            {
+                                Instance = TryGetGameObject(assemblyContext, ImplementedType, ImplementedType.Name,
+                                    preferredLifeCycle, resolveFrom);
+                            }
 
                             if (isTransient)
                             {
                                 (Instance as Component).gameObject.SetActive(false);
+                                assemblyContext.ProcessInjectAttribute((Instance as Component).gameObject);
                             }
                         }
                     }
@@ -146,13 +172,14 @@ namespace UnityIoC
                         }
 
                         //activate
+                        assemblyContext.ProcessInjectAttribute((instance as Component).gameObject);
                         (instance as Component).gameObject.SetActive(true);
                     }
                     else
                     {
                         //instance below should be cloned from Instance
                         instance = Activator.CreateInstance(ImplementedType, args);
-                        assemblyContext.ProcessInjectAttribute(Instance);
+                        assemblyContext.ProcessInjectAttribute(instance);
                     }
 
                     return instance;
@@ -171,7 +198,6 @@ namespace UnityIoC
             private Component TryGetGameObject(AssemblyContext assemblyContext, Type concreteType,
                 string TypeName, LifeCycle lifeCycle, object resolveFrom)
             {
-                GameObject prefab = null;
                 Component instance;
 
                 //if resolve as singleton, try to get component from an existing one in current scene or from cached
@@ -212,7 +238,10 @@ namespace UnityIoC
                 }
 
                 //search for prefabs of this component type from resources path folders
-                prefab = Resources.Load<GameObject>(string.Format("prefabs/scenes/{0}", TypeName));
+                GameObject prefab = MyResources.Load<GameObject>(TypeName);
+                if (!prefab) MyResources.Load<GameObject>(string.Format("bundles/{0}", TypeName));
+                
+                if (!prefab) prefab = Resources.Load<GameObject>(string.Format("prefabs/scenes/{0}", TypeName));
                 if (!prefab) prefab = Resources.Load<GameObject>(string.Format("scenes/{0}", TypeName));
                 if (!prefab) prefab = Resources.Load<GameObject>(string.Format("prefabs/{0}", TypeName));
                 if (!prefab) prefab = Resources.Load<GameObject>(TypeName);
@@ -248,6 +277,8 @@ namespace UnityIoC
                         instance = new GameObject().AddComponent(concreteType);
                     }
                 }
+
+                assemblyContext.ProcessInjectAttribute(instance.gameObject);
 
                 return instance;
             }

@@ -15,7 +15,6 @@ using Object = UnityEngine.Object;
 
 namespace UnityIoC
 {
-    
     public partial class AssemblyContext
     {
         #region Variables & Constants
@@ -125,7 +124,10 @@ namespace UnityIoC
                 LoadBindingSetting(sceneBindingSetting);
             }
 
-            ProcessInjectAttributeForMonoBehaviours();
+            if (Application.isPlaying)
+            {
+                ProcessInjectAttributeForMonoBehaviours();
+            }
         }
 
 
@@ -144,19 +146,7 @@ namespace UnityIoC
 
         private void BindFromSetting(InjectIntoBindingAsset bindingSetting)
         {
-            if (bindingSetting.ImplementedType == null)
-            {
-                bindingSetting.ImplementedType =
-                    GetTypeFromCurrentAssembly(bindingSetting.ImplementedTypeHolder.name);
-
-
-                if (bindingSetting.ImplementedType == null)
-                {
-                    debug.Log("bindingSetting.ImplementedType should not null!");
-                    return;
-                }
-            }
-
+            GameObject prefab = null;
             if (bindingSetting.AbstractType == null)
             {
                 bindingSetting.AbstractType =
@@ -164,13 +154,39 @@ namespace UnityIoC
 
                 if (bindingSetting.AbstractType == null)
                 {
-                    debug.Log("bindingSetting.AbstractType should not null!");
+                    debug.LogError("bindingSetting.AbstractType should not null!");
+                    return;
+                }
+            }
+
+            if (bindingSetting.ImplementedType == null)
+            {
+                if (bindingSetting.ImplementedTypeHolder is GameObject)
+                {
+                    prefab = bindingSetting.ImplementedTypeHolder as GameObject;
+                    if (!bindingSetting.AbstractType.IsAbstract)
+                    {
+                        bindingSetting.ImplementedType = bindingSetting.AbstractType;
+                    }
+                    else
+                    {
+                        bindingSetting.ImplementedType = prefab.GetComponent(bindingSetting.AbstractType).GetType();
+                    }
+                }
+                else
+                    bindingSetting.ImplementedType =
+                        GetTypeFromCurrentAssembly(bindingSetting.ImplementedTypeHolder.name);
+
+                if (bindingSetting.ImplementedType == null)
+                {
+                    debug.LogError("bindingSetting.ImplementedType should not null!");
                     return;
                 }
             }
 
             //bind it with inject into type
             var injectIntoBindingSetting = new InjectIntoBindingData();
+            injectIntoBindingSetting.Prefab = prefab;
             injectIntoBindingSetting.ImplementedType = bindingSetting.ImplementedType;
             injectIntoBindingSetting.AbstractType = bindingSetting.AbstractType;
             injectIntoBindingSetting.LifeCycle = bindingSetting.LifeCycle;
@@ -209,18 +225,7 @@ namespace UnityIoC
 
         private void BindFromSetting(BindingDataAsset bindingSetting, Type InjectIntoType = null)
         {
-            if (bindingSetting.ImplementedType == null)
-            {
-                bindingSetting.ImplementedType =
-                    GetTypeFromCurrentAssembly(bindingSetting.ImplementedTypeHolder.name);
-
-                if (bindingSetting.ImplementedType == null)
-                {
-                    debug.LogError("bindingSetting.ImplementedType should not null!");
-                    return;
-                }
-            }
-
+            GameObject prefab = null;
             if (bindingSetting.AbstractType == null)
             {
                 bindingSetting.AbstractType =
@@ -229,6 +234,31 @@ namespace UnityIoC
                 if (bindingSetting.AbstractType == null)
                 {
                     debug.LogError("bindingSetting.AbstractType should not null!");
+                    return;
+                }
+            }
+
+            if (bindingSetting.ImplementedType == null)
+            {
+                if (bindingSetting.ImplementedTypeHolder is GameObject)
+                {
+                    prefab = bindingSetting.ImplementedTypeHolder as GameObject;
+                    if (!bindingSetting.AbstractType.IsAbstract)
+                    {
+                        bindingSetting.ImplementedType = bindingSetting.AbstractType;
+                    }
+                    else
+                    {
+                        bindingSetting.ImplementedType = prefab.GetComponent(bindingSetting.AbstractType).GetType();
+                    }
+                }
+                else
+                    bindingSetting.ImplementedType =
+                        GetTypeFromCurrentAssembly(bindingSetting.ImplementedTypeHolder.name);
+
+                if (bindingSetting.ImplementedType == null)
+                {
+                    debug.LogError("bindingSetting.ImplementedType should not null!");
                     return;
                 }
             }
@@ -245,6 +275,7 @@ namespace UnityIoC
 
             //bind it with inject into type
             var injectIntoBindingSetting = new InjectIntoBindingData();
+            injectIntoBindingSetting.Prefab = prefab;
             injectIntoBindingSetting.ImplementedType = bindingSetting.ImplementedType;
             injectIntoBindingSetting.AbstractType = bindingSetting.AbstractType;
             injectIntoBindingSetting.LifeCycle = bindingSetting.LifeCycle;
@@ -280,7 +311,7 @@ namespace UnityIoC
             }
         }
 
-        private void ProcessInjectAttribute(object mono)
+        private void ProcessInjectAttribute(object mono, bool ignoreMonobehaviour = false)
         {
             if (mono == null)
             {
@@ -292,21 +323,21 @@ namespace UnityIoC
             {
                 foreach (var component in gameObj.GetComponents(typeof(MonoBehaviour)))
                 {
-                    ProcessMethod(component);
-                    ProcessProperties(component);
-                    ProcessVariables(component);
+                    ProcessMethod(component, ignoreMonobehaviour);
+                    ProcessProperties(component, ignoreMonobehaviour);
+                    ProcessVariables(component, ignoreMonobehaviour);
                 }
 
                 return;
             }
 
-            ProcessMethod(mono);
-            ProcessProperties(mono);
-            ProcessVariables(mono);
+            ProcessMethod(mono, ignoreMonobehaviour);
+            ProcessProperties(mono, ignoreMonobehaviour);
+            ProcessVariables(mono, ignoreMonobehaviour);
         }
 
 
-        private void ProcessMethod(object mono)
+        private void ProcessMethod(object mono, bool ignoreMonobehaviour)
         {
             Type objectType = mono.GetType();
             var methods = objectType.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
@@ -319,11 +350,12 @@ namespace UnityIoC
 
             foreach (var method in methods)
             {
-                ProcessMethodInfo(mono, method);
+                ProcessMethodInfo(mono, method, ignoreMonobehaviour);
             }
         }
 
-        private void ProcessMethodInfo(object mono, MethodInfo method, InjectAttribute inject = null)
+        private void ProcessMethodInfo(object mono, MethodInfo method, bool ignoreMonobehaviour,
+            InjectAttribute inject = null)
         {
             if (inject == null)
             {
@@ -333,6 +365,16 @@ namespace UnityIoC
             injectAttributes.Add(inject);
 
             var parameters = method.GetParameters();
+
+            //ignore process for monobehaviour
+            if (ignoreMonobehaviour)
+            {
+                if (parameters.Any(p => p.ParameterType.IsSubclassOf(typeof(Component))))
+                {
+                    return;
+                }
+            }
+
             var paramObjects = Array.ConvertAll(parameters, p =>
             {
                 debug.Log("Para: " + p.Name + " " + p.ParameterType);
@@ -342,7 +384,7 @@ namespace UnityIoC
             method.Invoke(mono, paramObjects);
         }
 
-        private void ProcessProperties(object mono)
+        private void ProcessProperties(object mono, bool ignoreMonobehaviour)
         {
             Type objectType = mono.GetType();
             var properties = objectType
@@ -356,10 +398,18 @@ namespace UnityIoC
 
             foreach (var property in properties)
             {
+                if (ignoreMonobehaviour)
+                {
+                    if (property.PropertyType.IsSubclassOf(typeof(Component)))
+                    {
+                        continue;
+                    }
+                }
+
                 var inject = property
                     .GetCustomAttributes(typeof(InjectAttribute), true)
                     .FirstOrDefault() as InjectAttribute;
-                
+
                 if (inject == null)
                 {
                     continue;
@@ -418,11 +468,11 @@ namespace UnityIoC
 
                 debug.Log("IComponentResolvable attribute fails to resolve {0}", property.PropertyType);
                 //resolve object as [Singleton], [Transient] or [AsComponent] if component attribute fails to resolve
-                ProcessMethodInfo(mono, setMethod, inject);
+                ProcessMethodInfo(mono, setMethod, ignoreMonobehaviour, inject);
             }
         }
 
-        private void ProcessVariables(object mono)
+        private void ProcessVariables(object mono, bool ignoreMonobehaviour)
         {
             Type objectType = mono.GetType();
             var fieldInfos = objectType
@@ -435,6 +485,14 @@ namespace UnityIoC
 
             foreach (var field in fieldInfos)
             {
+                if (ignoreMonobehaviour)
+                {
+                    if (field.FieldType.IsSubclassOf(typeof(Component)))
+                    {
+                        continue;
+                    }
+                }
+
                 var inject =
                     field.GetCustomAttributes(typeof(InjectAttribute), true).FirstOrDefault() as InjectAttribute;
 
@@ -442,7 +500,7 @@ namespace UnityIoC
                 {
                     continue;
                 }
-                
+
                 //only process a field if the field's value is not set yet
                 var value = field.GetValue(mono);
                 if (value != value.DefaultValue())
@@ -563,7 +621,7 @@ namespace UnityIoC
                 //unable to get it from gameObject
                 if (component != null)
                 {
-                    ProcessInjectAttribute(component.gameObject);
+                    ProcessInjectAttribute(component);
                 }
                 else
                 {
@@ -638,6 +696,42 @@ namespace UnityIoC
 
         #region Public members
 
+        public void ResolveAction<T>(Action<T> action, LifeCycle lifeCycle = LifeCycle.Default,
+            object resultFrom = null)
+        {
+            var arg = (T) Resolve(typeof(T), lifeCycle, resultFrom);
+            action(arg);
+        }
+
+        public void ResolveAction<T1, T2>(Action<T1, T2> action,
+            LifeCycle lifeCycle1 = LifeCycle.Default,
+            LifeCycle lifeCycle2 = LifeCycle.Default,
+            object resultFrom1 = null, object resultFrom2 = null)
+        {
+            var arg1 = (T1) Resolve(typeof(T1), lifeCycle1, resultFrom1);
+            var arg2 = (T2) Resolve(typeof(T1), lifeCycle2, resultFrom2);
+            action(arg1, arg2);
+        }
+
+        public Result ResolveFunc<Input, Result>(Func<Input, Result> func, LifeCycle lifeCycle = LifeCycle.Default,
+            object resultFrom = null)
+        {
+            var arg = (Input) Resolve(typeof(Input), lifeCycle, resultFrom);
+            return func(arg);
+        }
+
+        public Result ResolveFunc<Input1, Input2, Result>(Func<Input1, Input2, Result> func,
+            LifeCycle lifeCycle1 = LifeCycle.Default,
+            LifeCycle lifeCycle2 = LifeCycle.Default,
+            object resultFrom1 = null,
+            object resultFrom2 = null)
+        {
+            var arg1 = (Input1) Resolve(typeof(Input1), lifeCycle1, resultFrom1);
+            var arg2 = (Input2) Resolve(typeof(Input2), lifeCycle2, resultFrom2);
+            return func(arg1, arg2);
+        }
+
+
         /// <summary>
         /// Process inject attributes in every mono behaviour in scene
         /// </summary>
@@ -659,7 +753,7 @@ namespace UnityIoC
             if (sortableBehaviours.Any())
             {
                 debug.Log("Found sortableBehaviours behavior: " + sortableBehaviours.Count());
-                
+
                 Array.Sort(sortableBehaviours);
 
                 foreach (var mono in sortableBehaviours)
@@ -677,7 +771,7 @@ namespace UnityIoC
 
                 if (debug.enableLogging)
                 {
-                    nonSortableBehaviours.Select(m => m.GetType().Name).Do(m=>debug.Log(m));
+                    nonSortableBehaviours.Select(m => m.GetType().Name).Do(m => debug.Log(m));
                 }
 
                 foreach (var mono in nonSortableBehaviours)
@@ -736,14 +830,14 @@ namespace UnityIoC
                 debug.Log("Try to load binding setting for {0} from resources folders", type.Name);
 
                 //try to load setting by name format: type_scene
-                bindingSetting = Resources.Load<BindingSetting>("{0}_{1}"
+                bindingSetting = MyResources.Load<BindingSetting>("{0}_{1}"
                     , type.Name
                     , CurrentSceneName);
 
                 if (!bindingSetting)
                 {
                     //try to load setting by name format: type
-                    bindingSetting = Resources.Load<BindingSetting>(type.Name);
+                    bindingSetting = MyResources.Load<BindingSetting>(type.Name);
                     if (bindingSetting)
                     {
                         debug.Log("Found default setting for type {0}", type.Name);
@@ -779,7 +873,7 @@ namespace UnityIoC
                 debug.Log("Load binding setting for type from resources folders");
 
                 //try to load setting by name format: type_scene
-                bindingSetting = Resources.Load<InjectIntoBindingSetting>(CurrentSceneName);
+                bindingSetting = MyResources.Load<InjectIntoBindingSetting>(CurrentSceneName);
 
                 if (bindingSetting)
                 {
@@ -806,7 +900,7 @@ namespace UnityIoC
 
         public void LoadBindingSetting(string settingName)
         {
-            LoadBindingSetting(UnityIoC.Resources.Load<InjectIntoBindingSetting>(settingName));
+            LoadBindingSetting(UnityIoC.MyResources.Load<InjectIntoBindingSetting>(settingName));
         }
 
         public void LoadBindingSetting(InjectIntoBindingSetting bindingSetting)

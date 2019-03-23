@@ -64,8 +64,8 @@ namespace UnityIoC.Editor
                     DrawLabel("From", GUILayout.MaxWidth(35));
 
                     data.ImplementedTypeHolder = EditorGUILayout.ObjectField("", data.ImplementedTypeHolder,
-                        typeof(MonoScript),
-                        false,
+                        typeof(Object),
+                        true,
                         GUILayout.MaxWidth(80),
                         GUILayout.ExpandWidth(true));
 

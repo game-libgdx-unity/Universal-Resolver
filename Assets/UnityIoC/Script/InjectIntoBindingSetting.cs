@@ -7,7 +7,7 @@ using UnityEngine.SceneManagement;
 
 namespace UnityIoC
 {
-    [CreateAssetMenu(fileName = "default", menuName = "IoC/InjectInto Binding Data", order = 1)]
+    [CreateAssetMenu(fileName = "Assembly-CSharp", menuName = "IoC/InjectInto Binding Data", order = 1)]
     [Serializable]
     public class InjectIntoBindingSetting : ScriptableObject
     {
