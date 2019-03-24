@@ -38,14 +38,14 @@ namespace UnityIoC
 
         #region Constructors
 
-        public AssemblyContext(object target, bool automaticBinding = true)
+        public AssemblyContext(object target, bool autoFindBindSetting = true)
         {
-            Initialize(target.GetType(), automaticBinding);
+            Initialize(target.GetType(), autoFindBindSetting);
         }
 
-        public AssemblyContext(Type typeInTargetedAssembly, bool automaticBinding = true)
+        public AssemblyContext(Type typeInTargetedAssembly, bool autoFindBindSetting = true)
         {
-            Initialize(typeInTargetedAssembly, automaticBinding);
+            Initialize(typeInTargetedAssembly, autoFindBindSetting);
         }
 
         public AssemblyContext()
@@ -124,14 +124,12 @@ namespace UnityIoC
                 LoadBindingSetting(sceneBindingSetting);
             }
 
-            if (Application.isPlaying)
-            {
-                ProcessInjectAttributeForMonoBehaviours();
-            }
+
+            ProcessInjectAttributeForMonoBehaviours();
         }
 
 
-        private void LoadBindingSetting(BindingSetting bindingSetting)
+        public void LoadBindingSetting(BindingSetting bindingSetting)
         {
             debug.Log("From BindingSetting, {0} settings found: ", bindingSetting.defaultSettings.Length);
             //binding for default setting 
@@ -264,6 +262,10 @@ namespace UnityIoC
             }
 
             var lifeCycle = bindingSetting.LifeCycle;
+            if (prefab != null)
+            {
+                lifeCycle = LifeCycle.Singleton | LifeCycle.Prefab;
+            }
 
 
             debug.Log("Bind from setting {0} for {1} by {2} when inject into {3}",
@@ -275,12 +277,15 @@ namespace UnityIoC
 
             //bind it with inject into type
             var injectIntoBindingSetting = new InjectIntoBindingData();
+            
             injectIntoBindingSetting.Prefab = prefab;
             injectIntoBindingSetting.ImplementedType = bindingSetting.ImplementedType;
             injectIntoBindingSetting.AbstractType = bindingSetting.AbstractType;
-            injectIntoBindingSetting.LifeCycle = bindingSetting.LifeCycle;
+            
+            injectIntoBindingSetting.LifeCycle = lifeCycle;
             injectIntoBindingSetting.EnableInjectInto = InjectIntoType != null;
             injectIntoBindingSetting.InjectInto = InjectIntoType;
+            
             defaultContainer.Bind(injectIntoBindingSetting);
         }
 
@@ -737,6 +742,11 @@ namespace UnityIoC
         /// </summary>
         public void ProcessInjectAttributeForMonoBehaviours()
         {
+            if (!Application.isPlaying)
+            {
+                return;
+            }
+
             var allBehaviours = Object.FindObjectsOfType<MonoBehaviour>();
 
             var ignoredUnityEngineScripts = allBehaviours.Where(m =>
@@ -985,6 +995,7 @@ namespace UnityIoC
         public static AssemblyContext DefaultInstance
         {
             get { return GetDefaultInstance(); }
+            set { _defaultInstance = value; }
         }
 
         public static T Instantiate<T>(T origin, Transform parent = null) where T : Component

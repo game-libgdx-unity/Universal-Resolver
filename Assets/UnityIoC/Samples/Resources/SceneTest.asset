@@ -4,15 +4,18 @@
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
+  m_GeneratorAsset: {fileID: 0}
   m_Script: {fileID: 11500000, guid: b83a85f05d1da403fa31867b4ebd45cb, type: 3}
   m_Name: SceneTest
   m_EditorClassIdentifier: 
   defaultSettings:
-  - LifeCycle: 1
+  - Prefab: {fileID: 0}
+    LifeCycle: 1
     EnableInjectInto: 1
     InjectIntoHolder:
     - {fileID: 11500000, guid: 7f5395a6e03fa45229573ea07f8a45c2, type: 3}
@@ -20,7 +23,8 @@ MonoBehaviour:
       type: 3}
     ImplementedTypeHolder: {fileID: 11500000, guid: 65e4b8b71fb4b4071ad24ce2336c8c75,
       type: 3}
-  - LifeCycle: 1
+  - Prefab: {fileID: 0}
+    LifeCycle: 1
     EnableInjectInto: 1
     InjectIntoHolder:
     - {fileID: 11500000, guid: 234f316cee08f4e988a38e375ce22f34, type: 3}
@@ -29,7 +33,8 @@ MonoBehaviour:
       type: 3}
     ImplementedTypeHolder: {fileID: 11500000, guid: de1fc832357a34579a7009a2bbbecc61,
       type: 3}
-  - LifeCycle: 0
+  - Prefab: {fileID: 0}
+    LifeCycle: 0
     EnableInjectInto: 0
     InjectIntoHolder:
     - {fileID: 0}
@@ -39,7 +44,8 @@ MonoBehaviour:
       type: 3}
     ImplementedTypeHolder: {fileID: 11500000, guid: 2bc60193bfa194006b06174af2b11875,
       type: 3}
-  - LifeCycle: 1
+  - Prefab: {fileID: 0}
+    LifeCycle: 1
     EnableInjectInto: 1
     InjectIntoHolder:
     - {fileID: 11500000, guid: 234f316cee08f4e988a38e375ce22f34, type: 3}

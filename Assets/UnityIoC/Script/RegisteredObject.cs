@@ -15,7 +15,7 @@ namespace UnityIoC
     {
         public class RegisteredObject : IDisposable
         {
-            private readonly Logger Debug = new Logger(typeof(RegisteredObject));
+            private static Logger Debug = new Logger(typeof(RegisteredObject));
             public Type AbstractType { get; private set; }
 
             public Type ImplementedType { get; private set; }
@@ -23,7 +23,7 @@ namespace UnityIoC
             /// <summary>
             /// Prefab can be loaded instead of loading of ImplementType from bindingSetting files
             /// </summary>
-            public GameObject Prefab { get; set; }
+            public GameObject GameObject { get; set; }
 
             public object Instance { get; private set; }
 
@@ -107,24 +107,34 @@ namespace UnityIoC
 
                 if (Instance == null)
                 {
-                    if (Prefab || ImplementedType.IsSubclassOf(typeof(Component)))
+                    if (GameObject != null || ImplementedType.IsSubclassOf(typeof(Component)))
                     {
                         //cache 
                         if (Instance == null)
                         {
                             //resolve by registeredObject's prefab
-                            if (Prefab)
+                            if (GameObject != null)
                             {
                                 GameObject instance;
-                                var monoBehaviour = resolveFrom as Component;
-                                if ((preferredLifeCycle & LifeCycle.Component) == LifeCycle.Component &&
-                                    monoBehaviour != null)
+
+                                //don't create new Instance if the lifecycle is prefab
+                                if ((preferredLifeCycle & LifeCycle.Prefab) == LifeCycle.Prefab)
                                 {
-                                    instance = Object.Instantiate(Prefab, monoBehaviour.transform);
+                                    instance = GameObject;
                                 }
                                 else
                                 {
-                                    instance = Object.Instantiate(Prefab);
+                                    //create a new instance
+                                    var monoBehaviour = resolveFrom as Component;
+                                    if ((preferredLifeCycle & LifeCycle.Component) == LifeCycle.Component &&
+                                        monoBehaviour != null)
+                                    {
+                                        instance = Object.Instantiate(GameObject, monoBehaviour.transform);
+                                    }
+                                    else
+                                    {
+                                        instance = Object.Instantiate(GameObject);
+                                    }
                                 }
 
                                 Instance = instance.GetComponent(AbstractType);
@@ -210,13 +220,30 @@ namespace UnityIoC
                     {
                         instance = assemblyContext.monoScripts[concreteType];
                     }
-                    //try to get from current scene then
                     else
                     {
+                        //check if it's possible to resolve as Prefab
+                        if (Instance == null)
+                        {
+                            if ((lifeCycle & LifeCycle.Prefab) == LifeCycle.Prefab && GameObject != null)
+                            {
+                                instance = GameObject.GetComponent(AbstractType);
+                                if (instance)
+                                {
+                                    assemblyContext.monoScripts[concreteType] = instance as MonoBehaviour;
+                                    Debug.Log("Found {0} component on gameObject {1} from Prefab",
+                                        TypeName,
+                                        instance.gameObject.name);
+                                    Instance = instance;
+                                    return instance;
+                                }
+                            }
+                        }
+                        
+                        //try to find component from current scene then
                         if (Instance == null)
                         {
                             instance = Object.FindObjectOfType(concreteType) as MonoBehaviour;
-//                            
                         }
                         else
                         {
@@ -240,7 +267,7 @@ namespace UnityIoC
                 //search for prefabs of this component type from resources path folders
                 GameObject prefab = MyResources.Load<GameObject>(TypeName);
                 if (!prefab) MyResources.Load<GameObject>(string.Format("bundles/{0}", TypeName));
-                
+
                 if (!prefab) prefab = Resources.Load<GameObject>(string.Format("prefabs/scenes/{0}", TypeName));
                 if (!prefab) prefab = Resources.Load<GameObject>(string.Format("scenes/{0}", TypeName));
                 if (!prefab) prefab = Resources.Load<GameObject>(string.Format("prefabs/{0}", TypeName));

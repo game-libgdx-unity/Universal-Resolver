@@ -69,10 +69,9 @@ namespace UnityIoC.Editor
                         GUILayout.MaxWidth(80),
                         GUILayout.ExpandWidth(true));
 
-                    if (data.ImplementedTypeHolder)
+                    if (data.ImplementedTypeHolder is MonoScript)
                     {
                         data.ImplementedType = ((MonoScript) data.ImplementedTypeHolder).GetClass();
-                        serializedObject.ApplyModifiedProperties();
                     }
 
                     DrawLabel("Bind", GUILayout.MaxWidth(maxWidth));

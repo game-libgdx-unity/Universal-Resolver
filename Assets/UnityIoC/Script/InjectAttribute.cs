@@ -123,6 +123,13 @@ public class SingletonAttribute : InjectAttribute
     {
     }
 }
+public class PrefabAttribute : InjectAttribute
+{
+    public PrefabAttribute(string path = null)
+        : base(LifeCycle.Singleton | LifeCycle.Prefab, path)
+    {
+    }
+}
 
 public class TransientAttribute : InjectAttribute
 {

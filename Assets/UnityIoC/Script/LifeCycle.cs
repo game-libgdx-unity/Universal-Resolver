@@ -9,6 +9,7 @@ namespace UnityIoC
         Transient = 1 << 1,
         Singleton = 1 << 2,
         Component = 1 << 3,
+        Prefab = 1 << 4,
         SingletonComponent = Singleton | Component
     }
 

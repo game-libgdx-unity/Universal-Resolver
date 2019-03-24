@@ -16,7 +16,7 @@ public class MapGenerator : MonoBehaviour
     [SerializeField] private Button btnRestart;
     [SerializeField] private RectTransform container;
 
-    [Singleton("/Cell")] private Cell cellPrefab;
+    [Prefab] private Cell cell;
     [Singleton] private List<Cell> cells = new List<Cell>() ;
     [Singleton] private List<CellData> cellData = new List<CellData>();
     [Singleton] private IGameSolver gameSolver;
@@ -24,11 +24,6 @@ public class MapGenerator : MonoBehaviour
     
     private GameSetting gameSetting = new GameSetting();
     private ReactiveProperty<GameStatus> gameStatus = new ReactiveProperty<GameStatus>();
-
-    private void Awake()
-    {
-        AssemblyContext.GetDefaultInstance(this);
-    }
 
     public void Start()
     {
@@ -55,7 +50,7 @@ public class MapGenerator : MonoBehaviour
         //create cells
         foreach (var data in cellData)
         {
-            var cell = Object.Instantiate(cellPrefab);
+            var cell = Object.Instantiate(this.cell);
             cell.SetParent(container);
             cell.SetCellData(data);
             cells.Add(cell);

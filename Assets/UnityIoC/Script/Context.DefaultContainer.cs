@@ -184,7 +184,7 @@ namespace UnityIoC
                         {
                             debug.Log("Unbind {0} registered for {1}", data.ImplementedType,
                                 data.AbstractType);
-                            
+
                             RemoveRegisteredObjectFromCache(registeredObject);
                             registeredObjects.RemoveAt(i);
                             i--;
@@ -194,7 +194,7 @@ namespace UnityIoC
                     {
                         debug.Log("Unbind {0} registered for {1}", data.ImplementedType,
                             data.AbstractType);
-                        
+
                         RemoveRegisteredObjectFromCache(registeredObject);
                         registeredObjects.RemoveAt(i);
                         i--;
@@ -212,13 +212,16 @@ namespace UnityIoC
                 }
 
                 //add registered Object
+                var item = new RegisteredObject(
+                    data.AbstractType,
+                    data.ImplementedType,
+                    null,
+                    data.LifeCycle,
+                    data.InjectInto);
+                item.GameObject = data.Prefab;
+                
                 registeredObjects.Add(
-                    new RegisteredObject(
-                        data.AbstractType,
-                        data.ImplementedType,
-                        null,
-                        data.LifeCycle,
-                        data.InjectInto));
+                    item);
             }
 
             private void RemoveRegisteredObjectFromCache(RegisteredObject registeredObject)
@@ -251,7 +254,7 @@ namespace UnityIoC
                     if (registeredTypes.Contains(typeToResolve))
                     {
                         debug.Log("Already registered type of " + typeToResolve + " will unbind them first");
-                        
+
 //                        RemoveRegisteredObjectFromCache(registeredObject);
                         registeredObjects.RemoveAll(r =>
                             r.ImplementedType == typeConcrete && r.AbstractType == typeToResolve);
@@ -373,34 +376,30 @@ namespace UnityIoC
                     return obj;
                 }
 
-                debug.Log("ResolveFrom is not null");
                 debug.Log("Try high priority process for notnull InjectInto registeredObject");
 
-                filter = o => o != null && o.AbstractType == abstractType && resolveFrom.GetType() == o.InjectInto;
+                filter = o => o != null && o.AbstractType == abstractType &&
+                              (o.InjectInto == null || (o.InjectInto != null && resolveFrom.GetType() == o.InjectInto));
 
                 registeredObject = registeredObjects.FirstOrDefault(filter);
                 if (registeredObject != null)
                 {
                     //using binding attribute to filter registered objects
-                    var injectFromType = registeredObject.InjectInto;
-                    if (injectFromType != null)
+                    debug.Log("Binding of " + registeredObject.ImplementedType + " has inject into: " +
+                              registeredObject.InjectInto);
+                    debug.Log("resolve from: " + registeredObject.InjectInto +
+                              " by inject into from RegisteredObject");
+                    debug.Log("resolved by high priority approach");
+                    var obj = GetInstance(registeredObject, preferredLifeCycle, resolveFrom, parameters);
+
+                    //store as cached
+                    //only cache for non-array types
+                    if (!abstractType.IsArray)
                     {
-                        debug.Log("Binding of " + registeredObject.ImplementedType + " has inject into: " +
-                                  injectFromType);
-                        debug.Log("resolve from: " + registeredObject.InjectInto +
-                                  " by inject into from RegisteredObject");
-                        debug.Log("resolved by high priority approach");
-                        var obj = GetInstance(registeredObject, preferredLifeCycle, resolveFrom, parameters);
-
-                        //store as cached
-                        //only cache for non-array types
-                        if (!abstractType.IsArray)
-                        {
-                            CachedResolveResults[resolveInput] = registeredObject;
-                        }
-
-                        return obj;
+                        CachedResolveResults[resolveInput] = registeredObject;
                     }
+
+                    return obj;
                 }
 
                 debug.Log("High priority process is failed");
@@ -428,7 +427,8 @@ namespace UnityIoC
                 //Here is the recursive method, so can't cache from this part
                 debug.Log("Lower priority process is failed");
                 debug.Log("Worst case happened: Resolve without referring the resolveFrom object");
-                return ResolveObject(abstractType, preferredLifeCycle, null, parameters);
+                var resolveObject = ResolveObject(abstractType, preferredLifeCycle, null, parameters);
+                return resolveObject;
             }
 
             private object GetInstance(RegisteredObject registeredObject,
