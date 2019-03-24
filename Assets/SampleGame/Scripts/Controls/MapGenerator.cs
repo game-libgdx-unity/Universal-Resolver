@@ -17,16 +17,21 @@ public class MapGenerator : MonoBehaviour
     [SerializeField] private RectTransform container;
 
     [Prefab] private Cell cell;
-    [Singleton] private List<Cell> cells = new List<Cell>() ;
+    [Singleton] private List<Cell> cells = new List<Cell>();
     [Singleton] private List<CellData> cellData = new List<CellData>();
     [Singleton] private IGameSolver gameSolver;
     [Singleton] private IGameBoard gameBoard;
-    
+
     private GameSetting gameSetting = new GameSetting();
     private ReactiveProperty<GameStatus> gameStatus = new ReactiveProperty<GameStatus>();
 
     public void Start()
     {
+        if (!AssemblyContext.IsDefaultInstanceInitialized)
+        {
+            AssemblyContext.GetDefaultInstance(this);
+        }
+        
         //setup game status, when it get changes
         gameStatus.Subscribe(status => { print("Game status: " + status.ToString()); })
             .AddTo(gameObject);

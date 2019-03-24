@@ -992,6 +992,11 @@ namespace UnityIoC
 
         private static AssemblyContext _defaultInstance;
 
+        public static bool IsDefaultInstanceInitialized
+        {
+            get { return _defaultInstance != null; }
+        }
+
         public static AssemblyContext DefaultInstance
         {
             get { return GetDefaultInstance(); }
