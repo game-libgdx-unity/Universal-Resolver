@@ -106,7 +106,7 @@ namespace UnityIoC
         /// </summary>
         public void StartDownloadRequiredBundles()
         {
-            StartCoroutine(DoDownload(BundleInfos
+            StartCoroutine(DownloadRoutine(BundleInfos
                 .Where(bi => bi.IsRequired)
                 .Select(bi => bi.Name)
                 .ToArray()));
@@ -114,13 +114,13 @@ namespace UnityIoC
 
         public void StartDownloadOptionalBundles()
         {
-            StartCoroutine(DoDownload(BundleInfos
+            StartCoroutine(DownloadRoutine(BundleInfos
                 .Where(bi => !bi.IsRequired)
                 .Select(bi => bi.Name)
                 .ToArray()));
         }
 
-        protected IEnumerator DoDownload(params string[] bundleNames)
+        protected IEnumerator DownloadRoutine(params string[] bundleNames)
         {
             yield return null;
 
@@ -154,11 +154,18 @@ namespace UnityIoC
                         fullPath = HostUrl + "/" + bundleName;
                     }
 
-                    print("Downloading assets from " + fullPath);
+#if UNITY_EDITOR
 
-#if UNITY_EDITOR || UNITY_STANDALONE
-                    fullPath = "file://" + fullPath;
-                    if (!File.Exists(fullPath))
+#if !UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+
+                    //if the file url is from local streamingAssets path:
+                    if (HostUrl == Application.streamingAssetsPath)
+                    {
+                        fullPath = "file://" + fullPath;
+                    }
+#endif
+
+                    if (HostUrl == Application.streamingAssetsPath && !File.Exists(fullPath))
                     {
                         string msg = string.Format("Can't find the asset bundle {0}", bundleName);
                         Debug.LogFormat(msg);
@@ -171,7 +178,10 @@ namespace UnityIoC
                         continue;
                     }
 #endif
-                    WWW wwwEncryptedBundle = new WWW(fullPath);
+
+                    print("Downloading assets from " + fullPath);
+
+                    var wwwEncryptedBundle = new WWW(fullPath);
 
                     yield return wwwEncryptedBundle;
                     if (wwwEncryptedBundle.error != null)
@@ -182,12 +192,12 @@ namespace UnityIoC
                             OnAssetBundleDownloader_LoadFail(new Exception(wwwEncryptedBundle.error));
                         }
 
-                        yield break;
+                        continue;
                     }
 
                     data = wwwEncryptedBundle.bytes;
 
-                    print("Download completed");
+                    print("Download is complete");
 
                     if (enableCacheMode)
                     {
@@ -311,7 +321,7 @@ namespace UnityIoC
             if (path.Contains("/"))
             {
                 var bundleName = path.Substring(0, path.IndexOf('/'));
-                var asset = GetFromBundle<T>(path, bundleName);
+                var asset = Get<T>(bundleName, path);
                 if (!asset)
                 {
                     return null;
@@ -342,7 +352,7 @@ namespace UnityIoC
             return default(T);
         }
 
-        public Object GetFromBundle<T>(string path, string bundleName) where T : Object
+        public Object Get<T>(string bundleName, string path) where T : Object
         {
             if (bundles.ContainsKey(bundleName))
             {
@@ -360,9 +370,9 @@ namespace UnityIoC
             return default(T);
         }
 
-        public bool GetFromSceneBundle<T>(string bundleName) where T : Object
+        public bool GetFromSceneBundle<T>(string path) where T : Object
         {
-            return GetFromBundle<T>(SceneManager.GetActiveScene().name, bundleName);
+            return Get<T>(SceneManager.GetActiveScene().name, path);
         }
 
         public const string ResourceBundleName = "resources";

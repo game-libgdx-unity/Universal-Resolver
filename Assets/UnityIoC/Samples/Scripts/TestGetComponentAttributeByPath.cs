@@ -13,7 +13,7 @@ public class TestGetComponentAttributeByPath : MonoBehaviour
 	
 	[Component("child/child")] TestComponent testComponent;
 	[Transient("child/child")] private TestComponent aTestComponen;
-	[Singleton] private TestComponent sTestComponen;
+	[Singleton("child/child")] private TestComponent sTestComponen;
 	
 	// Use this for initialization
 	void Awake ()

@@ -219,7 +219,7 @@ namespace UnityIoC
                     data.LifeCycle,
                     data.InjectInto);
                 item.GameObject = data.Prefab;
-                
+
                 registeredObjects.Add(
                     item);
             }
@@ -338,7 +338,7 @@ namespace UnityIoC
                 {
                     debug.Log("Try default process to resolve");
 
-                    filter = o => o != null && o.AbstractType == abstractType && o.InjectInto == null;
+                    filter = o => o.AbstractType == abstractType && o.InjectInto == null;
 
                     registeredObject = registeredObjects.FirstOrDefault(filter);
                     if (registeredObject == null)
@@ -378,8 +378,8 @@ namespace UnityIoC
 
                 debug.Log("Try high priority process for notnull InjectInto registeredObject");
 
-                filter = o => o != null && o.AbstractType == abstractType &&
-                              (o.InjectInto == null || (o.InjectInto != null && resolveFrom.GetType() == o.InjectInto));
+                filter = o =>
+                    o.AbstractType == abstractType && o.InjectInto != null && resolveFrom.GetType() == o.InjectInto;
 
                 registeredObject = registeredObjects.FirstOrDefault(filter);
                 if (registeredObject != null)
@@ -405,7 +405,7 @@ namespace UnityIoC
                 debug.Log("High priority process is failed");
                 debug.Log("Try lower priority process for null Inject Into registeredObject");
 
-                filter = o => o != null && o.AbstractType == abstractType && null == o.InjectInto;
+                filter = o => o.AbstractType == abstractType && o.InjectInto == null;
 
                 registeredObject = registeredObjects.FirstOrDefault(filter);
                 if (registeredObject != null)
@@ -426,8 +426,30 @@ namespace UnityIoC
 
                 //Here is the recursive method, so can't cache from this part
                 debug.Log("Lower priority process is failed");
-                debug.Log("Worst case happened: Resolve without referring the resolveFrom object");
-                var resolveObject = ResolveObject(abstractType, preferredLifeCycle, null, parameters);
+                debug.Log("Lowest priority process: Create a new registeredObject to resolve");
+
+                if (abstractType.IsAbstract)
+                {
+                    throw new InvalidOperationException(
+                        "Cannot resolve the abstract type " + abstractType.Name +
+                        " with no respective registeredObject!");
+                }
+
+                debug.Log("trying to register {0} ", abstractType);
+
+                registeredObject = new RegisteredObject(
+                    abstractType,
+                    abstractType,
+                    assemblyContext,
+                    preferredLifeCycle);
+
+                registeredObjects.Add(registeredObject);
+                var resolveObject = GetInstance(registeredObject, preferredLifeCycle, resolveFrom, parameters);
+                //store as cached
+                if (!abstractType.IsArray)
+                {
+                    CachedResolveResults[resolveInput] = registeredObject;
+                }
                 return resolveObject;
             }
 

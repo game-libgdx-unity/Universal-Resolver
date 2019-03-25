@@ -11,7 +11,10 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/SampleGame/Scenes/GameLoadFromPrefab.unity
     guid: a75896dd470133142add73453db644b5
-  - enabled: 1
+  - enabled: 0
     path: Assets/SampleGame/Scenes/GameLoadFromScene.unity
     guid: 15badeebed2b74f53b00120b1c214964
+  - enabled: 1
+    path: Assets/SampleGame/Scenes/GameLoadFromSettings.unity
+    guid: c66ccefe4e61f4875aa2a70585678ec5
   m_configObjects: {}
