@@ -8,6 +8,7 @@ features on *iOS* and *Android*:
 |:----------------------------------:|:---------------------------------:|
 | Firebase Analytics                 | FirebaseAnalytics.unitypackage    |
 | Firebase Authentication            | FirebaseAuth.unitypackage         |
+| Firebase Crashlytics               | FirebaseCrashlytics.unitypackage  |
 | Firebase Realtime Database         | FirebaseDatabase.unitypackage     |
 | Firebase Dynamic Links             | FirebaseDynamicLinks.unitypackage |
 | Firebase Functions                 | FirebaseFunctions.unitypackage    |
@@ -162,6 +163,61 @@ Support
 
 Release Notes
 -------------
+### 5.6.0
+  - Overview
+    - Added Game Center sign-in to Auth and fixed intermittent crashes due to
+      garbage collection.
+  - Changes
+    - Auth (iOS): Added Game Center authentication.
+    - General: Fixed intermittent crashes caused when multiple native objects
+      were garbage-collected at the same time.
+
+### 5.5.0
+  - Overview
+    - Added support for
+      [Crashlytics](https://firebase.google.com/docs/crashlytics/get-started#unity)
+      as a Beta release, deprecated Firebase Invites, and updated the Android
+      Resolver.
+  - Changes
+    - Crashlytics:
+      [Crashlytics for Unity](https://firebase.google.com/docs/crashlytics/get-started#unity)
+      is now available as a Beta release. Get the next evolution with BigQuery
+      exports, Jira integration, and more. To migrate from Fabric Crashlytics
+      for Unity to Firebase Crashlytics, follow the
+      [migration guide](https://firebase.google.com/docs/crashlytics/migrate-from-fabric).
+    - General (Android): Updated to using version 1.2.101 of the Android
+      Resolver. Prompt the user before the resolver runs for the
+      first time and allow the user to elect to disable from the prompt.
+    - Invites: Firebase Invites is deprecated. Please refer to
+      https://firebase.google.com/docs/invites for details.
+
+### 5.4.4
+  - Overview
+    - Fixed bugs in iOS/Android Resolver components, Realtime Database on
+      mobile, and Cloud Functions on Android; fixed a general iOS bug; and fixed
+      issues with Unity 5.6 and Unity 2018.3 and newer.
+  - Changes
+    - General (Android): Fixed packaging of AARs in the Android Resolver when
+      using Unity 2018 and a recent version of Gradle.
+    - General: Reduced auto-resolution frequency in iOS and Android Resolvers,
+      speeding up builds and reducing memory footprint.
+    - General: Fixed an issue with version number handling in iOS and Android
+      Resolvers.
+    - General (iOS): Fixed an issue that caused apps to crash when exiting the
+      app.
+    - General: Fixed parsing of Unity 5.6 metadata.
+    - General: Workaround for Unity 2018.3 and newer ignoring the "Any"
+      platform.
+    - Realtime Database (mobile): Fixed an issue where certain DataSnapshots
+      were missing data.
+    - Cloud Functions (Android): Fixed an issue with error handling.
+  - Known Issues
+    - The garbage collection race condition mentioned	in version 5.4.2 still
+      occurs in Firebase Auth, Database, Storage, and Instance ID. To work
+      around the issue until a fixed is released, keep a reference to the
+      Firebase object instance (for example, FirebaseAuth.DefaultInstance) to
+      prevent garbage collection.
+
 ### 5.4.3
   - Overview
     - Bug fix for Firebase Storage on iOS.
