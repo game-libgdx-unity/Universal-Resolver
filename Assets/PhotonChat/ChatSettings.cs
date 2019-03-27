@@ -39,7 +39,7 @@ public class ChatSettings : ScriptableObject
 
     private static ChatSettings Create()
     {
-        ChatSettings settings = (ChatSettings)ScriptableObject.CreateInstance("ChatSettings");
+        ChatSettings settings = (ChatSettings)ScriptableObject.CreateInstance<ChatSettings>();
         Debug.Log("Creating ChatSettings asset. " + settings);
 #if UNITY_EDITOR
         if (!Directory.Exists("Assets/Resources"))

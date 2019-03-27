@@ -1,32 +1,19 @@
 fileFormatVersion: 2
-guid: bd073a69dd19ff4478fc5fd8fa16dead
+guid: 04bb5f307f2e48b4fbaa6da865fd4091
 PluginImporter:
-  externalObjects: {}
-  serializedVersion: 2
+  serializedVersion: 1
   iconMap: {}
   executionOrder: {}
   isPreloaded: 0
-  isOverridable: 0
   platformData:
-  - first:
-      Any: 
-    second:
+    Any:
       enabled: 0
       settings: {}
-  - first:
-      Editor: Editor
-    second:
+    Editor:
       enabled: 0
       settings:
         DefaultValueInitialized: true
-  - first:
-      Facebook: WebGL
-    second:
-      enabled: 1
-      settings: {}
-  - first:
-      WebGL: WebGL
-    second:
+    WebGL:
       enabled: 1
       settings: {}
   userData: 

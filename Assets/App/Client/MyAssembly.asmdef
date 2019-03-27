@@ -1,0 +1,11 @@
+{
+    "name": "MyAssembly",
+    "references": [
+        "UniRx",
+        "UnityIoC"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false
+}
