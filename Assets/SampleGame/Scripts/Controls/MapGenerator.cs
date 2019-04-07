@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using App.Scripts.Boards;
 using UniRx;
 using UnityEngine;
@@ -55,7 +56,7 @@ public class MapGenerator : MonoBehaviour
         //create cells
         foreach (var data in cellData)
         {
-            var cell = Object.Instantiate(this.cell);
+            var cell = AssemblyContext.Instantiate(this.cell);
             cell.SetParent(container);
             cell.SetCellData(data);
             cells.Add(cell);
@@ -72,7 +73,7 @@ public class MapGenerator : MonoBehaviour
 
     IEnumerator RestartRoutine()
     {
-        AssemblyContext.DisposeDefaultInstance();
+        AssemblyContext.DefaultInstance.Dispose();
         yield return null;
         SceneManager.LoadScene(SceneManager.GetActiveScene().name); //restart the game
     }
