@@ -313,6 +313,10 @@ namespace UniRx
 
             tuple.Item2.SetCanceled();
             tuple.Item1.removablePromises.Remove(tuple.Item2.RegisteredCancelationToken);
+
+            ReactiveCommand command = new ReactiveCommand();
+
+            command.Execute();
         }
 
 #endif

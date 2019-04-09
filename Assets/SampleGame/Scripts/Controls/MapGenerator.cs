@@ -28,7 +28,7 @@ public class MapGenerator : MonoBehaviour
 
     public void Start()
     {
-        if (!AssemblyContext.IsDefaultInstanceInitialized)
+        if (!AssemblyContext.DefaultInstanceInitialized)
         {
             AssemblyContext.GetDefaultInstance(this);
         }
@@ -42,7 +42,12 @@ public class MapGenerator : MonoBehaviour
         {
             btnRestart.gameObject.SetActive(false);
             btnRestart.OnClickAsObservable()
-                .Subscribe(unit => { StartCoroutine(RestartRoutine()); })
+                .Subscribe(unit =>
+                {
+                    AssemblyContext.DefaultInstance.Dispose();
+                    AssemblyContext.DefaultInstance = null;
+                    SceneManager.LoadScene(SceneManager.GetActiveScene().name); //restart the game
+                })
                 .AddTo(gameObject);
         }
 
@@ -56,11 +61,14 @@ public class MapGenerator : MonoBehaviour
         //create cells
         foreach (var data in cellData)
         {
-            var cell = AssemblyContext.Instantiate(this.cell);
-            cell.SetParent(container);
-            cell.SetCellData(data);
-            cells.Add(cell);
+            var cellImg = AssemblyContext.Instantiate(this.cell, container);
+            cellImg.SetCellData(data);
+            cells.Add(cellImg);
         }
+
+        Destroy(cell.gameObject);
+        
+        print("Map setup");
 
         //solve the game
         Observable.FromCoroutine(_ => gameSolver.Solve(1f)).Subscribe(_ =>
@@ -69,12 +77,5 @@ public class MapGenerator : MonoBehaviour
                 btnRestart.gameObject.SetActive(true);
             })
             .AddTo(this);
-    }
-
-    IEnumerator RestartRoutine()
-    {
-        AssemblyContext.DefaultInstance.Dispose();
-        yield return null;
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name); //restart the game
     }
 }

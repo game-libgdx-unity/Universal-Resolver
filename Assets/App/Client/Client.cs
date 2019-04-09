@@ -236,26 +236,26 @@ public class Client : MonoBehaviour, IChatClientListener
         if (EnableLogging)
         {
             //log new friend request to unity console
-            SentMessages.SubscribeToConsole("Sent msg").AddTo(gameObject);
-            FriendRequestIncoming.SubscribeToConsole("Received friend request from ").AddTo(gameObject);
-            NewChallengeRequest.SubscribeToConsole("Received challenge request from ").AddTo(gameObject);
-            NewUserOnline.SubscribeToConsole("NewUserOnline ").AddTo(gameObject);
-            NewUserOffline.SubscribeToConsole("NewUserOffline ").AddTo(gameObject);
-            FriendRequestResult.Select(r => r.result).SubscribeToConsole("Received Friend result ").AddTo(gameObject);
-            ChallengeRequestResult.Select(r => r.result).SubscribeToConsole("Received challenge result ")
-                .AddTo(gameObject);
-            IsReady.SubscribeToConsole("IsReady ").AddTo(gameObject);
-
-            //log current user update to unity console
-            FriendStatus.ObserveReplace()
-                .Select(arg => arg.Key + " " + arg.NewValue)
-                .SubscribeToConsole("Status updated ")
-                .AddTo(gameObject);
-
-            FriendStatusMsg.ObserveReplace()
-                .Select(arg => arg.Key + " " + arg.NewValue)
-                .SubscribeToConsole("Status msg updated ")
-                .AddTo(gameObject);
+//            SentMessages.SubscribeToConsole("Sent msg").AddTo(gameObject);
+//            FriendRequestIncoming.SubscribeToConsole("Received friend request from ").AddTo(gameObject);
+//            NewChallengeRequest.SubscribeToConsole("Received challenge request from ").AddTo(gameObject);
+//            NewUserOnline.SubscribeToConsole("NewUserOnline ").AddTo(gameObject);
+//            NewUserOffline.SubscribeToConsole("NewUserOffline ").AddTo(gameObject);
+//            FriendRequestResult.Select(r => r.result).SubscribeToConsole("Received Friend result ").AddTo(gameObject);
+//            ChallengeRequestResult.Select(r => r.result).SubscribeToConsole("Received challenge result ")
+//                .AddTo(gameObject);
+//            IsReady.SubscribeToConsole("IsReady ").AddTo(gameObject);
+//
+//            //log current user update to unity console
+//            FriendStatus.ObserveReplace()
+//                .Select(arg => arg.Key + " " + arg.NewValue)
+//                .SubscribeToConsole("Status updated ")
+//                .AddTo(gameObject);
+//
+//            FriendStatusMsg.ObserveReplace()
+//                .Select(arg => arg.Key + " " + arg.NewValue)
+//                .SubscribeToConsole("Status msg updated ")
+//                .AddTo(gameObject);
         }
 #endif
     }
