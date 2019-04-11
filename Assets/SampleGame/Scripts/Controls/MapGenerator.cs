@@ -28,9 +28,9 @@ public class MapGenerator : MonoBehaviour
 
     public void Start()
     {
-        if (!AssemblyContext.DefaultInstanceInitialized)
+        if (!Context.Initialized)
         {
-            AssemblyContext.GetDefaultInstance(this);
+            Context.GetDefaultInstance(this);
         }
         
         //setup game status, when it get changes
@@ -44,8 +44,8 @@ public class MapGenerator : MonoBehaviour
             btnRestart.OnClickAsObservable()
                 .Subscribe(unit =>
                 {
-                    AssemblyContext.DefaultInstance.Dispose();
-                    AssemblyContext.DefaultInstance = null;
+                    Context.DefaultInstance.Dispose();
+                    Context.DefaultInstance = null;
                     SceneManager.LoadScene(SceneManager.GetActiveScene().name); //restart the game
                 })
                 .AddTo(gameObject);
@@ -61,7 +61,7 @@ public class MapGenerator : MonoBehaviour
         //create cells
         foreach (var data in cellData)
         {
-            var cellImg = AssemblyContext.Instantiate(this.cell, container);
+            var cellImg = Context.Instantiate(this.cell, container);
             cellImg.SetCellData(data);
             cells.Add(cellImg);
         }

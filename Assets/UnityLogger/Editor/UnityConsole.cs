@@ -55,8 +55,9 @@ public static class UnityConsole
         object param_5)
     {
         var trace = new StackTrace(true);
-        var stackFrame = trace.GetFrame(1);
 
+        var stackFrame = trace.GetFrame(1);
+        
         var paramArray = new object[] {param_1, param_2, param_3, param_4, param_5};
         var strBuilder = new StringBuilder();
         var typeDetails = String.Empty;

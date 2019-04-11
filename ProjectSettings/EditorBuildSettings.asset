@@ -6,7 +6,7 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 0
-    path: Assets/UniversalResolver/Samples/1. TestDefaultBindingSetting.unity
+    path: Assets/UniversalResolver/Samples/Scenes/1. TestDefaultBindingSetting.unity
     guid: 301338f899a8247c3ae7b7027f20baf6
   - enabled: 0
     path: 
