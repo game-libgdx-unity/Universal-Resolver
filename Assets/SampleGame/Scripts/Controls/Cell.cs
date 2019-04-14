@@ -1,18 +1,12 @@
-﻿﻿/**
+﻿/**
  * Author:    Vinh Vu Thanh
  * This class is a part of Universal Resolver project that can be downloaded free at 
  * https://github.com/game-libgdx-unity/UnityEngine.IoC or http://u3d.as/1rQJ
  * (c) Copyright by MrThanhVinh168@gmail.com
  **/
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using App.Scripts.Boards;
-using UniRx;
-using UniRx.Triggers;
+
+
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 
@@ -22,117 +16,110 @@ using UnityEngine.UI;
 [SelectionBase]
 public class Cell : MonoBehaviour, ICell
 {
-    private IReactiveProperty<CellType> CellType = new ReactiveProperty<CellType>();
-    
-    private CellData cellData { get; set; }
-    private Text textUI;
-    private Image background;
-    private Outline outline;
+    private Observable<CellType> CellType = new Observable<CellType>();
 
-    private void Init(CellData data)
+    private CellData cellData { get; set; }
+    [Children] Text textUI;
+    [Component] Image background;
+    [Component] Outline outline;
+
+    public void SetCellData(CellData data)
     {
         Debug.Assert(data != null);
         this.cellData = data;
 
-        //inject some components
-        background = GetComponent<Image>();
-        outline = GetComponent<Outline>();
-        textUI = GetComponentInChildren<Text>();
-
         outline.effectColor = Color.black;
 
         //when number of adjacent mines get changed
-        cellData.AdjacentMines
-            .Where(mines => mines > 0)
-            .Subscribe(mines => { CellType.Value = (CellType) mines; })
-            .AddTo(this);
+        cellData.AdjacentMines.Subscribe(this, mines =>
+        {
+            if (mines > 0) CellType.Value = (CellType) mines;
+        });
 
-        cellData.IsFlagged
-            .Where(isFlagged => isFlagged)
-            .Subscribe(isFlagged => { CellType.Value = global::CellType.FLAGGED; })
-            .AddTo(this);
+        //when a cell is flagged
+        cellData.IsFlagged.Subscribe(this, isFlagged =>
+        {
+            if (isFlagged) CellType.Value = global::CellType.FLAGGED;
+        });
 
-        cellData.IsRevealed
-            .Subscribe(isRevealed =>
+        //when a cell is revealed
+        cellData.IsRevealed.Subscribe(this, isRevealed =>
+        {
+            textUI.enabled = isRevealed;
+            background.color = isRevealed ? Color.white : Color.gray;
+            if (isRevealed)
             {
-                textUI.enabled = isRevealed;
-                background.color = isRevealed ? Color.white : Color.gray;
-            })
-            .AddTo(this);
-
-        cellData.IsMine
-            .Where(isMine => isMine)
-            .SelectMany(cellData.IsRevealed)
-            .Where(isRevealed => isRevealed)
-            .Subscribe(isMined => { CellType.Value = global::CellType.MINE; })
-            .AddTo(this);
+                cellData.IsMine.Subscribe(this, isMined =>
+                {
+                    if (isMined) CellType.Value = global::CellType.MINE;
+                });
+            }
+        });
 
         //change UI when CellType change
-        CellType.Where(c => c != global::CellType.UNOPENED)
-            .Subscribe(type =>
+        CellType.Subscribe(this, type =>
+        {
+            if (type == global::CellType.UNOPENED)
             {
-                textUI.color = Color.black;
-                switch (type)
-                {
-                    case global::CellType.EMPTY:
-                        textUI.text = "";
-                        break;
-                    case global::CellType.M1:
-                        textUI.text = "1";
-                        textUI.color = Color.blue;
+                return;
+            }
 
-                        break;
-                    case global::CellType.M2:
-                        textUI.text = "2";
-                        textUI.color = Color.cyan;
+            textUI.color = Color.black;
+            switch (type)
+            {
+                case global::CellType.EMPTY:
+                    textUI.text = "";
+                    break;
+                case global::CellType.M1:
+                    textUI.text = "1";
+                    textUI.color = Color.blue;
 
-                        break;
-                    case global::CellType.M3:
-                        textUI.text = "3";
-                        textUI.color = Color.magenta;
+                    break;
+                case global::CellType.M2:
+                    textUI.text = "2";
+                    textUI.color = Color.cyan;
 
-                        break;
-                    case global::CellType.M4:
-                        textUI.text = "4";
-                        textUI.color = Color.blue;
+                    break;
+                case global::CellType.M3:
+                    textUI.text = "3";
+                    textUI.color = Color.magenta;
 
-                        break;
-                    case global::CellType.M5:
-                        textUI.text = "5";
+                    break;
+                case global::CellType.M4:
+                    textUI.text = "4";
+                    textUI.color = Color.blue;
 
-                        break;
-                    case global::CellType.M6:
-                        textUI.text = "6";
+                    break;
+                case global::CellType.M5:
+                    textUI.text = "5";
 
-                        break;
-                    case global::CellType.M7:
-                        textUI.text = "7";
+                    break;
+                case global::CellType.M6:
+                    textUI.text = "6";
 
-                        break;
-                    case global::CellType.M8:
-                        textUI.text = "8";
+                    break;
+                case global::CellType.M7:
+                    textUI.text = "7";
 
-                        break;
-                    case global::CellType.MINE:
-                        textUI.text = "M";
-                        textUI.color = Color.red;
-                        textUI.enabled = true;
+                    break;
+                case global::CellType.M8:
+                    textUI.text = "8";
 
-                        break;
-                    case global::CellType.FLAGGED:
-                        textUI.text = "F";
-                        textUI.color = Color.blue;
-                        textUI.enabled = true;
+                    break;
+                case global::CellType.MINE:
+                    textUI.text = "M";
+                    textUI.color = Color.red;
+                    textUI.enabled = true;
 
-                        break;
-                }
-            })
-            .AddTo(gameObject);
-    }
+                    break;
+                case global::CellType.FLAGGED:
+                    textUI.text = "F";
+                    textUI.color = Color.blue;
+                    textUI.enabled = true;
 
-    public void SetCellData(CellData data)
-    {
-        Init(data);
+                    break;
+            }
+        });
     }
 
     public void SetParent(Transform parent)

@@ -17,7 +17,7 @@ public static class ObjectExtension
     {
         return default(T);
     }
-    
+
     public static T CopyComponent<T>(this T original, GameObject destination) where T : Component
     {
         Type type = original.GetType();
@@ -44,7 +44,7 @@ public static class ObjectExtension
 
         return dst as T;
     }
-    
+
     public static T BinaryClone<T>(this T objSource)
     {
         if (objSource == null)
@@ -63,7 +63,7 @@ public static class ObjectExtension
             return (T) formatter.Deserialize(stream);
         }
     }
-    
+
     public static T JsonClone<T>(this T source)
     {
         var serialized = JsonUtility.ToJson(source);
@@ -81,7 +81,7 @@ public static class ObjectExtension
 
         return array;
     }
-    
+
     public static T DeepCloneObject<T>(this T objSource)
 
     {
@@ -141,6 +141,15 @@ public static class ObjectExtension
 
         return (T) objTarget;
     }
+
+    public static T GetOrAddComponent<T>(this GameObject gameObject) where T : Component
+    {
+        return gameObject.GetComponent<T>() ?? gameObject.AddComponent<T>();
+    }
+    public static T GetOrAddComponent<T>(this Component component) where T : Component
+    {
+        return component.gameObject.GetOrAddComponent<T>();
+    }
 }
 
 //Get all the properties of source object type
@@ -189,5 +198,5 @@ public static class ObjectExtension
 //                }
 //            }
 //        } 
-        
+
 //Get all the properties of source object type

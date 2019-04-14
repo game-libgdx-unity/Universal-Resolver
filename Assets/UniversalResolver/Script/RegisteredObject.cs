@@ -192,6 +192,11 @@ namespace UnityIoC
 
                     if (instance)
                     {
+                        if (lifeCycle == LifeCycle.Prefab)
+                        {
+                            instance.gameObject.SetActive(false);
+                        }
+                        
                         Debug.Log("Found {0} component on gameObject {1} as {2} from current scene",
                             TypeName,
                             instance.gameObject.name,
@@ -204,7 +209,7 @@ namespace UnityIoC
                 //search for prefabs of this component type from resources path folders
                 GameObject prefab;
 
-                if (lifeCycle == LifeCycle.Prefab)
+                if (lifeCycle == LifeCycle.Prefab && GameObject)
                 {
                     prefab = GameObject;
                 }

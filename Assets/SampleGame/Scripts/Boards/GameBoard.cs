@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using UniRx;
+
 using Random = System.Random;
 using System.Collections.Generic;
 using System.Linq;
-using UniRx;
+
 using UnityEngine;
 using UnityIoC;
 
@@ -13,7 +13,7 @@ namespace App.Scripts.Boards
     public class GameBoard : IGameBoard
     {
         [Singleton] private List<CellData> Cells { get; set; }
-        [Singleton] private ReactiveProperty<GameStatus> Status { get; set; }
+        [Singleton] private Observable<GameStatus> Status { get; set; }
         [Singleton] private GameSetting GameSettings { get; set; }
 
         public int Width

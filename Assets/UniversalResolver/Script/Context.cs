@@ -338,7 +338,7 @@ namespace UnityIoC
         /// </summary>
         /// <param name="mono"></param>
         /// <param name="ignoreMonobehaviour"></param>
-        private void ProcessInjectAttribute(object mono, bool ignoreMonobehaviour = false)
+        public void ProcessInjectAttribute(object mono, bool ignoreMonobehaviour = false)
         {
             if (mono == null)
             {
@@ -464,21 +464,21 @@ namespace UnityIoC
                 }
 
                 //only process a property if the property's value is not set yet
-                var value = property.GetValue(mono, null);
-                if (value != value.DefaultValue())
-                {
-                    debug.Log(string.Format("Don't set value for property {0} due to non-default value",
-                        property.Name));
-
-                    //check to bind this instance
-                    if (inject.LifeCycle == LifeCycle.Singleton ||
-                        (inject.LifeCycle & LifeCycle.Singleton) == LifeCycle.Singleton)
-                    {
-                        container.Bind(property.PropertyType, value);
-                    }
-
-                    continue;
-                }
+//                var value = property.GetValue(mono, null);
+//                if (value != value.DefaultValue())
+//                {
+//                    debug.Log(string.Format("Don't set value for property {0} due to non-default value",
+//                        property.Name));
+//
+//                    //check to bind this instance
+//                    if (inject.LifeCycle == LifeCycle.Singleton ||
+//                        (inject.LifeCycle & LifeCycle.Singleton) == LifeCycle.Singleton)
+//                    {
+//                        container.Bind(property.PropertyType, value);
+//                    }
+//
+//                    continue;
+//                }
 
                 var setMethod = property.GetSetMethod(true);
 
@@ -550,23 +550,46 @@ namespace UnityIoC
                 }
 
                 //only process a field if the field's value is not set yet
-                var value = field.GetValue(mono);
-                if (value != value.DefaultValue())
-                {
-                    debug.Log(string.Format("Don't set value for field {0} due to non-default value", field.Name));
 
-                    //check to bind this instance
-                    if (inject.LifeCycle == LifeCycle.Singleton ||
-                        (inject.LifeCycle & LifeCycle.Singleton) == LifeCycle.Singleton)
-                    {
-                        debug.Log(string.Format("Bind instance for field {0}", field.Name));
-                        container.Bind(field.FieldType, value);
-                    }
-
-                    continue;
-                }
+//                var value = field.GetValue(mono);
+//                bool defaultValue = false;
+//
+//                if (field.FieldType.IsArray)
+//                {
+//                    if (value != null)
+//                    {
+//                        defaultValue = value != value.DefaultValue();
+//
+//                        var array = value as Array;
+//                        if (array.Length == 0)
+//                        {
+//                            defaultValue = true;
+//                        }
+//                    }
+//                }
+//                else
+//                {
+//                    defaultValue = value != value.DefaultValue();
+//                }
+//
+//                if (defaultValue)
+//                {
+//                    debug.Log(string.Format("Don't set value for field {0} due to non-default value", field.Name));
+//
+//                    //check to bind this instance
+//                    if (inject.LifeCycle == LifeCycle.Singleton ||
+//                        (inject.LifeCycle & LifeCycle.Singleton) == LifeCycle.Singleton)
+//                    {
+//                        debug.Log(string.Format("Bind instance for field {0}", field.Name));
+//                        container.Bind(field.FieldType, value);
+//                    }
+//
+//                    continue;
+//                }
 
                 injectAttributes.Add(inject);
+
+                debug.Log("Processing field {0}", field.Name);
 
                 //pass container to injectAttribute
                 inject.container = DefaultContainer;
@@ -664,7 +687,7 @@ namespace UnityIoC
                 {
                     ProcessInjectAttribute(component);
 
-                    if (injectAttribute.LifeCycle == LifeCycle.Prefab)
+                    if (injectAttribute is PrefabAttribute || injectAttribute.LifeCycle == LifeCycle.Prefab)
                     {
                         component.gameObject.SetActive(false);
                     }
@@ -820,10 +843,13 @@ namespace UnityIoC
             var allBehaviours = Object.FindObjectsOfType<MonoBehaviour>();
 
             var ignoredUnityEngineScripts = allBehaviours.Where(m =>
-            {
-                var ns = m.GetType().Namespace;
-                return ns == null || !ns.StartsWith("UnityEngine");
-            }).ToArray();
+                {
+                    var type = m.GetType();
+                    var ns = type.Namespace;
+                    var ignored = type.GetCustomAttributes(typeof(IgnoreProcessingAttribute), true).Any();
+                    return !ignored && (ns == null || !ns.StartsWith("UnityEngine"));
+                })
+                .ToArray();
 
             var sortableBehaviours = Array.FindAll(ignoredUnityEngineScripts,
                 b => b.GetType().GetCustomAttributes(typeof(ProcessingOrderAttribute), true).Any());
@@ -834,33 +860,43 @@ namespace UnityIoC
             {
                 debug.Log("Found sortableBehaviours behavior: " + sortableBehaviours.Count());
 
-                Array.Sort(sortableBehaviours);
+                Array.Sort(sortableBehaviours, MonobehaviourComparer.Default);
 
                 foreach (var mono in sortableBehaviours)
                 {
                     if (mono)
                     {
+                        debug.Log("Process on object " + mono.GetType().Name);
+
                         ProcessInjectAttribute(mono);
                     }
                 }
             }
 
-            if (nonSortableBehaviours.Any())
+            foreach (var mono in nonSortableBehaviours)
             {
-                debug.Log("Found nonSortableBehaviours behavior: " + nonSortableBehaviours.Count());
-
-                if (debug.enableLogging)
+                if (mono)
                 {
-                    nonSortableBehaviours.Select(m => m.GetType().Name).Do(m => debug.Log(m));
-                }
+                    debug.Log("Process on object " + mono.GetType().Name);
 
-                foreach (var mono in nonSortableBehaviours)
+                    ProcessInjectAttribute(mono);
+                }
+            }
+
+            //process for IRunBeforeUpdate interface
+            var runBeforeUpdateComp = allBehaviours.Where(m => m is IRunBeforeUpdate).ToArray();
+            foreach (var mono in runBeforeUpdateComp)
+            {
+                if (mono.GetType().GetCustomAttributes(typeof(IgnoreProcessingAttribute), true).Any())
                 {
                     if (mono)
                     {
+                        debug.Log("Process on object " + mono.GetType().Name);
                         ProcessInjectAttribute(mono);
                     }
                 }
+
+                mono.GetOrAddComponent<RunBeforeUpdate>();
             }
         }
 
@@ -1247,7 +1283,6 @@ namespace UnityIoC
 
         public static void Bind(InjectIntoBindingSetting bindingSetting)
         {
-            
             if (bindingSetting.assemblyHolder)
             {
                 var customAssembly = Assembly.Load(bindingSetting.assemblyHolder.name);
@@ -1257,7 +1292,7 @@ namespace UnityIoC
                     GetDefaultInstance(type);
                 }
             }
-            
+
             GetDefaultInstance().LoadBindingSetting(bindingSetting);
         }
 

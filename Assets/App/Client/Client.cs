@@ -236,7 +236,7 @@ public class Client : MonoBehaviour, IChatClientListener
         if (EnableLogging)
         {
             //log new friend request to unity console
-//            SentMessages.SubscribeToConsole("Sent msg").AddTo(gameObject);
+            SentMessages.SubscribeToConsole("Sent msg").AddTo(gameObject);
 //            FriendRequestIncoming.SubscribeToConsole("Received friend request from ").AddTo(gameObject);
 //            NewChallengeRequest.SubscribeToConsole("Received challenge request from ").AddTo(gameObject);
 //            NewUserOnline.SubscribeToConsole("NewUserOnline ").AddTo(gameObject);

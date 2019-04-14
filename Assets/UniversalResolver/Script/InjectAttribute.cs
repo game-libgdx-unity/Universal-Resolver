@@ -41,21 +41,25 @@ public class InjectAttribute : Attribute, IComponentResolvable, IComponentArrayR
             return null;
         }
 
-        var componentFromGameObject = gameObject.GetComponent(type);
-
-        if (componentFromGameObject != null)
+        if (type.IsSubclassOf(typeof(Component))
+            || type.IsInterface)
         {
-            //as default or transition
-            if (LifeCycle == LifeCycle.Transient || (LifeCycle & LifeCycle.Transient) == LifeCycle.Transient ||
-                LifeCycle == LifeCycle.Default || (LifeCycle & LifeCycle.Default) == LifeCycle.Default)
-            {
-//                var clone = componentFromGameObject.CopyComponent(new GameObject());
-                var clone = Object.Instantiate(componentFromGameObject);
-                return clone;
-            }
+            var componentFromGameObject = gameObject.GetComponent(type);
 
-            //as singleton or component
-            return componentFromGameObject;
+            if (componentFromGameObject != null)
+            {
+                //as default or transition
+                if (LifeCycle == LifeCycle.Transient || (LifeCycle & LifeCycle.Transient) == LifeCycle.Transient ||
+                    LifeCycle == LifeCycle.Default || (LifeCycle & LifeCycle.Default) == LifeCycle.Default)
+                {
+//                var clone = componentFromGameObject.CopyComponent(new GameObject());
+                    var clone = Object.Instantiate(componentFromGameObject);
+                    return clone;
+                }
+
+                //as singleton or component
+                return componentFromGameObject;
+            }
         }
 
         return null;
@@ -79,7 +83,7 @@ public class InjectAttribute : Attribute, IComponentResolvable, IComponentArrayR
         if (string.IsNullOrEmpty(path))
         {
             //unsupported
-            return null;
+            return behaviour.gameObject;
         }
 
         GameObject gameObject = null;

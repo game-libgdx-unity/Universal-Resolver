@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using UniRx;
+
 using UnityEngine;
 using Random = System.Random;
 
@@ -10,7 +10,7 @@ namespace App.Scripts.Boards
 
     public class GameSolver : IGameSolver
     {
-        [Singleton] private ReactiveProperty<GameStatus> Status { get; set; }
+        [Singleton] private Observable<GameStatus> Status { get; set; }
 
         [Singleton] private List<CellData> CellData { get; set; }
 

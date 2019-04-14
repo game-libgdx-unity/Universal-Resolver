@@ -41,6 +41,7 @@ public class ComponentAttribute : InjectAttribute, IComponentResolvable, ICompon
                     return componentFromGameObject;
                 }
             }
+
             //not supported: get non-component from gameObject
 //            else
 //            {
@@ -55,15 +56,17 @@ public class ComponentAttribute : InjectAttribute, IComponentResolvable, ICompon
 //                    }
 //                }                
 //            }
-
         }
 
         if (type.IsSubclassOf(typeof(MonoBehaviour)))
         {
-            MyDebug.Log("Can't find type of {0}, create a new one on gameObject {1}", type,
-                gameObject.name);
+            if (gameObject)
+            {
+                MyDebug.Log("Can't find type of {0}, create a new one on gameObject {1}", type,
+                    gameObject.name);
 
-            return gameObject.AddComponent(type);
+                return gameObject.AddComponent(type);
+            }
         }
 
         return null;
@@ -86,8 +89,7 @@ public class ComponentAttribute : InjectAttribute, IComponentResolvable, ICompon
     {
         if (string.IsNullOrEmpty(path))
         {
-            //unsupported
-            return null;
+            return behaviour.gameObject;
         }
 
         GameObject gameObject = null;
@@ -170,9 +172,20 @@ public class ComponentAttribute : InjectAttribute, IComponentResolvable, ICompon
 
 public class ChildrenAttribute : InjectAttribute, IComponentResolvable, IComponentArrayResolvable
 {
+    public ChildrenAttribute()
+        : base(LifeCycle.Component | LifeCycle.Default, null)
+    {
+    }
+
+    public ChildrenAttribute(string path = null)
+        : base(LifeCycle.Component | LifeCycle.Default, path)
+    {
+    }
+
     public Component GetComponent(MonoBehaviour behaviour, Type type)
     {
-        var componentInChildren = behaviour.GetComponentInChildren(type);
+        var gameObj = GetGameObject(behaviour, Path);
+        var componentInChildren = gameObj.GetComponentInChildren(type);
         if (componentInChildren != null)
         {
             return componentInChildren;
@@ -192,7 +205,8 @@ public class ChildrenAttribute : InjectAttribute, IComponentResolvable, ICompone
 
     public Component[] GetComponents(MonoBehaviour behaviour, Type type)
     {
-        return behaviour.GetComponentsInChildren(type);
+        var gameObj = GetGameObject(behaviour, Path);
+        return gameObj.GetComponentsInChildren(type);
     }
 }
 

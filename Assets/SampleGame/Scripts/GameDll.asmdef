@@ -1,15 +1,8 @@
 {
     "name": "GameDll",
     "references": [
-        "UnityIoC",
-        "UniRx"
+        "UnityIoC"
     ],
-    "optionalUnityReferences": [],
     "includePlatforms": [],
-    "excludePlatforms": [],
-    "allowUnsafeCode": false,
-    "overrideReferences": false,
-    "precompiledReferences": [],
-    "autoReferenced": true,
-    "defineConstraints": []
+    "excludePlatforms": []
 }

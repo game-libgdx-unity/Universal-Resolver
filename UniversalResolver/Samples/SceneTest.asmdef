@@ -1,0 +1,10 @@
+{
+    "name": "SceneTest",
+    "references": [
+        "UnityIoC"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false
+}

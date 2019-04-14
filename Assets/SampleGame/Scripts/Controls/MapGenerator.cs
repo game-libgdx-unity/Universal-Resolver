@@ -1,9 +1,16 @@
-﻿using System.Collections;
+﻿/**
+ * Author:    Vinh Vu Thanh
+ * This class is a part of Universal Resolver project that can be downloaded free at 
+ * https://github.com/game-libgdx-unity/UnityEngine.IoC
+ * (c) Copyright by MrThanhVinh168@gmail.com
+ **/
+
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using App.Scripts.Boards;
-using UniRx;
+
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -24,15 +31,18 @@ public class MapGenerator : MonoBehaviour
     [Singleton] private IGameBoard gameBoard;
 
     private GameSetting gameSetting = new GameSetting();
-    private ReactiveProperty<GameStatus> gameStatus = new ReactiveProperty<GameStatus>();
+    private Observable<GameStatus> gameStatus = new Observable<GameStatus>();
 
-    public void Start()
+    private void Awake()
     {
         if (!Context.Initialized)
         {
             Context.GetDefaultInstance(this);
         }
-        
+    }
+
+    public void Start()
+    {   
         //setup game status, when it get changes
         gameStatus.Subscribe(status => { print("Game status: " + status.ToString()); })
             .AddTo(gameObject);
@@ -41,14 +51,13 @@ public class MapGenerator : MonoBehaviour
         if (btnRestart)
         {
             btnRestart.gameObject.SetActive(false);
-            btnRestart.OnClickAsObservable()
-                .Subscribe(unit =>
+            btnRestart.onClick.RemoveAllListeners();
+            btnRestart.onClick.AddListener(() =>
                 {
                     Context.DefaultInstance.Dispose();
                     Context.DefaultInstance = null;
                     SceneManager.LoadScene(SceneManager.GetActiveScene().name); //restart the game
-                })
-                .AddTo(gameObject);
+                });
         }
 
         //setup the layout
@@ -66,16 +75,20 @@ public class MapGenerator : MonoBehaviour
             cells.Add(cellImg);
         }
 
-        Destroy(cell.gameObject);
+//        cell.gameObject.SetActive(false);
+//        Destroy(cell.gameObject);
         
         print("Map setup");
 
         //solve the game
-        Observable.FromCoroutine(_ => gameSolver.Solve(1f)).Subscribe(_ =>
-            {
-                print("Finished");
-                btnRestart.gameObject.SetActive(true);
-            })
-            .AddTo(this);
+        StartCoroutine(SolveRoutine());
+    }
+
+    IEnumerator SolveRoutine()
+    {
+        yield return gameSolver.Solve(1f);
+        
+        print("Finished");
+        btnRestart.gameObject.SetActive(true);
     }
 }
