@@ -121,7 +121,7 @@ namespace UnityIoC
                 Bind<TTypeToResolve, TConcrete>(LifeCycle.Transient);
             }
 
-            public void Bind(Type typeToResolve, Type concreteType, LifeCycle lifeCycle = LifeCycle.Default)
+            public RegisteredObject Bind(Type typeToResolve, Type concreteType, LifeCycle lifeCycle = LifeCycle.Default)
             {
                 if (concreteType.IsAbstract)
                 {
@@ -141,7 +141,9 @@ namespace UnityIoC
                 }
 
                 debug.Log("Add registeredObject: " + concreteType + " for " + typeToResolve + " as " + lifeCycle);
-                registeredObjects.Add(new RegisteredObject(typeToResolve, concreteType, context, lifeCycle));
+                var registeredObject = new RegisteredObject(typeToResolve, concreteType, context, lifeCycle);
+                registeredObjects.Add(registeredObject);
+                return registeredObject;
             }
 
             public void Bind<TTypeToResolve, TConcrete>(LifeCycle lifeCycle)
@@ -163,7 +165,7 @@ namespace UnityIoC
                     lifeCycle));
             }
 
-            public void Bind(InjectIntoBindingData data)
+            public RegisteredObject Bind(InjectIntoBindingData data)
             {
                 if (data.ImplementedType.IsAbstract)
                 {
@@ -223,6 +225,8 @@ namespace UnityIoC
 
                 registeredObjects.Add(
                     item);
+
+                return item;
             }
 
             private void RemoveRegisteredObjectFromCache(RegisteredObject registeredObject)

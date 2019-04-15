@@ -1,4 +1,4 @@
-﻿/**
+﻿﻿/**
  * Author:    Vinh Vu Thanh
  * This class is a part of Universal Resolver project that can be downloaded free at 
  * https://github.com/game-libgdx-unity/UnityEngine.IoC
@@ -194,7 +194,13 @@ namespace UnityIoC
                     {
                         if (lifeCycle == LifeCycle.Prefab)
                         {
-                            instance.gameObject.SetActive(false);
+                            GameObject gameObject;
+                            (gameObject = instance.gameObject).SetActive(false);
+                            InjectIntoBindingData d = new InjectIntoBindingData();
+                            d.AbstractType = AbstractType;
+                            d.ImplementedType = ImplementedType;
+                            d.LifeCycle = LifeCycle.Prefab;
+                            context.container.Bind(d).GameObject = gameObject;
                         }
                         
                         Debug.Log("Found {0} component on gameObject {1} as {2} from current scene",

@@ -11,7 +11,7 @@ namespace UnityIoC
 {
     public interface IContainer : IDisposable
     {
-        void Bind(InjectIntoBindingData data);
+        Context.RegisteredObject Bind(InjectIntoBindingData data);
 
         object ResolveObject(Type abstractType,
             LifeCycle preferredLifeCycle = LifeCycle.Default,

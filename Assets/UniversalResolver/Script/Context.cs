@@ -1157,8 +1157,17 @@ namespace UnityIoC
             object resolveFrom = null,
             params object[] parameters)
         {
-            debug.Log("Start resolve type of {0}", typeToResolve);
-            debug.Log("resolveFrom: " + (resolveFrom ?? "None"));
+            if (typeToResolve.IsSubclassOf(typeof(MonoBehaviour)) && ( lifeCycle == LifeCycle.Default || lifeCycle == LifeCycle.Prefab || lifeCycle == LifeCycle.Transient))
+            {
+                //try to look for prefab
+                var registeredObject =
+                    container.registeredObjects.FirstOrDefault(r => r.GameObject && r.AbstractType == typeToResolve);
+                if (registeredObject != null)
+                {
+                    return CreateInstance(registeredObject.GameObject).GetComponent(registeredObject.ImplementedType);
+                }
+            }
+
             return container.ResolveObject(typeToResolve, lifeCycle, resolveFrom, parameters);
         }
 
@@ -1185,6 +1194,11 @@ namespace UnityIoC
         }
 
         public static T Instantiate<T>(T origin, Object parent) where T : Component
+        {
+            return DefaultInstance.CreateInstance(origin, parent as Transform);
+        }
+
+        public static GameObject Instantiate(GameObject origin, Object parent)
         {
             return DefaultInstance.CreateInstance(origin, parent as Transform);
         }
@@ -1230,6 +1244,14 @@ namespace UnityIoC
             params object[] parameters)
         {
             return (T) GetDefaultInstance(typeof(T)).Resolve(typeof(T), lifeCycle, resolveFrom, parameters);
+        }
+        
+        
+        public static T ResolveComponent<T>(RectTransform parents) where T:Component
+        {
+            var obj = ResolveObject(typeof(T), LifeCycle.Default) as T;
+            obj.transform.SetParent(parents);
+            return obj;
         }
 
         public static void SetPropertyValue(object inputObject, string propertyName, object propertyVal)

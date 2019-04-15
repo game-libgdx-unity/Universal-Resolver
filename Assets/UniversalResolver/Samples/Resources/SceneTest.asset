@@ -46,3 +46,11 @@ MonoBehaviour:
       type: 3}
     ImplementedTypeHolder: {fileID: 11500000, guid: 2bc60193bfa194006b06174af2b11875,
       type: 3}
+  - Prefab: {fileID: 0}
+    LifeCycle: 8
+    EnableInjectInto: 0
+    InjectIntoHolder: []
+    AbstractTypeHolder: {fileID: 11500000, guid: 7f5395a6e03fa45229573ea07f8a45c2,
+      type: 3}
+    ImplementedTypeHolder: {fileID: 6983474524551509918, guid: 56bb0dddc031f4f79964a1da69bd087a,
+      type: 3}

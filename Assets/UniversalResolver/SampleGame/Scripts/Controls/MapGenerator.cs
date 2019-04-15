@@ -10,7 +10,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using App.Scripts.Boards;
-
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -39,10 +38,7 @@ public class MapGenerator : MonoBehaviour
         {
             Context.GetDefaultInstance(this);
         }
-    }
 
-    public void Start()
-    {   
         //setup game status, when it get changes
         gameStatus.Subscribe(status => { print("Game status: " + status.ToString()); })
             .AddTo(gameObject);
@@ -53,11 +49,11 @@ public class MapGenerator : MonoBehaviour
             btnRestart.gameObject.SetActive(false);
             btnRestart.onClick.RemoveAllListeners();
             btnRestart.onClick.AddListener(() =>
-                {
-                    Context.DefaultInstance.Dispose();
-                    Context.DefaultInstance = null;
-                    SceneManager.LoadScene(SceneManager.GetActiveScene().name); //restart the game
-                });
+            {
+                Context.DefaultInstance.Dispose();
+                Context.DefaultInstance = null;
+                SceneManager.LoadScene(SceneManager.GetActiveScene().name); //restart the game
+            });
         }
 
         //setup the layout
@@ -70,14 +66,15 @@ public class MapGenerator : MonoBehaviour
         //create cells
         foreach (var data in cellData)
         {
-            var cellImg = Context.Instantiate(this.cell, container);
+//          var cellImg = Context.Instantiate(cell, container);
+            var cellImg = Context.ResolveComponent<Cell>(container);
             cellImg.SetCellData(data);
             cells.Add(cellImg);
         }
 
 //        cell.gameObject.SetActive(false);
 //        Destroy(cell.gameObject);
-        
+
         print("Map setup");
 
         //solve the game
@@ -87,7 +84,7 @@ public class MapGenerator : MonoBehaviour
     IEnumerator SolveRoutine()
     {
         yield return gameSolver.Solve(1f);
-        
+
         print("Finished");
         btnRestart.gameObject.SetActive(true);
     }
