@@ -26,12 +26,12 @@ namespace SceneTest
 			//try to resolve each component
 			
 			//you should see a log in console
-			context.Resolve<TestComponent>();
+			context.ResolveObject<TestComponent>();
 			
 			//you should see another log in console
-			context.Resolve<TestComponent2>();
+			context.ResolveObject<TestComponent2>();
 			
-			context.Resolve<TestComponent>();
+			context.ResolveObject<TestComponent>();
 		}
 	}
 }

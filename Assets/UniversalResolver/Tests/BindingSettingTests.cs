@@ -13,7 +13,7 @@ namespace UnityIoC.Editor
         public void t1_default_binding_settings()
         {
             var context = new Context(this);
-            var testI = context.Resolve<TestInterface>();
+            var testI = context.ResolveObject<TestInterface>();
             Assert.IsNotNull(testI);
             Assert.IsInstanceOf<TestClass>(testI);
             testI.DoSomething();
@@ -24,7 +24,7 @@ namespace UnityIoC.Editor
         {
             var context = new Context(this);
             context.LoadBindingSetting(MyResources.Load<InjectIntoBindingSetting>("not_default"));
-            var testI = context.Resolve<TestInterface>();
+            var testI = context.ResolveObject<TestInterface>();
             Assert.IsNotNull(testI);
         }
         

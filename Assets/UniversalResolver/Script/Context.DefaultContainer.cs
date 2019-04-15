@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using UnityEngine;
 
 namespace UnityIoC
 {
@@ -344,11 +345,25 @@ namespace UnityIoC
 
                 RegisteredObject registeredObject = null;
 
-                if (resolveFrom == null
-                    || (preferredLifeCycle & LifeCycle.Component) == LifeCycle.Component
-                    || (preferredLifeCycle & LifeCycle.Prefab) == LifeCycle.Prefab)
+                if (resolveFrom == null)
                 {
                     debug.Log("Try default process to resolve");
+                    if (abstractType.IsSubclassOf(typeof(Component)) &&
+                        (preferredLifeCycle == LifeCycle.Default || preferredLifeCycle == LifeCycle.Transient))
+                    {
+                        //try to look for the component from prefab
+                         registeredObject = registeredObjects.FirstOrDefault(r => r.GameObject && r.AbstractType == abstractType);
+                        if (registeredObject != null)
+                        {
+                            //store as cached
+                            if (!abstractType.IsArray)
+                            {
+                                CachedResolveResults[resolveInput] = registeredObject;
+                            }
+
+                            return context.CreateInstance(registeredObject.GameObject).GetComponent(registeredObject.ImplementedType);
+                        }
+                    }
 
                     filter = o => o.AbstractType == abstractType && o.InjectInto == null;
 
@@ -483,8 +498,11 @@ namespace UnityIoC
 
                     if (parameters == null || parameters.Length == 0)
                     {
-                        var param = ResolveConstructorParameters(registeredObject);
-                        paramArray = param == null ? null : param.ToArray();
+                         paramArray = ResolveConstructorParameters(registeredObject, parameters).ToArray();
+                    }
+                    else
+                    {
+                        paramArray = parameters;
                     }
 
                     var obj = registeredObject.CreateInstance(context, objectLifeCycle, resolveFrom,
@@ -501,9 +519,23 @@ namespace UnityIoC
                 return registeredObject.Instance;
             }
 
-            private IEnumerable<object> ResolveConstructorParameters(RegisteredObject registeredObject)
+            private IEnumerable<object> ResolveConstructorParameters(
+                RegisteredObject registeredObject,
+                object[] parameters)
             {
-                ConstructorInfo constructorInfo = registeredObject.ImplementedType.GetConstructors().FirstOrDefault();
+                ConstructorInfo constructorInfo = null;
+
+                if (parameters == null || parameters.Length == 0)
+                {
+                    constructorInfo = registeredObject.ImplementedType
+                        .GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.NonPublic)
+                        .FirstOrDefault();
+                }
+                else
+                {
+                    constructorInfo =
+                        registeredObject.ImplementedType.GetConstructor(parameters.Select(p => p.GetType()).ToArray());
+                }
 
                 if (constructorInfo == null)
                 {

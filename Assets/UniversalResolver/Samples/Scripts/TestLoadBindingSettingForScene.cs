@@ -13,12 +13,12 @@ public class TestLoadBindingSettingForScene : MonoBehaviour {
 		//in this case, please refer to SceneTest setting from the resources folder.
 		var context = new Context(this);
 		//you should see a log in unity console
-		context.Resolve<TestComponent>();
+		context.ResolveObject<TestComponent>();
 		
 		//This method will load a setting with a sceneName, overriden the current setting
 		//in this case, please refer to 3. TestLoadBindingSettingForScene setting from the resources folder.
 		context.LoadBindingSettingForScene();
 		//you should see another log in unity console
-		context.Resolve<TestComponent>();
+		context.ResolveObject<TestComponent>();
 	}
 }

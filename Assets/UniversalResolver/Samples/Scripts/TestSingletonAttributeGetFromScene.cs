@@ -17,7 +17,7 @@ public class TestSingletonAttributeGetFromScene : MonoBehaviour
 		//resolve this testComponent as singleton
 		//TestComponent has been resolved by [Component] Attribute below, so 
 		//this is just a reference to it, they are the same object.
-		var testComp = assemblyContext.Resolve<TestComponent>(LifeCycle.Singleton);
+		var testComp = assemblyContext.ResolveObject<TestComponent>(LifeCycle.Singleton);
 		
 		//to verify, you should see only 1 instance for this type
 		print("Number of TestComponent instances: "+FindObjectsOfType<TestComponent>().Length);

@@ -108,7 +108,7 @@ namespace UnityIoC
                                (objectLifeCycle & LifeCycle.Prefab) == LifeCycle.Prefab;
 
                 object instance = null;
-
+                
                 if (Instance == null || !isSingleton)
                 {
                     if (ImplementedType.IsSubclassOf(typeof(Component)))
@@ -116,15 +116,14 @@ namespace UnityIoC
                         //resolve by registeredObject's prefab
                         if (GameObject != null)
                         {
-                            var go = isPrefab ? GameObject : context.CreateInstance(GameObject);
+                            var go = context.CreateInstance(GameObject);
                             instance = go.GetComponent(ImplementedType);
+                            return instance;
                         }
-                        else
-                        {
-                            //resolve by Prefab from resources or asset bundles
-                            instance = TryGetGameObject(context, ImplementedType, ImplementedType.Name,
-                                preferredLifeCycle, resolveFrom);
-                        }
+
+                        //resolve by Prefab from resources or asset bundles
+                        instance = TryGetGameObject(context, ImplementedType, ImplementedType.Name,
+                            preferredLifeCycle, resolveFrom);
 
                         var isUnityBehaviour = ImplementedType.Namespace != null &&
                                                ImplementedType.Namespace.StartsWith("UnityEngine");

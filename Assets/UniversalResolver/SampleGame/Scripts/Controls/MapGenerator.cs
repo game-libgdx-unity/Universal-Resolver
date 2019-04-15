@@ -67,7 +67,7 @@ public class MapGenerator : MonoBehaviour
         foreach (var data in cellData)
         {
 //          var cellImg = Context.Instantiate(cell, container);
-            var cellImg = Context.ResolveComponent<Cell>(container);
+            var cellImg = Context.Resolve<Cell>(container);
             cellImg.SetCellData(data);
             cells.Add(cellImg);
         }

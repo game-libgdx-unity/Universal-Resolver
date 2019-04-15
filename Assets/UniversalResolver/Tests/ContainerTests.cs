@@ -15,8 +15,8 @@ namespace UnityIoC.Editor
         {
             var context = new Context(this);
 
-            var singleton1 = context.Resolve<TestInterface>(LifeCycle.Singleton);
-            var singleton2 = context.Resolve<TestInterface>(LifeCycle.Singleton);
+            var singleton1 = context.ResolveObject<TestInterface>(LifeCycle.Singleton);
+            var singleton2 = context.ResolveObject<TestInterface>(LifeCycle.Singleton);
             
             Assert.AreSame(singleton1, singleton2);
         }
@@ -26,8 +26,8 @@ namespace UnityIoC.Editor
         {
             var context = new Context(this);
 
-            var singleton1 = context.Resolve<TestInterface>(LifeCycle.Transient);
-            var singleton2 = context.Resolve<TestInterface>(LifeCycle.Transient);
+            var singleton1 = context.ResolveObject<TestInterface>(LifeCycle.Transient);
+            var singleton2 = context.ResolveObject<TestInterface>(LifeCycle.Transient);
             
             Assert.AreNotSame(singleton1, singleton2);
         }
@@ -40,7 +40,7 @@ namespace UnityIoC.Editor
 
             context.Bind<TestInterface>(obj);
             
-            var obj2 = context.Resolve<TestInterface>();
+            var obj2 = context.ResolveObject<TestInterface>();
             Assert.AreSame(obj,obj2);
         }
         
@@ -48,7 +48,7 @@ namespace UnityIoC.Editor
         public void t1_automatic_bind_component_attribute()
         {
             var assemblyContext = new Context(this, true);
-            var testClass = assemblyContext.Resolve<TestInterface>();
+            var testClass = assemblyContext.ResolveObject<TestInterface>();
             Assert.IsNotNull(testClass);
             Assert.IsInstanceOf<TestClass>(testClass);
         }
@@ -59,7 +59,7 @@ namespace UnityIoC.Editor
         public void t2_resolve_component_attribute()
         {
             var assemblyContext = new Context(typeof(AbstractClass));
-            var component = assemblyContext.Resolve<TestComponent>();
+            var component = assemblyContext.ResolveObject<TestComponent>();
             Assert.IsInstanceOf(typeof(ImplClass), component.abstractClass);
         }
 #endif

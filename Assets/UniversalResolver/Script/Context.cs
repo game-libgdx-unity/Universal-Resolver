@@ -797,7 +797,7 @@ namespace UnityIoC
         public void ResolveAction<T>(Action<T> action, LifeCycle lifeCycle = LifeCycle.Default,
             object resultFrom = null)
         {
-            var arg = (T) Resolve(typeof(T), lifeCycle, resultFrom);
+            var arg = (T) ResolveObject(typeof(T), lifeCycle, resultFrom);
             action(arg);
         }
 
@@ -806,15 +806,15 @@ namespace UnityIoC
             LifeCycle lifeCycle2 = LifeCycle.Default,
             object resultFrom1 = null, object resultFrom2 = null)
         {
-            var arg1 = (T1) Resolve(typeof(T1), lifeCycle1, resultFrom1);
-            var arg2 = (T2) Resolve(typeof(T1), lifeCycle2, resultFrom2);
+            var arg1 = (T1) ResolveObject(typeof(T1), lifeCycle1, resultFrom1);
+            var arg2 = (T2) ResolveObject(typeof(T1), lifeCycle2, resultFrom2);
             action(arg1, arg2);
         }
 
         public Result ResolveFunc<Input, Result>(Func<Input, Result> func, LifeCycle lifeCycle = LifeCycle.Default,
             object resultFrom = null)
         {
-            var arg = (Input) Resolve(typeof(Input), lifeCycle, resultFrom);
+            var arg = (Input) ResolveObject(typeof(Input), lifeCycle, resultFrom);
             return func(arg);
         }
 
@@ -824,8 +824,8 @@ namespace UnityIoC
             object resultFrom1 = null,
             object resultFrom2 = null)
         {
-            var arg1 = (Input1) Resolve(typeof(Input1), lifeCycle1, resultFrom1);
-            var arg2 = (Input2) Resolve(typeof(Input2), lifeCycle2, resultFrom2);
+            var arg1 = (Input1) ResolveObject(typeof(Input1), lifeCycle1, resultFrom1);
+            var arg2 = (Input2) ResolveObject(typeof(Input2), lifeCycle2, resultFrom2);
             return func(arg1, arg2);
         }
 
@@ -1143,31 +1143,20 @@ namespace UnityIoC
             Bind(typeof(TTypeToResolve), instance);
         }
 
-        public TTypeToResolve Resolve<TTypeToResolve>(
+        public TTypeToResolve ResolveObject<TTypeToResolve>(
             LifeCycle lifeCycle = LifeCycle.Default,
             object resolveFrom = null,
             params object[] parameters)
         {
-            return (TTypeToResolve) Resolve(typeof(TTypeToResolve), lifeCycle, resolveFrom, parameters);
+            return (TTypeToResolve) ResolveObject(typeof(TTypeToResolve), lifeCycle, resolveFrom, parameters);
         }
 
-        public object Resolve(
+        public object ResolveObject(
             Type typeToResolve,
             LifeCycle lifeCycle = LifeCycle.Default,
             object resolveFrom = null,
             params object[] parameters)
         {
-            if (typeToResolve.IsSubclassOf(typeof(MonoBehaviour)) && ( lifeCycle == LifeCycle.Default || lifeCycle == LifeCycle.Prefab || lifeCycle == LifeCycle.Transient))
-            {
-                //try to look for prefab
-                var registeredObject =
-                    container.registeredObjects.FirstOrDefault(r => r.GameObject && r.AbstractType == typeToResolve);
-                if (registeredObject != null)
-                {
-                    return CreateInstance(registeredObject.GameObject).GetComponent(registeredObject.ImplementedType);
-                }
-            }
-
             return container.ResolveObject(typeToResolve, lifeCycle, resolveFrom, parameters);
         }
 
@@ -1229,28 +1218,38 @@ namespace UnityIoC
             }
         }
 
-        public static object ResolveObject(
+        public static object Resolve(
             Type typeToResolve,
             LifeCycle lifeCycle = LifeCycle.Default,
             object resolveFrom = null,
             params object[] parameters)
         {
-            return GetDefaultInstance(typeToResolve).Resolve(typeToResolve, lifeCycle, resolveFrom, parameters);
+            return GetDefaultInstance(typeToResolve).ResolveObject(typeToResolve, lifeCycle, resolveFrom, parameters);
         }
 
-        public static T ResolveObject<T>(
+        public static T Resolve<T>(
+            LifeCycle lifeCycle = LifeCycle.Default,
+            object resolveFrom = null,
+            Transform parents = null,
+            params object[] parameters)
+        {
+            return (T) Resolve(typeof(T), lifeCycle, resolveFrom, parameters);
+        }
+
+
+        public static T Resolve<T>(
+            Transform parents,
             LifeCycle lifeCycle = LifeCycle.Default,
             object resolveFrom = null,
             params object[] parameters)
+            where T : Component
         {
-            return (T) GetDefaultInstance(typeof(T)).Resolve(typeof(T), lifeCycle, resolveFrom, parameters);
-        }
-        
-        
-        public static T ResolveComponent<T>(RectTransform parents) where T:Component
-        {
-            var obj = ResolveObject(typeof(T), LifeCycle.Default) as T;
-            obj.transform.SetParent(parents);
+            var obj = Resolve(typeof(T), lifeCycle, resolveFrom, parameters) as T;
+            if (parents)
+            {
+                obj.transform.SetParent(parents);
+            }
+
             return obj;
         }
 

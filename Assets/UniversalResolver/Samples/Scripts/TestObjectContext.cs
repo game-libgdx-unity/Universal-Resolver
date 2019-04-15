@@ -16,7 +16,7 @@ namespace SceneTest
 			var assemblyContext = Context.GetDefaultInstance(this);
 			
 			//resolve the abstract type using default binging setting of this assembly.
-			assemblyContext.Resolve<AbstractClass>();
+			assemblyContext.ResolveObject<AbstractClass>();
 			
 			//create a context with automatic load binding setting for the current class, TestObjectContext
 			//in this case, please refer to TestObjectContext setting from the resources folder.

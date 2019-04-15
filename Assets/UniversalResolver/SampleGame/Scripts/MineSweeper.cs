@@ -23,7 +23,7 @@ public class MineSweeper : MonoBehaviour
         stopWatch.Start();
         
         var context = Context.GetDefaultInstance(typeof(MineSweeper));
-        context.Resolve<MapGenerator>(LifeCycle.Singleton);
+        context.ResolveObject<MapGenerator>(LifeCycle.Singleton);
         
         
         stopWatch.Stop();

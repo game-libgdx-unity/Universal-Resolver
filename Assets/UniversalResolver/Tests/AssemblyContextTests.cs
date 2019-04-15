@@ -18,7 +18,7 @@ namespace UnityIoC.Editor
         [Test]
         public void t2_bind_from_tests_setting()
         {
-            var obj = Context.ResolveObject<TestInterface>();
+            var obj = Context.Resolve<TestInterface>();
             Assert.IsNotNull(obj);
         }
 
@@ -28,7 +28,7 @@ namespace UnityIoC.Editor
         {
             //TestClass implements the TestInterface
             Context.Bind<TestInterface, TestClass>();
-            var obj = Context.ResolveObject<TestInterface>();
+            var obj = Context.Resolve<TestInterface>();
             Assert.IsNotNull(obj);
         }
 
@@ -38,7 +38,7 @@ namespace UnityIoC.Editor
         {
             var instance = new TestClass();
             Context.Bind(instance);
-            var obj = Context.ResolveObject<TestInterface>();
+            var obj = Context.Resolve<TestInterface>();
             Assert.IsNotNull(obj);
         }
 
@@ -46,19 +46,19 @@ namespace UnityIoC.Editor
         [Test]
         public void t5_bind_as()
         {
-            var instance = Context.ResolveObject<TestClass>(LifeCycle.Singleton);
+            var instance = Context.Resolve<TestClass>(LifeCycle.Singleton);
             //assign singleton value to
             var testString = "Hello";
             instance.JustAProperty = testString;
 
             //try to resolve as transient, this is a brand new object
-            var transient = Context.ResolveObject<TestClass>(LifeCycle.Transient);
+            var transient = Context.Resolve<TestClass>(LifeCycle.Transient);
 
             //so the value of the property should be as default
             Assert.IsNull(transient.JustAProperty);
 
             //now try to resolve as singleton, this should be the previous object which have been created
-            var singleton = Context.ResolveObject<TestClass>(LifeCycle.Singleton);
+            var singleton = Context.Resolve<TestClass>(LifeCycle.Singleton);
 
             //verify by the property's value
             Assert.AreSame(singleton, instance);
@@ -70,7 +70,7 @@ namespace UnityIoC.Editor
         public void t6_load_custom_setting()
         {
             Context.Bind(Resources.Load<InjectIntoBindingSetting>("not_default"));
-            var obj = Context.ResolveObject<TestInterface>();
+            var obj = Context.Resolve<TestInterface>();
             Assert.IsNotNull(obj);
         }
 
@@ -78,7 +78,7 @@ namespace UnityIoC.Editor
         [Test]
         public void t7_resolve_unregistered_objects()
         {
-            var obj = Context.ResolveObject<TestClass>();
+            var obj = Context.Resolve<TestClass>();
             Assert.IsNotNull(obj);
 
             var assem = Assembly.Load("Tests");
@@ -87,7 +87,7 @@ namespace UnityIoC.Editor
         }
 
         //you can enable this test if running on Unity 2018.3 or newer
-        
+
 #if UNITY_2018_3_OR_NEWER
         [Test]
         public void t8_instantiate_prefabs()
@@ -96,7 +96,7 @@ namespace UnityIoC.Editor
             Context.GetDefaultInstance(typeof(TestComponent));
 
             //create a gameobject with TestComponent as a prefab
-            var prefab = Context.ResolveObject<TestComponent>();
+            var prefab = Context.Resolve<TestComponent>();
             prefab.gameObject.SetActive(false);
 
             //Instantiate the prefab (a.k.a clone)
@@ -121,7 +121,7 @@ namespace UnityIoC.Editor
         [Test]
         public void t10_resolve_funcs()
         {
-            var obj = Context.ResolveObject<TestInterface>(LifeCycle.Singleton);
+            var obj = Context.Resolve<TestInterface>(LifeCycle.Singleton);
             obj.JustAProperty = "Hello";
 
             Func<TestInterface, string> func = t =>
@@ -136,7 +136,7 @@ namespace UnityIoC.Editor
 
 
         [Test]
-        public void t11_dispose_instance()
+        public void t99_dispose_instance()
         {
             Assert.IsFalse(Context.Initialized);
 //create
@@ -147,6 +147,13 @@ namespace UnityIoC.Editor
             Context.DisposeDefaultInstance();
 //assert
             Assert.IsFalse(Context.Initialized);
+        }
+
+        [Test]
+        public void t11_resolve_with_parameters()
+        {
+            var obj = Context.Resolve<ImplClass>(parameters: new object[] {1});
+            obj.ShowValue();
         }
 
         [TearDown]

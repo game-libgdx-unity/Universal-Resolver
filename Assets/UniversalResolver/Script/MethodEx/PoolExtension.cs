@@ -27,7 +27,7 @@ public static class PoolExtension
         T g = null;
         if (Context.Initialized)
         {
-            g = Context.ResolveObject<T>(LifeCycle.Prefab);
+            g = Context.Resolve<T>(LifeCycle.Prefab);
         }
         else
         {

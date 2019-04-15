@@ -5,12 +5,27 @@ using UnityIoC;
 
 namespace SceneTest
 {
-	public class ImplClass : AbstractClass
-	{
+    public class ImplClass : AbstractClass
+    {
+        public int a;
 
-		public void DoSomething()
-		{
-			MyDebug.Log("This is ImplClass");
-		}
-	}
+        public ImplClass()
+        {
+        }
+
+        public ImplClass(int a)
+        {
+            this.a = a;
+        }
+
+        public void ShowValue()
+        {
+            MyDebug.Log("A: " + a);
+        }
+
+        public void DoSomething()
+        {
+            MyDebug.Log("This is ImplClass");
+        }
+    }
 }
