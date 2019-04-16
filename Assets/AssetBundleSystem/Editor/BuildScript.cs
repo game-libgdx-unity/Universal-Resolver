@@ -12,7 +12,7 @@ public class BuildScript
 	private static string AssetBundlesOutputPath = "AssetBundles";
     public static bool isAESCryption = false;
 
-	[MenuItem("Build/Custom Build Bundle + player %q")]
+	[MenuItem("Build/Custom Build Bundle + player %w")]
 	public static void MyBuild()
 	{
 		string buildFolder = @"\AutoBuild";

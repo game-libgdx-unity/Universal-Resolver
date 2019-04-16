@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 using NUnit.Framework;
@@ -136,6 +137,70 @@ namespace UnityIoC.Editor
 
 
         [Test]
+        public void t11_resolve_with_parameters()
+        {
+            var obj = Context.Resolve<ImplClass>(parameters: new object[] {1});
+            Assert.AreEqual(obj.a, 1);
+            obj = Context.Resolve<ImplClass>();
+            Assert.AreEqual(obj.a, 0);
+        }
+
+        [Test]
+        public void t12_resolve_with_inject_into()
+        {
+            var t1 = Context.Resolve<TestComponent>();
+            var t2 = Context.Resolve<TestComponent2>();
+            var t3 = Context.Resolve<TestComponent3>();
+
+            var i1 = Context.Resolve<AbstractClass>(resolveFrom: t1);
+            var i2 = Context.Resolve<AbstractClass>(resolveFrom: t2);
+            var i3 = Context.Resolve<AbstractClass>(resolveFrom: t3);
+            
+            Assert.IsInstanceOf<ImplClass>(i1);
+            Assert.IsInstanceOf<ImplClass2>(i2);
+            Assert.IsInstanceOf<ImplClass2>(i3);
+        }
+        
+           [Test]
+        public void t13_Preload_From_Pools()
+        {
+            var gameObjects = new List<GameObject>();
+
+            gameObjects.Preload(10, new GameObject());
+            Assert.AreEqual(gameObjects.Count, 10);
+        }
+
+        [Test]
+        public void t14_Get_From_Pools()
+        {
+            var gameObjects = new List<TestComponent>();
+
+            var obj = gameObjects.GetFromPool();
+            var obj2 = gameObjects.GetFromPool();
+            var obj3 = gameObjects.GetFromPool();
+
+            Assert.AreEqual(gameObjects.Count, 3);
+        }
+        [Test]
+        public void t15_Recycle_objects_From_Pools()
+        {
+            var gameObjects = new List<TestComponent>();
+
+            var obj = gameObjects.GetFromPool();
+            var obj2 = gameObjects.GetFromPool();
+            var obj3 = gameObjects.GetFromPool();
+            
+            obj2.gameObject.SetActive(false);
+            
+            var obj4 = gameObjects.GetFromPool();
+
+            Assert.AreEqual(gameObjects.Count, 3);
+        }
+        
+        
+        
+        
+        [Test]
         public void t99_dispose_instance()
         {
             Assert.IsFalse(Context.Initialized);
@@ -149,12 +214,6 @@ namespace UnityIoC.Editor
             Assert.IsFalse(Context.Initialized);
         }
 
-        [Test]
-        public void t11_resolve_with_parameters()
-        {
-            var obj = Context.Resolve<ImplClass>(parameters: new object[] {1});
-            obj.ShowValue();
-        }
 
         [TearDown]
         public void Dispose()

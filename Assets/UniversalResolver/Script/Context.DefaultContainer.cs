@@ -84,6 +84,10 @@ namespace UnityIoC
 
         public class Container : IContainer
         {
+            private const BindingFlags BindingFlags = System.Reflection.BindingFlags.Instance |
+                                                      System.Reflection.BindingFlags.NonPublic |
+                                                      System.Reflection.BindingFlags.NonPublic;
+
             internal Dictionary<ResolveInput, RegisteredObject> CachedResolveResults =
                 new Dictionary<ResolveInput, RegisteredObject>(new CacheEqualityComparer());
 
@@ -111,8 +115,9 @@ namespace UnityIoC
                 CachedResolveResults.Clear();
                 registeredTypes.Clear();
 
-                var prefabTypes = registeredObjects.Where(r => r.LifeCycle == LifeCycle.Prefab).Select(r=>r.AbstractType);
-                
+                var prefabTypes = registeredObjects.Where(r => r.LifeCycle == LifeCycle.Prefab)
+                    .Select(r => r.AbstractType);
+
                 registeredTypes.RemoveWhere(t => !prefabTypes.Contains(t));
                 registeredObjects.RemoveAll(r => r.LifeCycle != LifeCycle.Prefab);
             }
@@ -312,7 +317,8 @@ namespace UnityIoC
                 Type abstractType,
                 LifeCycle preferredLifeCycle = LifeCycle.Default,
                 object resolveFrom = null,
-                params object[] parameters)
+                params object[] parameters
+            )
             {
                 ResolveInput resolveInput = new ResolveInput();
 
@@ -348,23 +354,12 @@ namespace UnityIoC
                 if (resolveFrom == null)
                 {
                     debug.Log("Try default process to resolve");
-                    if (abstractType.IsSubclassOf(typeof(Component)) &&
-                        (preferredLifeCycle == LifeCycle.Default || preferredLifeCycle == LifeCycle.Transient))
-                    {
-                        //try to look for the component from prefab
-                         registeredObject = registeredObjects.FirstOrDefault(r => r.GameObject && r.AbstractType == abstractType);
-                        if (registeredObject != null)
-                        {
-                            //store as cached
-                            if (!abstractType.IsArray)
-                            {
-                                CachedResolveResults[resolveInput] = registeredObject;
-                            }
-
-                            return context.CreateInstance(registeredObject.GameObject).GetComponent(registeredObject.ImplementedType);
-                        }
+                    var instance = CreateInstanceFromPrefab(abstractType, preferredLifeCycle, resolveInput);
+                    if (instance != null)
+                    { 
+                        return instance;
                     }
-
+                    
                     filter = o => o.AbstractType == abstractType && o.InjectInto == null;
 
                     registeredObject = registeredObjects.FirstOrDefault(filter);
@@ -403,6 +398,7 @@ namespace UnityIoC
                     return obj;
                 }
 
+                ////////////////////////////////////////////////
                 debug.Log("Try high priority process for notnull InjectInto registeredObject");
 
                 filter = o =>
@@ -481,6 +477,33 @@ namespace UnityIoC
                 return resolveObject;
             }
 
+            private object CreateInstanceFromPrefab(Type abstractType, LifeCycle preferredLifeCycle,
+                ResolveInput resolveInput)
+            {
+                object resolveObject = null;
+                RegisteredObject registeredObject;
+                if (abstractType.IsSubclassOf(typeof(Component)) &&
+                    (preferredLifeCycle == LifeCycle.Default || preferredLifeCycle == LifeCycle.Transient))
+                {
+                    //try to look for the component from prefab
+                    registeredObject =
+                        registeredObjects.FirstOrDefault(r => r.GameObject && r.AbstractType == abstractType);
+                    if (registeredObject != null)
+                    {
+                        //store as cached
+                        if (!abstractType.IsArray)
+                        {
+                            CachedResolveResults[resolveInput] = registeredObject;
+                        }
+
+                        resolveObject = context.CreateInstance(registeredObject.GameObject)
+                            .GetComponent(registeredObject.ImplementedType);
+                    }
+                }
+
+                return resolveObject;
+            }
+
             private object GetInstance(RegisteredObject registeredObject,
                 LifeCycle preferredLifeCycle = LifeCycle.Default,
                 object resolveFrom = null,
@@ -498,7 +521,12 @@ namespace UnityIoC
 
                     if (parameters == null || parameters.Length == 0)
                     {
-                         paramArray = ResolveConstructorParameters(registeredObject, parameters).ToArray();
+                        paramArray = ResolveConstructorParameters(registeredObject).ToArray();
+                    }
+                    else if (parameters.GetType().GetElementType() == typeof(Type))
+                    {
+                        var elementTypes = parameters.Select(p => p as Type).ToArray();
+                        paramArray = ResolveConstructorParameters(registeredObject, elementTypes).ToArray();
                     }
                     else
                     {
@@ -519,22 +547,21 @@ namespace UnityIoC
                 return registeredObject.Instance;
             }
 
-            private IEnumerable<object> ResolveConstructorParameters(
-                RegisteredObject registeredObject,
-                object[] parameters)
+            private IEnumerable<object> ResolveConstructorParameters(RegisteredObject registeredObject,
+                Type[] elementTypes = null)
             {
                 ConstructorInfo constructorInfo = null;
 
-                if (parameters == null || parameters.Length == 0)
+                if (elementTypes == null || elementTypes.Length == 0)
                 {
                     constructorInfo = registeredObject.ImplementedType
-                        .GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.NonPublic)
+                        .GetConstructors(BindingFlags)
                         .FirstOrDefault();
                 }
                 else
                 {
-                    constructorInfo =
-                        registeredObject.ImplementedType.GetConstructor(parameters.Select(p => p.GetType()).ToArray());
+                    constructorInfo = registeredObject.ImplementedType
+                        .GetConstructor(elementTypes);
                 }
 
                 if (constructorInfo == null)

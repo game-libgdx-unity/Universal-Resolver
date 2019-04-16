@@ -214,7 +214,7 @@ namespace UnityIoC
             injectIntoBindingSetting.EnableInjectInto = InjectIntoType != null;
             injectIntoBindingSetting.InjectInto = InjectIntoType;
 
-            defaultContainer.Bind(injectIntoBindingSetting);
+            DefaultContainer.Bind(injectIntoBindingSetting);
         }
 
         /// <summary>
@@ -288,7 +288,7 @@ namespace UnityIoC
                                 injectIntoHolder.name);
 
                             injectIntoBindingSetting.InjectInto = injectIntoType;
-                            defaultContainer.Bind(injectIntoBindingSetting);
+                            DefaultContainer.Bind(injectIntoBindingSetting);
                         }
                     }
                 }
@@ -296,7 +296,7 @@ namespace UnityIoC
             //binding without inject into
             else
             {
-                defaultContainer.Bind(injectIntoBindingSetting);
+                DefaultContainer.Bind(injectIntoBindingSetting);
             }
         }
 
@@ -1116,12 +1116,6 @@ namespace UnityIoC
                 }
             }
         }
-
-        private Container defaultContainer
-        {
-            get { return (Container) container; }
-        }
-
 
         public Container DefaultContainer
         {

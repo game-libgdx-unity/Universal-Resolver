@@ -13,11 +13,12 @@ namespace UnityIoC
     {
         Context.RegisteredObject Bind(InjectIntoBindingData data);
 
-        object ResolveObject(Type abstractType,
+        object ResolveObject(
+            Type abstractType,
             LifeCycle preferredLifeCycle = LifeCycle.Default,
             object resolveFrom = null,
-            params object[] parameters);
-        IEnumerable<Context.RegisteredObject> GetRegisteredObject(Type typeToResolve);
+            params object[] parameters
+            );
     }
 }
 

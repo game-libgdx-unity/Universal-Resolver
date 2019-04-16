@@ -7,7 +7,6 @@ public static class PoolExtension
 {
     public static T GetFromPool<T>(
         this List<T> objects,
-        T prefab,
         Transform parentObject = null)
         where T : Component
     {
@@ -24,20 +23,16 @@ public static class PoolExtension
             }
         }
 
-        T g = null;
-        if (Context.Initialized)
+        T g = Context.Resolve<T>(LifeCycle.Transient);
+        g.gameObject.SetActive(true);
+
+        objects.Add(g);
+
+        if (parentObject)
         {
-            g = Context.Resolve<T>(LifeCycle.Prefab);
-        }
-        else
-        {
-            g = Object.Instantiate(prefab) as T;
+            g.transform.SetParent(parentObject, false);
         }
 
-        g.gameObject.SetActive(true);
-        objects.Add(g);
-        if (parentObject)
-            g.transform.SetParent(parentObject, false);
         return g;
     }
 
