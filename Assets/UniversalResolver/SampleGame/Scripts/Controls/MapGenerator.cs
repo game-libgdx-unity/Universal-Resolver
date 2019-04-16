@@ -50,6 +50,9 @@ public class MapGenerator : MonoBehaviour
             btnRestart.onClick.RemoveAllListeners();
             btnRestart.onClick.AddListener(() =>
             {
+                //todo: benmark load and reload scene
+                //try to disable [Component] in Cell.cs
+                
                 Context.DefaultInstance.Dispose();
                 Context.DefaultInstance = null;
                 SceneManager.LoadScene(SceneManager.GetActiveScene().name); //restart the game

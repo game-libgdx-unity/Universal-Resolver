@@ -11,12 +11,14 @@ namespace UnityIoC
 {
     public interface IContainer : IDisposable
     {
-        Context.RegisteredObject Bind(InjectIntoBindingData data);
+        Context.RegisteredObject Bind(
+            InjectIntoBindingData data
+            );
 
         object ResolveObject(
             Type abstractType,
             LifeCycle preferredLifeCycle = LifeCycle.Default,
-            object resolveFrom = null,
+            Type resolveFrom = null,
             params object[] parameters
             );
     }

@@ -16,27 +16,53 @@ using Object = UnityEngine.Object;
 namespace UnityIoC
 {
     public partial class Context
-    {
-        private const string DefaultAssemblyName = "Assembly-CSharp";
 
         #region Variables & Constants
+    {
+        /// <summary>
+        /// This is the name of default assembly that unity generates to compile your code
+        /// </summary>
+        private const string DefaultAssemblyName = "Assembly-CSharp";
 
+        /// <summary>
+        /// Custom logger
+        /// </summary>
         private readonly Logger debug = new Logger(typeof(Context));
 
-        //cache inject attributes
+        /// <summary>
+        /// cache inject attributes
+        /// </summary>
         private List<InjectAttribute> injectAttributes = new List<InjectAttribute>();
 
-        //cache objects from scene
+        /// <summary>
+        /// cache objects from scene
+        /// </summary>
         private Dictionary<Type, MonoBehaviour> monoScripts = new Dictionary<Type, MonoBehaviour>();
 
+        /// <summary>
+        /// Automatic binding a binding setting with the same name as the assembly's then process all monobehaviours in
+        /// scene for [inject] attributes
+        /// </summary>
         public bool automaticBinding = false;
 
+        /// <summary>
+        /// A Type that context will retrieve its assembly for initializations.
+        /// </summary>
         public Type TargetType { get; set; }
 
+        /// <summary>
+        /// If this context is available to use.
+        /// </summary>
+        public bool initialized;
+        
+        /// <summary>
+        /// a container of references
+        /// </summary>
         private Container container;
 
-        private bool initialized;
-
+        /// <summary>
+        /// Name of an assembly that will be loaded when initialize the context and if TargetType is null
+        /// </summary>
         private string assemblyName = DefaultAssemblyName;
 
         #endregion
@@ -422,7 +448,7 @@ namespace UnityIoC
             {
                 debug.Log("Para: " + p.Name + " " + p.ParameterType);
                 return container.ResolveObject(p.ParameterType,
-                    inject == null ? LifeCycle.Default : inject.LifeCycle, mono);
+                    inject == null ? LifeCycle.Default : inject.LifeCycle, mono.GetType());
             });
             method.Invoke(mono, paramObjects);
         }
@@ -763,9 +789,9 @@ namespace UnityIoC
             this.TargetType = target;
             container = new Container(this);
 
-            initialized = true;
-
             InitialProcess();
+            
+            initialized = true;
         }
 
         #endregion
@@ -1157,6 +1183,16 @@ namespace UnityIoC
         #endregion
 
         #region Static members
+
+        public static ObjectContext FromObject(object obj, BindingSetting data = null)
+        {
+            return new ObjectContext(obj, GetDefaultInstance(obj), data);
+        }
+
+        public static ObjectContext<T> FromObject<T>(BindingSetting data = null)
+        {
+            return new ObjectContext<T>(GetDefaultInstance(typeof(T)), data);
+        }
 
         private static Context _defaultInstance;
 

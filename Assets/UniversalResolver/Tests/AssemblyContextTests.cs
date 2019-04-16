@@ -161,8 +161,21 @@ namespace UnityIoC.Editor
             Assert.IsInstanceOf<ImplClass2>(i3);
         }
         
+        [Test]
+        public void t13_resolve_with_inject_into()
+        {
+            
+            var t1 = Context.Resolve<TestComponent>();
+            
+            ObjectContext objectContext = new ObjectContext(t1);
+
+            var i1 = objectContext.Resolve<AbstractClass>();
+            
+            Assert.IsInstanceOf<ImplClass>(i1);
+        }
+        
            [Test]
-        public void t13_Preload_From_Pools()
+        public void t14_Preload_From_Pools()
         {
             var gameObjects = new List<GameObject>();
 
@@ -171,7 +184,7 @@ namespace UnityIoC.Editor
         }
 
         [Test]
-        public void t14_Get_From_Pools()
+        public void t15_Get_From_Pools()
         {
             var gameObjects = new List<TestComponent>();
 
@@ -181,8 +194,21 @@ namespace UnityIoC.Editor
 
             Assert.AreEqual(gameObjects.Count, 3);
         }
+        
         [Test]
-        public void t15_Recycle_objects_From_Pools()
+        public void t16_resolve_with_generic_ObjectContext()
+        {
+            var i1 = Context.FromObject<TestComponent>().Resolve<AbstractClass>();
+            var i2 = Context.FromObject<TestComponent2>().Resolve<AbstractClass>();
+            var i3 = Context.FromObject<TestComponent3>().Resolve<AbstractClass>();
+            
+            Assert.IsInstanceOf<ImplClass>(i1);
+            Assert.IsInstanceOf<ImplClass2>(i2);
+            Assert.IsInstanceOf<ImplClass2>(i3);
+        }
+        
+        [Test]
+        public void t16_Recycle_objects_From_Pools()
         {
             var gameObjects = new List<TestComponent>();
 

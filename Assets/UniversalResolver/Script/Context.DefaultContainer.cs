@@ -78,10 +78,45 @@ namespace UnityIoC
         {
             public Type abstractType { get; set; }
             public LifeCycle lifeCycle { get; set; }
-            public object resolveFrom { get; set; }
+            public Type resolveFrom { get; set; }
             public object[] parameters { get; set; }
         }
 
+        /** not very useful right now... ObjectContext can do as this class does
+        public class ObjectContextContainer : Container
+        {
+            public object ResolveFrom { get; set; }
+
+            public ObjectContextContainer(
+                Context context,
+                object resolveFrom,
+                BindingSetting bindingData = null
+            )
+                : base(context)
+            {
+                ResolveFrom = resolveFrom;
+                context.LoadBindingSettingForType(resolveFrom.GetType(), bindingData);
+
+            }
+
+            public override object ResolveObject(Type abstractType, LifeCycle preferredLifeCycle = LifeCycle.Default, object resolveFrom = null,
+                params object[] parameters)
+            {
+                if (ResolveFrom != null)
+                {
+                    resolveFrom = ResolveFrom;
+                }
+                
+                return base.ResolveObject(abstractType, preferredLifeCycle, resolveFrom, parameters);
+            }
+            public object ResolveObject(Type abstractType, LifeCycle preferredLifeCycle = LifeCycle.Default,
+                params object[] parameters)
+            {
+                return base.ResolveObject(abstractType, preferredLifeCycle, ResolveFrom, parameters);
+            }
+        }
+        */
+        
         public class Container : IContainer
         {
             private const BindingFlags BindingFlags = System.Reflection.BindingFlags.Instance |
@@ -313,10 +348,20 @@ namespace UnityIoC
             }
 
 
-            public object ResolveObject(
+            public virtual object ResolveObject(
                 Type abstractType,
                 LifeCycle preferredLifeCycle = LifeCycle.Default,
                 object resolveFrom = null,
+                params object[] parameters
+            )
+            {
+                return ResolveObject(abstractType, preferredLifeCycle, resolveFrom?.GetType(), parameters);
+            }
+
+            public virtual object ResolveObject(
+                Type abstractType,
+                LifeCycle preferredLifeCycle = LifeCycle.Default,
+                Type resolveFrom = null,
                 params object[] parameters
             )
             {
@@ -344,7 +389,7 @@ namespace UnityIoC
                 debug.Log("preferredLifeCycle: " + preferredLifeCycle);
                 if (resolveFrom != null)
                 {
-                    debug.Log("Resolve from: " + resolveFrom.GetType().Name);
+                    debug.Log("Resolve from: " + resolveFrom.Name);
                 }
 
                 Func<RegisteredObject, bool> filter = null;
@@ -356,10 +401,10 @@ namespace UnityIoC
                     debug.Log("Try default process to resolve");
                     var instance = CreateInstanceFromPrefab(abstractType, preferredLifeCycle, resolveInput);
                     if (instance != null)
-                    { 
+                    {
                         return instance;
                     }
-                    
+
                     filter = o => o.AbstractType == abstractType && o.InjectInto == null;
 
                     registeredObject = registeredObjects.FirstOrDefault(filter);
@@ -402,7 +447,7 @@ namespace UnityIoC
                 debug.Log("Try high priority process for notnull InjectInto registeredObject");
 
                 filter = o =>
-                    o.AbstractType == abstractType && o.InjectInto != null && resolveFrom.GetType() == o.InjectInto;
+                    o.AbstractType == abstractType && o.InjectInto != null && resolveFrom == o.InjectInto;
 
                 registeredObject = registeredObjects.FirstOrDefault(filter);
                 if (registeredObject != null)
@@ -574,7 +619,7 @@ namespace UnityIoC
 
                 foreach (var parameter in constructorInfo.GetParameters())
                 {
-                    yield return ResolveObject(parameter.ParameterType);
+                    yield return ResolveObject(parameter.ParameterType, LifeCycle.Default, null, null);
                 }
             }
         }
