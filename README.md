@@ -1,4 +1,8 @@
 # Unity-IoC
+
+You can download this asset from unity3d assetstore, however I would recommend you download from this github repository. 
+https://assetstore.unity.com/packages/tools/integration/universal-resolver-138872
+
 Implements for Unity in fields of IoC, Reactive programming, Firebase, Photon Server, etc.
 
 Unity3d Resolver is an Unity3d IoC Framework comes with combine of binding settings from UnityProject. C# Attributes allow to resolve your fields, constructors, methods or properties as [Component], [Singleton] and [Transient].
