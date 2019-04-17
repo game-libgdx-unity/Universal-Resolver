@@ -20,7 +20,7 @@ namespace UnityIoC
         #region Variables & Constants
     {
         /// <summary>
-        /// This is the name of default assembly that unity generates to compile your code
+        /// This is the name of the default assembly that unity generates to compile your code
         /// </summary>
         private const string DefaultAssemblyName = "Assembly-CSharp";
 

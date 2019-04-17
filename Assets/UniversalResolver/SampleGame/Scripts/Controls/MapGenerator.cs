@@ -7,6 +7,7 @@
 
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using App.Scripts.Boards;
@@ -36,7 +37,13 @@ public class MapGenerator : MonoBehaviour
     {
         if (!Context.Initialized)
         {
+            Benchmark.Start();
+
+            MyDebug.EnableLogging = false;
             Context.GetDefaultInstance(this);
+            
+            Benchmark.Stop();
+
         }
 
         //setup game status, when it get changes
@@ -48,15 +55,7 @@ public class MapGenerator : MonoBehaviour
         {
             btnRestart.gameObject.SetActive(false);
             btnRestart.onClick.RemoveAllListeners();
-            btnRestart.onClick.AddListener(() =>
-            {
-                //todo: benmark load and reload scene
-                //try to disable [Component] in Cell.cs
-                
-                Context.DefaultInstance.Dispose();
-                Context.DefaultInstance = null;
-                SceneManager.LoadScene(SceneManager.GetActiveScene().name); //restart the game
-            });
+            btnRestart.onClick.AddListener(() => { StartCoroutine(RestartRoutine()); });
         }
 
         //setup the layout
@@ -82,6 +81,24 @@ public class MapGenerator : MonoBehaviour
 
         //solve the game
         StartCoroutine(SolveRoutine());
+    }
+
+    private IEnumerator RestartRoutine()
+    {
+        //todo: benchmark load and reload scene
+        
+        Benchmark.Start();
+        //try to disable [Component] in Cell.cs
+
+        Context.DefaultInstance.Dispose();
+        Context.DefaultInstance = null;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name); //restart the game
+
+        yield return null;
+        yield return null;
+        //now scene loading is complete
+        
+        Benchmark.Stop();
     }
 
     IEnumerator SolveRoutine()
