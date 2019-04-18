@@ -27,7 +27,7 @@ namespace SceneTest
 			
 			//try to resolve the object by setting in default setting of this SceneTest assembly
 			//just no logs in console.
-			var testI = context.ResolveObject<AbstractClass>();
+			var testI = context.ResolveObject<IAbstract>();
 			testI.DoSomething();
 		}
 	}

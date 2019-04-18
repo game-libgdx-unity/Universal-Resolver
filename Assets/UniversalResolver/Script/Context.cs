@@ -1195,6 +1195,8 @@ namespace UnityIoC
         }
 
         private static Context _defaultInstance;
+        
+//        private static Dictionary<Type, Context> _instances = new Dictionary<Type, Context>();
 
         public static bool Initialized
         {
@@ -1260,7 +1262,6 @@ namespace UnityIoC
         public static T Resolve<T>(
             LifeCycle lifeCycle = LifeCycle.Default,
             object resolveFrom = null,
-            Transform parents = null,
             params object[] parameters)
         {
             return (T) Resolve(typeof(T), lifeCycle, resolveFrom, parameters);

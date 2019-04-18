@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace SceneTest
 {
-    public interface AbstractClass
+    public interface IAbstract
     {
         void DoSomething();
     }

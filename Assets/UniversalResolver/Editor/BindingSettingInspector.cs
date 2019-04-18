@@ -106,12 +106,12 @@ namespace UnityIoC.Editor
                         GUILayout.ExpandWidth(false));
 
 
-                    DrawButton("X", () => { defaultSettingList.Remove(data); },
-                        GUILayout.MaxWidth(17),
-                        GUILayout.ExpandWidth(false));
+//                    DrawButton("X", () => { defaultSettingList.Remove(data); },
+//                        GUILayout.MaxWidth(17),
+//                        GUILayout.ExpandWidth(false));
 
-                    DrawButton("C", () => { defaultSettingList.Add(data.Clone()); },
-                        GUILayout.MaxWidth(20),
+                    DrawButton("Clone", () => { defaultSettingList.Add(data.Clone()); },
+                        GUILayout.MaxWidth(60),
                         GUILayout.ExpandWidth(false));
 
                     EditorGUILayout.EndHorizontal();

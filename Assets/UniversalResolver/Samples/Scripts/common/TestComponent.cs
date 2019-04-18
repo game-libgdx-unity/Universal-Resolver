@@ -5,23 +5,28 @@ using UnityEngine;
 
 namespace SceneTest
 {
-    public class TestComponent : MonoBehaviour
+    public class TestComponent : MonoBehaviour, IComponentAbstract
     {
         [SerializeField] public int Afield;
 
-        [Transient] public AbstractClass abstractClass;
+        [Transient] public IAbstract @abstract;
 
         // Use this for initialization
         void Start()
         {
-            if (abstractClass != null)
+            if (@abstract != null)
             {
-                abstractClass.DoSomething();
+                @abstract.DoSomething();
             }
             else
             {
                 Debug.Log("Abstract class fails to resolve");
             }
+        }
+
+        public void DoSomething()
+        {
+            Debug.Log("Caller from TestComponent as an IComponentAbstract interface");
         }
     }
 }

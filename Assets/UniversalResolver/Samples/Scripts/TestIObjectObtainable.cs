@@ -8,7 +8,7 @@ public class TestIObjectObtainable : MonoBehaviour
 {
 
 	//This attribute do the work as "Add Or GetComponent" from this GameObject
-	[Singleton("GameObject")] private AbstractClass abstractClass;
+	[Singleton("GameObject")] private IAbstract @abstract;
 	// Use this for initialization
 	void Awake ()
 	{
@@ -19,6 +19,6 @@ public class TestIObjectObtainable : MonoBehaviour
 
 	private void Start()
 	{
-		abstractClass.DoSomething();
+		@abstract.DoSomething();
 	}
 }

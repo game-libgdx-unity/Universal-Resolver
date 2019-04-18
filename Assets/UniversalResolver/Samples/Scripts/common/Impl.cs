@@ -5,15 +5,15 @@ using UnityIoC;
 
 namespace SceneTest
 {
-    public class ImplClass : AbstractClass
+    public class Impl : IAbstract
     {
         public int a;
 
-        public ImplClass()
+        public Impl()
         {
         }
 
-        public ImplClass(int a)
+        public Impl(int a)
         {
             this.a = a;
         }

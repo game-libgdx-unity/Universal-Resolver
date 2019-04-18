@@ -23,7 +23,7 @@ public class TestGetComponentAttributeByPath : MonoBehaviour
 		 new Context(this);
 
 		 print("internalTestComponent null: "+ (internalTestComponent==null));
-		internalTestComponent.abstractClass.DoSomething();
+		internalTestComponent.@abstract.DoSomething();
 	}
 
 	private void Start()

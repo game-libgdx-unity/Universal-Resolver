@@ -33,7 +33,7 @@ namespace SceneTest
 //            Debug.Log(t1.Afield);
 //            Debug.Log(t3.Afield);
 
-            Context.Resolve<TestComponent>().abstractClass.DoSomething();
+            Context.Resolve<TestComponent>().@abstract.DoSomething();
             
             Invoke("Reset", 5);
         }

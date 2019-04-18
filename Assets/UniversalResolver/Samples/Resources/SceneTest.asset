@@ -44,13 +44,21 @@ MonoBehaviour:
     - {fileID: 0}
     AbstractTypeHolder: {fileID: 11500000, guid: ce7aabad9f7f44db69b5206bcf95f5c7,
       type: 3}
-    ImplementedTypeHolder: {fileID: 11500000, guid: 2bc60193bfa194006b06174af2b11875,
+    ImplementedTypeHolder: {fileID: 11500000, guid: 65e4b8b71fb4b4071ad24ce2336c8c75,
       type: 3}
   - Prefab: {fileID: 0}
-    LifeCycle: 8
+    LifeCycle: 0
     EnableInjectInto: 0
     InjectIntoHolder: []
     AbstractTypeHolder: {fileID: 11500000, guid: 7f5395a6e03fa45229573ea07f8a45c2,
+      type: 3}
+    ImplementedTypeHolder: {fileID: 6983474524551509918, guid: 56bb0dddc031f4f79964a1da69bd087a,
+      type: 3}
+  - Prefab: {fileID: 0}
+    LifeCycle: 0
+    EnableInjectInto: 0
+    InjectIntoHolder: []
+    AbstractTypeHolder: {fileID: 11500000, guid: 164a52a71992485a805c419eca065eb8,
       type: 3}
     ImplementedTypeHolder: {fileID: 6983474524551509918, guid: 56bb0dddc031f4f79964a1da69bd087a,
       type: 3}

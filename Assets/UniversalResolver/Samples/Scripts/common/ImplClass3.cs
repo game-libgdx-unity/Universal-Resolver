@@ -3,7 +3,7 @@ using UnityIoC;
 
 namespace SceneTest
 {
-    public class ImplClass3 : AbstractClass
+    public class ImplClass3 : IAbstract
     {
 
         public void DoSomething()

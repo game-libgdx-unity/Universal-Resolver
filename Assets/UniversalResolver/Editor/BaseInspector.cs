@@ -18,13 +18,14 @@ namespace UnityIoC.Editor
             DrawFoldOut("Show Default Inspector", () => DrawDefaultInspector(), false);
             Revert();
         }
-        
+
         protected virtual GUIStyle CustomizeStyle(GUIStyle editorStyle)
         {
             GUIStyle custom = new GUIStyle(editorStyle);
             customStyles.Add(editorStyle, custom);
             return custom;
         }
+
         protected virtual void Revert()
         {
             foreach (var style in customStyles.Keys)
@@ -32,7 +33,8 @@ namespace UnityIoC.Editor
                 RevertStyle(style, customStyles[style]);
             }
         }
-        protected virtual void RevertStyle(GUIStyle target,GUIStyle backup)
+
+        protected virtual void RevertStyle(GUIStyle target, GUIStyle backup)
         {
             //todo: add more properties as long as you need to change it in your custom inspector
             target.font = backup.font;
@@ -45,8 +47,7 @@ namespace UnityIoC.Editor
             target.alignment = backup.alignment;
             target.contentOffset = backup.contentOffset;
         }
-        
-    
+
 
         protected T DrawEnumPopup<T>(string label, ref T value, params GUILayoutOption[] options)
             where T : struct, IConvertible
@@ -133,11 +134,10 @@ namespace UnityIoC.Editor
 //                    if (objCount > 0) list.Clear();
 //                    foldOutFlags[label] = true;
 //                });
-////                DrawButton("Remove last", () =>
-////                {
-////                    if (objCount > 0) list.RemoveAt(list.Count - 1);
-////                    showFoldOutFlags[label] = true;
-////                });
+            DrawButton("Remove last", () =>
+            {
+                if (objCount > 0) list.RemoveAt(list.Count - 1);
+            });
 //            }
 
             EndHorizontal();
@@ -173,7 +173,7 @@ namespace UnityIoC.Editor
                                 objects[i] = new T();
                             }
 
-                            objects[i] = 
+                            objects[i] =
                                 DrawElement(objects[i]);
                         }
                     }
@@ -183,10 +183,10 @@ namespace UnityIoC.Editor
             {
             }
 
-            return objects;
+            return list;
         }
 
-        protected void DrawCheckbox(string content,ref bool value, params GUILayoutOption[] options)
+        protected void DrawCheckbox(string content, ref bool value, params GUILayoutOption[] options)
         {
             value = EditorGUILayout.Toggle(content, value, options);
         }
@@ -211,7 +211,7 @@ namespace UnityIoC.Editor
             {
                 foldOutFlags[label] = true;
             }
-            
+
             foldOutFlags[label] = EditorGUILayout.Foldout(foldOutFlags[label], label, true);
             EditorGUILayout.EndHorizontal();
 

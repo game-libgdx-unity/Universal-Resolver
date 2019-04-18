@@ -85,13 +85,10 @@ public class MapGenerator : MonoBehaviour
 
     private IEnumerator RestartRoutine()
     {
-        //todo: benchmark load and reload scene
-        
         Benchmark.Start();
-        //try to disable [Component] in Cell.cs
+        //try to disable [Component] in Cell.cs to see if it's better for performance
 
-        Context.DefaultInstance.Dispose();
-        Context.DefaultInstance = null;
+        Context.DisposeDefaultInstance();
         SceneManager.LoadScene(SceneManager.GetActiveScene().name); //restart the game
 
         yield return null;

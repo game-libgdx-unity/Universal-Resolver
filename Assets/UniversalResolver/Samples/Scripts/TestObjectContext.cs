@@ -16,7 +16,7 @@ namespace SceneTest
 			var assemblyContext = Context.GetDefaultInstance(this);
 			
 			//resolve the abstract type using default binging setting of this assembly.
-			assemblyContext.ResolveObject<AbstractClass>();
+			assemblyContext.ResolveObject<IAbstract>();
 			
 			//create a context with automatic load binding setting for the current class, TestObjectContext
 			//in this case, please refer to TestObjectContext setting from the resources folder.
@@ -25,7 +25,7 @@ namespace SceneTest
 			//using this objectContext to resolve things.
 			//the output should be different to default assemblyContext's.
 			//due to different binding settings loaded.
-			var obj = objectContext.Resolve<AbstractClass>();
+			var obj = objectContext.Resolve<IAbstract>();
 			obj.DoSomething();
 		}
 	}

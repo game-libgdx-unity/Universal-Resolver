@@ -6,12 +6,12 @@ namespace SceneTest
 {
 	public class TestComponent3 : MonoBehaviour
 	{
-		[Transient] private AbstractClass abstractClass;
+		[Transient] private IAbstract @abstract;
 
 		// Use this for initialization
 		void Start()
 		{
-			abstractClass.DoSomething();
+			@abstract.DoSomething();
 		}
 	}
 }

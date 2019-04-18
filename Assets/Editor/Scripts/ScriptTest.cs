@@ -19,16 +19,16 @@ public class ScriptTest : MonoBehaviour, IRunScriptOnEditor
         var obj = GameObject.Find("GameObject");
         
         var t = obj.GetComponent<TestComponent>();
-        t.abstractClass = new ImplClass(); 
+        t.@abstract = new Impl(); 
         
         var o2 = Object.Instantiate(obj);
         var t2 = Object.Instantiate(t);
         
         Debug.Log(o2.GetComponent<TestComponent>());
-        Debug.Log(o2.GetComponent<TestComponent>().abstractClass == null);
+        Debug.Log(o2.GetComponent<TestComponent>().@abstract == null);
         
         Debug.Log(t2.GetComponent<TestComponent>());
-        Debug.Log(t2.GetComponent<TestComponent>().abstractClass == null);
+        Debug.Log(t2.GetComponent<TestComponent>().@abstract == null);
     }
 
     /**/

@@ -14,7 +14,7 @@ public class TestOverrideDefaultBindingSetting : MonoBehaviour {
 		var assemblyContext = new Context(GetType());
 			
 		//try to resolve the object by setting in default setting of this SceneTest assembly
-		var test1 = assemblyContext.ResolveObject<AbstractClass>();
+		var test1 = assemblyContext.ResolveObject<IAbstract>();
 		//will display a message on console
 		test1.DoSomething(); 
 		
@@ -22,7 +22,7 @@ public class TestOverrideDefaultBindingSetting : MonoBehaviour {
 		assemblyContext.LoadBindingSetting(MyResources.Load<InjectIntoBindingSetting>("custom_setting"));
 		
 		//try to resolve the object by the new setting which this assemblyContext just loaded.
-		var test2 = assemblyContext.ResolveObject<AbstractClass>();
+		var test2 = assemblyContext.ResolveObject<IAbstract>();
 		
 		//will display another message on console		
 		test2.DoSomething();
