@@ -246,27 +246,27 @@ public class Observable<T> : IReactiveProperty<T>, IDisposable
         return new ObservableDisposable<T>(this, observer);
     }
 
-    public IDisposable SubscribeToConsole(string subject)
-    {
-        return Subscribe(new ConsoleObserver<T>(subject));
-    }
-
     public IDisposable Subscribe(Action<T> onNext, Action<Exception> onError = null, Action onCompleted = null)
     {
         return Subscribe(new Observer<T>(onNext, onError, onCompleted));
     }
 
-    public IDisposable Subscribe(GameObject gameObject, Action<T> onNext, Action<Exception> onError = null,
+    public IDisposable SubscribeToConsole(string subject)
+    {
+        return Subscribe(new ConsoleObserver<T>(subject));
+    }
+
+    public IDisposable SubscribeToGameObject(GameObject gameObject, Action<T> onNext, Action<Exception> onError = null,
         Action onCompleted = null)
     {
         var disposable = Subscribe(new ObserverGameObject<T>(gameObject, onNext, onError, onCompleted));
         return disposable.AddTo(gameObject);
     }
 
-    public IDisposable Subscribe(Component component, Action<T> onNext, Action<Exception> onError = null,
+    public IDisposable SubscribeToComponent(Component component, Action<T> onNext, Action<Exception> onError = null,
         Action onCompleted = null)
     {
-        return Subscribe(component.gameObject, onNext, onError, onCompleted);
+        return SubscribeToGameObject(component.gameObject, onNext, onError, onCompleted);
     }
 
     public T Value

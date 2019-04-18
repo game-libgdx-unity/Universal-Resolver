@@ -31,25 +31,25 @@ public class Cell : MonoBehaviour, ICell
         outline.effectColor = Color.black;
 
         //when number of adjacent mines get changed
-        cellData.AdjacentMines.Subscribe(this, mines =>
+        cellData.AdjacentMines.SubscribeToComponent(this, mines =>
         {
             if (mines > 0) CellType.Value = (CellType) mines;
         });
 
         //when a cell is flagged
-        cellData.IsFlagged.Subscribe(this, isFlagged =>
+        cellData.IsFlagged.SubscribeToComponent(this, isFlagged =>
         {
             if (isFlagged) CellType.Value = global::CellType.FLAGGED;
         });
 
         //when a cell is revealed
-        cellData.IsRevealed.Subscribe(this, isRevealed =>
+        cellData.IsRevealed.SubscribeToComponent(this, isRevealed =>
         {
             textUI.enabled = isRevealed;
             background.color = isRevealed ? Color.white : Color.gray;
             if (isRevealed)
             {
-                cellData.IsMine.Subscribe(this, isMined =>
+                cellData.IsMine.SubscribeToComponent(this, isMined =>
                 {
                     if (isMined) CellType.Value = global::CellType.MINE;
                 });
@@ -57,7 +57,7 @@ public class Cell : MonoBehaviour, ICell
         });
 
         //change UI when CellType change
-        CellType.Subscribe(this, type =>
+        CellType.SubscribeToComponent(this, type =>
         {
             if (type == global::CellType.UNOPENED)
             {
