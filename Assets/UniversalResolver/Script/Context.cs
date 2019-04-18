@@ -18,6 +18,7 @@ namespace UnityIoC
     public partial class Context
 
         #region Variables & Constants
+
     {
         /// <summary>
         /// This is the name of the default assembly that unity generates to compile your code
@@ -54,7 +55,7 @@ namespace UnityIoC
         /// If this context is available to use.
         /// </summary>
         public bool initialized;
-        
+
         /// <summary>
         /// a container of references
         /// </summary>
@@ -790,7 +791,7 @@ namespace UnityIoC
             container = new Container(this);
 
             InitialProcess();
-            
+
             initialized = true;
         }
 
@@ -1184,6 +1185,10 @@ namespace UnityIoC
 
         #region Static members
 
+        public static List<T> GetPool<T>(BindingSetting data = null)
+        {
+            return Pool<T>.List;
+        }
         public static ObjectContext FromObject(object obj, BindingSetting data = null)
         {
             return new ObjectContext(obj, GetDefaultInstance(obj), data);
@@ -1195,7 +1200,7 @@ namespace UnityIoC
         }
 
         private static Context _defaultInstance;
-        
+
 //        private static Dictionary<Type, Context> _instances = new Dictionary<Type, Context>();
 
         public static bool Initialized

@@ -31,6 +31,7 @@ namespace UnityIoC.Editor
             Context.Bind<TestInterface, TestClass>();
             var obj = Context.Resolve<TestInterface>();
             Assert.IsNotNull(obj);
+            Assert.IsInstanceOf<TestClass>(obj);
         }
 
 
@@ -187,9 +188,9 @@ namespace UnityIoC.Editor
         {
             var gameObjects = new List<TestComponent>();
 
-            var obj = gameObjects.GetFromPool();
-            var obj2 = gameObjects.GetFromPool();
-            var obj3 = gameObjects.GetFromPool();
+            var obj = gameObjects.GetInstanceFromPool();
+            var obj2 = gameObjects.GetInstanceFromPool();
+            var obj3 = gameObjects.GetInstanceFromPool();
 
             Assert.AreEqual(gameObjects.Count, 3);
         }
@@ -211,15 +212,15 @@ namespace UnityIoC.Editor
         {
             var gameObjects = new List<TestComponent>();
 
-            var obj = gameObjects.GetFromPool();
-            var obj2 = gameObjects.GetFromPool();
-            var obj3 = gameObjects.GetFromPool();
+            var obj = gameObjects.GetInstanceFromPool();
+            var obj2 = gameObjects.GetInstanceFromPool();
+            var obj3 = gameObjects.GetInstanceFromPool();
 
             //put obj back to the pool
             obj2.gameObject.SetActive(false);
 
             //get an obj out
-            var obj4 = gameObjects.GetFromPool();
+            var obj4 = gameObjects.GetInstanceFromPool();
 
             //the num of obj in pool shouldn't be changed
             Assert.AreEqual(gameObjects.Count, 3);
@@ -230,6 +231,30 @@ namespace UnityIoC.Editor
         {
             var obj = Context.Resolve<IComponentAbstract>();
             Assert.IsInstanceOf<TestComponent>(obj);
+        }
+
+        [Test]
+        public void t18_get_from_pools()
+        {
+            var testComponentPool = Context.GetPool<TestComponent>();
+            var testComponent2Pool = Context.GetPool<TestComponent2>();
+            
+            var obj = testComponentPool.GetInstanceFromPool();
+            var obj5 = testComponent2Pool.GetInstanceFromPool();
+            var obj2 = testComponentPool.GetInstanceFromPool();
+            var obj6 = testComponent2Pool.GetInstanceFromPool();
+            var obj3 = testComponentPool.GetInstanceFromPool();
+            var obj7 = testComponent2Pool.GetInstanceFromPool();
+
+            obj2.gameObject.SetActive(false);
+
+            var obj4 = testComponentPool.GetInstanceFromPool();
+            Assert.AreEqual(testComponentPool.Count, 3);
+            
+            obj6.gameObject.SetActive(false);
+            var obj8 = testComponent2Pool.GetInstanceFromPool();
+            Assert.AreEqual(testComponent2Pool.Count, 3);
+
         }
 
 

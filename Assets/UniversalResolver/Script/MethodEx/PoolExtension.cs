@@ -5,13 +5,14 @@ using UnityIoC;
 
 public static class PoolExtension
 {
-    public static T GetFromPool<T>(
+    public static T GetInstanceFromPool<T>(
         this List<T> objects,
         Transform parentObject = null)
         where T : Component
     {
         if (objects.Count > 0)
         {
+            objects.RemoveAll(o => o == null);
             for (int i = 0; i < objects.Count; i++)
             {
                 if (!objects[i].gameObject.activeSelf)
@@ -36,7 +37,7 @@ public static class PoolExtension
         return g;
     }
 
-    public static GameObject GetFromPool(this List<GameObject> objects, GameObject prefab,
+    public static GameObject GetInstanceFromPool(this List<GameObject> objects, GameObject prefab,
         Transform parentObject = null)
     {
         if (objects.Count > 0)
