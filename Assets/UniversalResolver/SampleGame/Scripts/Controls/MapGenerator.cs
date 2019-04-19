@@ -25,8 +25,8 @@ public class MapGenerator : MonoBehaviour
     [SerializeField] private RectTransform container;
 
     [Prefab] private Cell cell;
-    [Singleton] private List<Cell> cells = new List<Cell>();
-    [Singleton] private List<CellData> cellData = new List<CellData>();
+    [Singleton] private List<Cell> cells;
+    [Singleton] private List<CellData> cellData;
     [Singleton] private IGameSolver gameSolver;
     [Singleton] private IGameBoard gameBoard;
 
@@ -41,9 +41,8 @@ public class MapGenerator : MonoBehaviour
 
             MyDebug.EnableLogging = false;
             Context.GetDefaultInstance(this);
-            
-            Benchmark.Stop();
 
+            Benchmark.Stop();
         }
 
         //setup game status, when it get changes
@@ -65,13 +64,15 @@ public class MapGenerator : MonoBehaviour
         //build the board
         gameBoard.Build();
 
+        //preload cell
+        cells.Preload(gameSetting.Width * gameSetting.Height, container);
+
         //create cells
         foreach (var data in cellData)
         {
-//          var cellImg = Context.Instantiate(cell, container);
-            var cellImg = Context.Resolve<Cell>(container);
-            cellImg.SetCellData(data);
-            cells.Add(cellImg);
+            var cell = cells.GetInstanceFromPool();
+            cell.SetCellData(data);
+            cells.Add(cell);
         }
 
 //        cell.gameObject.SetActive(false);
@@ -94,7 +95,7 @@ public class MapGenerator : MonoBehaviour
         yield return null;
         yield return null;
         //now scene loading is complete
-        
+
         Benchmark.Stop();
     }
 
