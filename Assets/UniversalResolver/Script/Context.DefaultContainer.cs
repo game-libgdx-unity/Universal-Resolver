@@ -50,7 +50,7 @@ namespace UnityIoC
 
     public partial class Context
     {
-        public class CacheEqualityComparer : IEqualityComparer<ResolveInput>
+        protected class CacheEqualityComparer : IEqualityComparer<ResolveInput>
         {
             public bool Equals(ResolveInput x, ResolveInput y)
             {
@@ -74,7 +74,7 @@ namespace UnityIoC
             }
         }
 
-        public struct ResolveInput
+        protected struct ResolveInput
         {
             public Type abstractType { get; set; }
             public LifeCycle lifeCycle { get; set; }
@@ -123,7 +123,7 @@ namespace UnityIoC
                                                       System.Reflection.BindingFlags.NonPublic |
                                                       System.Reflection.BindingFlags.NonPublic;
 
-            internal Dictionary<ResolveInput, RegisteredObject> CachedResolveResults =
+            private Dictionary<ResolveInput, RegisteredObject> CachedResolveResults =
                 new Dictionary<ResolveInput, RegisteredObject>(new CacheEqualityComparer());
 
             internal HashSet<Type> registeredTypes = new HashSet<Type>();

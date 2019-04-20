@@ -25,7 +25,6 @@ public class MapGenerator : MonoBehaviour
     [SerializeField] private RectTransform container;
 
     [Prefab] private Cell cell;
-    [Singleton] private List<Cell> cells;
     [Singleton] private List<CellData> cellData;
     [Singleton] private IGameSolver gameSolver;
     [Singleton] private IGameBoard gameBoard;
@@ -65,14 +64,12 @@ public class MapGenerator : MonoBehaviour
         gameBoard.Build();
 
         //preload cell
-        cells.Preload(gameSetting.Width * gameSetting.Height, container);
-
+        
         //create cells
         foreach (var data in cellData)
         {
-            var cell = cells.GetInstanceFromPool();
+            var cell = Context.ResolveFromPool<Cell>(container);
             cell.SetCellData(data);
-            cells.Add(cell);
         }
 
 //        cell.gameObject.SetActive(false);

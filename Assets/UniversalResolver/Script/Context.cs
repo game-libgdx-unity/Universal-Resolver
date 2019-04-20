@@ -527,8 +527,21 @@ namespace UnityIoC
                 }
                 else
                 {
-                    var component = GetComponentFromGameObject(mono, property.PropertyType, inject);
-                    if (component)
+                    object component = null;
+
+                    //try to use IObjectResolvable to resolve objects
+                    if (!property.PropertyType.IsSubclassOf(typeof(Component)))
+                    {
+                        component = GetObjectFromGameObject(mono, property.PropertyType);
+                    }
+
+                    //try to use IComponentResolvable to resolve objects
+                    if (component == null)
+                    {
+                        component = GetComponentFromGameObject(mono, property.PropertyType, inject);
+                    }
+
+                    if (component != null)
                     {
                         if (inject.LifeCycle == LifeCycle.Singleton ||
                             (inject.LifeCycle & LifeCycle.Singleton) == LifeCycle.Singleton)
@@ -546,6 +559,7 @@ namespace UnityIoC
                 ProcessMethodInfo(mono, setMethod, ignoreMonobehaviour, inject);
             }
         }
+
 
         private void ProcessVariables(object mono, bool ignoreMonobehaviour)
         {
@@ -643,9 +657,20 @@ namespace UnityIoC
                 }
                 else
                 {
-                    //try to resolve as monoBehaviour component
-                    var component = GetComponentFromGameObject(mono, field.FieldType, inject);
-                    if (component)
+                    object component = null;
+                    //try to use IObjectResolvable to resolve objects
+                    if (!field.FieldType.IsSubclassOf(typeof(Component)))
+                    {
+                        component = GetObjectFromGameObject(mono, field.FieldType);
+                    }
+
+                    //try to use IComponentResolvable to resolve objects
+                    if (component == null)
+                    {
+                        component = GetComponentFromGameObject(mono, field.FieldType, inject);
+                    }
+
+                    if (component != null)
                     {
                         //if the life cycle is singleton, bind the instance of the Type with this component
                         if (inject.LifeCycle == LifeCycle.Singleton ||
@@ -686,6 +711,56 @@ namespace UnityIoC
             }
 
             return array;
+        }
+
+
+        /// <summary>
+        /// Try to resolve non-component object, this should be used in other attribute process methods
+        /// </summary>
+        /// <param name="mono">object is expected as behaviour</param>
+        /// <returns>the object that is not component</returns>
+        private object GetObjectFromGameObject(object mono, Type type)
+        {
+            if (!mono.GetType().IsSubclassOf(typeof(Component)))
+            {
+                return null;
+            }
+
+            object objectFromGameObject = null;
+            var comp = mono as Component;
+
+            //get all mono behaviour components
+            var objectGenericResolvableAsComponents = comp.GetComponents(typeof(MonoBehaviour));
+            foreach (var objectObtainable in objectGenericResolvableAsComponents)
+            {   
+                bool containsGenericObjectObtainableInterface = objectObtainable.GetType().GetInterfaces()
+                    .Where(i => i.IsGenericType)
+                    .Any(i => i.GetGenericTypeDefinition() == typeof(IObjectResolvable<>));
+                
+                if (containsGenericObjectObtainableInterface)
+                {
+                    objectFromGameObject = objectObtainable.GetType().GetMethods().FirstOrDefault(m=>m.Name == "GetObject" && m.GetParameters().Length == 0)?.Invoke(objectObtainable, null);
+                    if (objectFromGameObject != null)
+                    {
+                        //quick return
+                        return objectFromGameObject;
+                    }
+                }
+            }
+
+            var objectResolvableAsComponents = comp.GetComponents(typeof(IObjectResolvable));
+            foreach (var objectObtainable in objectResolvableAsComponents)
+            {
+                var objectResolvable = objectObtainable as IObjectResolvable;
+                objectFromGameObject = objectResolvable.GetObject(type);
+                if (objectFromGameObject != null && type.IsAssignableFrom(objectFromGameObject.GetType()))
+                {
+                    //quick return
+                    return objectFromGameObject;
+                }
+            }
+
+            return objectFromGameObject;
         }
 
         /// <summary>
@@ -1185,10 +1260,26 @@ namespace UnityIoC
 
         #region Static members
 
-        public static List<T> GetPool<T>(BindingSetting data = null)
+        public static T ResolveFromPool<T>(
+            Transform parentObject = null,
+            int preload = 0,
+            object resolveFrom = null,
+            params object[] parameters) where T : Component
+        {
+            if (preload > 0)
+            {
+                Pool<T>.List.Preload(preload, parentObject, resolveFrom, parameters);
+            }
+
+            return Pool<T>.List.GetInstanceFromPool<T>(parentObject, resolveFrom, parameters);
+        }
+
+
+        public static List<T> GetFromPool<T>() where T : Component
         {
             return Pool<T>.List;
         }
+
         public static ObjectContext FromObject(object obj, BindingSetting data = null)
         {
             return new ObjectContext(obj, GetDefaultInstance(obj), data);

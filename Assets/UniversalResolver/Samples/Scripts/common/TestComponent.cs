@@ -1,11 +1,13 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using SceneTest;
 using UnityEngine;
 
 namespace SceneTest
 {
-    public class TestComponent : MonoBehaviour, IComponentAbstract
+    [ProcessingOrder(2)]
+    public class TestComponent : MonoBehaviour, IComponentAbstract, IObjectResolvable, IObjectResolvable<IAbstract>
     {
         [SerializeField] public int Afield;
 
@@ -27,6 +29,19 @@ namespace SceneTest
         public void DoSomething()
         {
             Debug.Log("Caller from TestComponent as an IComponentAbstract interface");
+        }
+
+        public object GetObject(Type type)
+        {
+            if (type == typeof(IAbstract))
+                return @abstract;
+
+            return null;
+        }
+
+        public IAbstract GetObject()
+        {
+            return @abstract;
         }
     }
 }

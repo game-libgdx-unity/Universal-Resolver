@@ -1,17 +1,32 @@
-﻿using System.Collections;
-using System.Collections.Generic; 
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace SceneTest
 {
-	public class TestComponent3 : MonoBehaviour
-	{
-		[Transient] private IAbstract @abstract;
+    [ProcessingOrder(2)]
+    public class TestComponent3 : MonoBehaviour, IObjectResolvable, IObjectResolvable<IAbstract>
+    {
+        [Transient] public IAbstract @abstract;
 
-		// Use this for initialization
-		void Start()
-		{
-			@abstract.DoSomething();
-		}
-	}
+        // Use this for initialization
+        void Start()
+        {
+            @abstract.DoSomething();
+        }
+
+        public object GetObject(Type type)
+        {
+            if (type == typeof(IAbstract))
+                return @abstract;
+
+            return null;
+        }
+
+        public IAbstract GetObject()
+        {
+            return @abstract;
+        }
+    }
 }

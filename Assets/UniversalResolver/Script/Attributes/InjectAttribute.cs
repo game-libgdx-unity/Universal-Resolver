@@ -30,6 +30,36 @@ public class InjectAttribute : Attribute, IComponentResolvable, IComponentArrayR
     public InjectAttribute() : this(LifeCycle.Default)
     {
     }
+    
+    
+//    public object GetObject(MonoBehaviour behaviour, Type type)
+//    {
+//        var gameObject = GetGameObject(behaviour, Path);
+//
+//        //can't process if gameObject not found
+//        if (gameObject == null)
+//        {
+//            return null;
+//        }
+//        
+//        var componentFromGameObject = gameObject.GetComponent(type);
+//
+//        if (componentFromGameObject != null)
+//        {
+//            //as default or transition
+//            if (LifeCycle == LifeCycle.Transient || (LifeCycle & LifeCycle.Transient) == LifeCycle.Transient ||
+//                LifeCycle == LifeCycle.Default || (LifeCycle & LifeCycle.Default) == LifeCycle.Default)
+//            {
+//                var clone = Object.Instantiate(componentFromGameObject);
+//                return clone;
+//            }
+//
+//            //as singleton or component
+//            return componentFromGameObject;
+//        }
+//
+//        return null;
+//    }
 
     public Component GetComponent(MonoBehaviour behaviour, Type type)
     {
@@ -52,7 +82,6 @@ public class InjectAttribute : Attribute, IComponentResolvable, IComponentArrayR
                 if (LifeCycle == LifeCycle.Transient || (LifeCycle & LifeCycle.Transient) == LifeCycle.Transient ||
                     LifeCycle == LifeCycle.Default || (LifeCycle & LifeCycle.Default) == LifeCycle.Default)
                 {
-//                var clone = componentFromGameObject.CopyComponent(new GameObject());
                     var clone = Object.Instantiate(componentFromGameObject);
                     return clone;
                 }

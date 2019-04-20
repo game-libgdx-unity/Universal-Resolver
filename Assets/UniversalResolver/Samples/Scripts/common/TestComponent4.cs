@@ -6,7 +6,7 @@ namespace SceneTest
 {
 	public class TestComponent4 : MonoBehaviour
 	{
-		[Transient] private IAbstract @abstract;
+		[Transient] public IAbstract @abstract;
 
 		// Use this for initialization
 		void Start()

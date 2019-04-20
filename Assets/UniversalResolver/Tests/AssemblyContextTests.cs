@@ -236,9 +236,9 @@ namespace UnityIoC.Editor
         [Test]
         public void t18_get_from_pools()
         {
-            var testComponentPool = Context.GetPool<TestComponent>();
-            var testComponent2Pool = Context.GetPool<TestComponent2>();
-            
+            var testComponentPool = Context.GetFromPool<TestComponent>();
+            var testComponent2Pool = Context.GetFromPool<TestComponent2>();
+
             var obj = testComponentPool.GetInstanceFromPool();
             var obj5 = testComponent2Pool.GetInstanceFromPool();
             var obj2 = testComponentPool.GetInstanceFromPool();
@@ -250,11 +250,31 @@ namespace UnityIoC.Editor
 
             var obj4 = testComponentPool.GetInstanceFromPool();
             Assert.AreEqual(testComponentPool.Count, 3);
-            
+
             obj6.gameObject.SetActive(false);
             var obj8 = testComponent2Pool.GetInstanceFromPool();
             Assert.AreEqual(testComponent2Pool.Count, 3);
+        }
 
+        [Test]
+        public void t19_test_IObjectResolvable()
+        {
+            //new prefab
+            var go = new GameObject();
+            go.AddComponent<TestComponent>();
+            go.AddComponent<TestComponent5>();
+
+            //process inject attributes
+            var context = Context.GetDefaultInstance(typeof(TestComponent));
+            context.ProcessInjectAttribute(go);
+
+            //assert
+            Assert.IsNotNull(go.GetComponent<TestComponent>().@abstract);
+            Assert.IsNotNull(go.GetComponent<TestComponent5>().getFromGameObject);
+            Assert.AreSame(
+                go.GetComponent<TestComponent>().@abstract,
+                go.GetComponent<TestComponent5>().getFromGameObject
+            );
         }
 
 

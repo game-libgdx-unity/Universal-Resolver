@@ -14,11 +14,18 @@ using UnityEngine.UI;
 /// UI implementation for cells
 /// </summary>
 [SelectionBase]
-public class Cell : MonoBehaviour, ICell
+public class Cell : MonoBehaviour, ICell, IObjectResolvable<CellData>
 {
-    private Observable<CellType> CellType = new Observable<CellType>();
 
+    public CellData GetObject()
+    {
+        return cellData;
+    }
+    
+    //data layer
     private CellData cellData { get; set; }
+    
+    //presentation layer
     [Children] Text textUI;
     [Component] Image background;
     [Component] Outline outline;
@@ -33,13 +40,13 @@ public class Cell : MonoBehaviour, ICell
         //when number of adjacent mines get changed
         cellData.AdjacentMines.SubscribeToComponent(this, mines =>
         {
-            if (mines > 0) CellType.Value = (CellType) mines;
+            if (mines > 0) cellData.CellType.Value = (CellType) mines;
         });
 
         //when a cell is flagged
         cellData.IsFlagged.SubscribeToComponent(this, isFlagged =>
         {
-            if (isFlagged) CellType.Value = global::CellType.FLAGGED;
+            if (isFlagged) cellData.CellType.Value = global::CellType.FLAGGED;
         });
 
         //when a cell is revealed
@@ -51,13 +58,13 @@ public class Cell : MonoBehaviour, ICell
             {
                 cellData.IsMine.SubscribeToComponent(this, isMined =>
                 {
-                    if (isMined) CellType.Value = global::CellType.MINE;
+                    if (isMined) cellData.CellType.Value = global::CellType.MINE;
                 });
             }
         });
 
         //change UI when CellType change
-        CellType.SubscribeToComponent(this, type =>
+        cellData.CellType.SubscribeToComponent(this, type =>
         {
             if (type == global::CellType.UNOPENED)
             {
@@ -126,4 +133,5 @@ public class Cell : MonoBehaviour, ICell
     {
         this.transform.SetParent(parent);
     }
+
 }

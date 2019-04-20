@@ -9,16 +9,19 @@ public static class PoolExtension
 {
     public static T GetInstanceFromPool<T>(
         this List<T> objects,
-        Transform parentObject = null)
+        Transform parentObject = null,
+        object resolveFrom = null,
+        params object[] parameters)
         where T : Component
     {
         if (objects.Count > 0)
         {
-//            objects.RemoveAll(o => o == null);
             for (int i = 0; i < objects.Count; i++)
             {
                 if (!objects[i])
                 {
+                    objects.RemoveAt(i);
+                    i--;
                     continue;
                 }
 
@@ -31,7 +34,7 @@ public static class PoolExtension
             }
         }
 
-        T g = Context.Resolve<T>(LifeCycle.Transient);
+        T g = Context.Resolve<T>(parentObject, LifeCycle.Transient, resolveFrom, parameters);
         g.gameObject.SetActive(true);
 
         objects.Add(g);
