@@ -7,7 +7,7 @@ using UnityEngine;
 namespace SceneTest
 {
     [ProcessingOrder(2)]
-    public class TestComponent : MonoBehaviour, IComponentAbstract, IObjectResolvable, IObjectResolvable<IAbstract>
+    public class TestComponent : MonoBehaviour, IComponentAbstract, IObjectResolvable<IAbstract>
     {
         [SerializeField] public int Afield;
 
@@ -30,15 +30,7 @@ namespace SceneTest
         {
             Debug.Log("Caller from TestComponent as an IComponentAbstract interface");
         }
-
-        public object GetObject(Type type)
-        {
-            if (type == typeof(IAbstract))
-                return @abstract;
-
-            return null;
-        }
-
+        
         public IAbstract GetObject()
         {
             return @abstract;

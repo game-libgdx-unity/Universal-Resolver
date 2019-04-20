@@ -277,6 +277,27 @@ namespace UnityIoC.Editor
             );
         }
 
+        [Test]
+        public void t20_test_IObjectResolvableGeneric()
+        {
+            //new prefab
+            var go = new GameObject();
+            go.AddComponent<TestComponent2>();
+            go.AddComponent<TestComponent5>();
+
+            //process inject attributes
+            var context = Context.GetDefaultInstance(typeof(TestComponent2));
+            context.ProcessInjectAttribute(go);
+
+            //assert
+            Assert.IsNotNull(go.GetComponent<TestComponent2>().@abstract);
+            Assert.IsNotNull(go.GetComponent<TestComponent5>().getFromGameObject);
+            Assert.AreSame(
+                go.GetComponent<TestComponent2>().@abstract,
+                go.GetComponent<TestComponent5>().getFromGameObject
+            );
+        }
+
 
         [Test]
         public void t99_dispose_instance()

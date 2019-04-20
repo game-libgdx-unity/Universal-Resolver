@@ -732,14 +732,16 @@ namespace UnityIoC
             //get all mono behaviour components
             var objectGenericResolvableAsComponents = comp.GetComponents(typeof(MonoBehaviour));
             foreach (var objectObtainable in objectGenericResolvableAsComponents)
-            {   
+            {
                 bool containsGenericObjectObtainableInterface = objectObtainable.GetType().GetInterfaces()
                     .Where(i => i.IsGenericType)
                     .Any(i => i.GetGenericTypeDefinition() == typeof(IObjectResolvable<>));
-                
+
                 if (containsGenericObjectObtainableInterface)
                 {
-                    objectFromGameObject = objectObtainable.GetType().GetMethods().FirstOrDefault(m=>m.Name == "GetObject" && m.GetParameters().Length == 0)?.Invoke(objectObtainable, null);
+                    objectFromGameObject = objectObtainable.GetType().GetMethods()
+                        .FirstOrDefault(m => m.Name == "GetObject" && m.GetParameters().Length == 0)
+                        ?.Invoke(objectObtainable, null);
                     if (objectFromGameObject != null)
                     {
                         //quick return
@@ -1260,18 +1262,50 @@ namespace UnityIoC
 
         #region Static members
 
+        //subject to resolving object
+        public static Observable<object> OnResolved = new Observable<object>();
+
+        public static Observable<T> OnObjectResolved<T>(Component addTo)
+        {
+            Observable<T> output = new Observable<T>();
+            OnResolved.SubscribeToComponent(addTo, o =>
+            {
+                if (o.GetType() == typeof(T))
+                {
+                    output.Value = (T) o;
+                }
+            });
+
+            return output;
+        }
+        
         public static T ResolveFromPool<T>(
             Transform parentObject = null,
             int preload = 0,
             object resolveFrom = null,
             params object[] parameters) where T : Component
         {
-            if (preload > 0)
+            if (preload > 0 && Pool<T>.List.Count == 0)
             {
-                Pool<T>.List.Preload(preload, parentObject, resolveFrom, parameters);
+                PreloadFromPool<T>(preload, parentObject, resolveFrom, parameters);
             }
 
-            return Pool<T>.List.GetInstanceFromPool<T>(parentObject, resolveFrom, parameters);
+            var instanceFromPool = Pool<T>.List.GetInstanceFromPool<T>(parentObject, resolveFrom, parameters);
+
+            if (instanceFromPool != null)
+            {
+                //trigger the subject
+                OnResolved.Value = instanceFromPool;
+            }
+
+            return instanceFromPool;
+        }
+
+        public static void PreloadFromPool<T>(int preload, Transform parentObject = null, object resolveFrom = null,
+            params object[] parameters)
+            where T : Component
+        {
+            Pool<T>.List.Preload(preload, parentObject, resolveFrom, parameters);
         }
 
 
@@ -1352,7 +1386,16 @@ namespace UnityIoC
             object resolveFrom = null,
             params object[] parameters)
         {
-            return GetDefaultInstance(typeToResolve).ResolveObject(typeToResolve, lifeCycle, resolveFrom, parameters);
+            var resolveObject = GetDefaultInstance(typeToResolve).ResolveObject(typeToResolve, lifeCycle, resolveFrom, parameters);
+            
+            if (resolveObject != null)
+            {
+                //trigger the subject
+                OnResolved.Value = resolveObject;
+            }
+
+            
+            return resolveObject;
         }
 
         public static T Resolve<T>(
@@ -1372,11 +1415,10 @@ namespace UnityIoC
             where T : Component
         {
             var obj = Resolve(typeof(T), lifeCycle, resolveFrom, parameters) as T;
-            if (parents)
+            if (parents && obj)
             {
                 obj.transform.SetParent(parents);
             }
-
             return obj;
         }
 

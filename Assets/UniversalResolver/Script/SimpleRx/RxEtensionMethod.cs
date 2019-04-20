@@ -12,6 +12,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEngine;
+using UnityIoC;
 using PropertyAttribute = UnityEngine.PropertyAttribute;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -109,7 +110,7 @@ public class ObserverGameObject<T> : Observer<T>
             {
                 return false;
             }
-            
+
             return GameObject.activeInHierarchy && base.IsCompleted;
         }
         set { base.IsCompleted = value; }
@@ -196,6 +197,28 @@ public class ObservableDisposable<T> : IDisposable
         reactiveProperty.observers.Remove(observer);
     }
 }
+
+//public class Observable<K, V> : Observable<K>, IDisposable
+//{
+//    public Observable<V> Property { get; set; }
+//
+//    public Observable() : this(default(K), default(V))
+//    {
+//    }
+//
+//    public Observable(K key, V initialValue) : base(key)
+//    {
+//        Property = new Observable<V>(initialValue);
+//    }
+//
+//    public void Set(K instanceFromPool, V transient)
+//    {
+//        Value = instanceFromPool;
+//        Property.Value = transient;
+//    }
+//}
+
+
 
 public class Observable<T> : IReactiveProperty<T>, IDisposable
 {
@@ -1174,7 +1197,6 @@ public class InspectorDisplayDrawer : UnityEditor.PropertyDrawer
 
 
 #if !(NETFX_CORE || NET_4_6 || NET_STANDARD_2_0 || UNITY_WSA_10_0)
-
 /// <summary>
 /// Simple IObserver implementation for Unity
 /// </summary>
@@ -1196,3 +1218,25 @@ public interface IObservable<T>
 }
 
 #endif
+
+
+///// <summary>
+///// Simple IObservable implementation for Unity
+///// </summary>
+///// <typeparam name="T"></typeparam>
+//public interface IObservable<K, V>
+//{
+//    IDisposable Subscribe(IObserver<K, V> observer);
+//}
+///// <summary>
+///// Simple IObserver implementation for Unity
+///// </summary>
+///// <typeparam name="T"></typeparam>
+//public interface IObserver<K, V>
+//{
+//    void OnCompleted();
+//    void OnError(Exception error);
+//    void OnNext(K value);
+//    
+//    void OnNext(V value);
+//}

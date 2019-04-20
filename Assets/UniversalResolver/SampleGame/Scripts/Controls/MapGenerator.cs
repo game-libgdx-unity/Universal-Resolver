@@ -15,6 +15,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityIoC;
+using Debug = UnityEngine.Debug;
 
 
 [ProcessingOrder(1)]
@@ -60,17 +61,29 @@ public class MapGenerator : MonoBehaviour
         gridLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
         gridLayout.constraintCount = gameSetting.Width;
 
+        Context.PreloadFromPool<Cell>(gameSetting.Width * gameSetting.Height, container);
+        Context.OnResolved.Subscribe(obj =>
+        {
+            if (obj.GetType() == typeof(CellData))
+            {
+                //create cells
+                var cell = Context.ResolveFromPool<Cell>();
+                cell.SetCellData((CellData) obj);
+            }
+        });
+        
         //build the board
         gameBoard.Build();
 
-        //preload cell
-        
+        //preload cell (optional)
+//        Context.PreloadFromPool<Cell>(gameSetting.Width * gameSetting.Height);
+
         //create cells
-        foreach (var data in cellData)
-        {
-            var cell = Context.ResolveFromPool<Cell>(container);
-            cell.SetCellData(data);
-        }
+//        foreach (var data in cellData)
+//        {
+//            var cell = Context.ResolveFromPool<Cell>(container);
+//            cell.SetCellData(data);
+//        }
 
 //        cell.gameObject.SetActive(false);
 //        Destroy(cell.gameObject);
@@ -89,7 +102,6 @@ public class MapGenerator : MonoBehaviour
         Context.DisposeDefaultInstance();
         SceneManager.LoadScene(SceneManager.GetActiveScene().name); //restart the game
 
-        yield return null;
         yield return null;
         //now scene loading is complete
 
