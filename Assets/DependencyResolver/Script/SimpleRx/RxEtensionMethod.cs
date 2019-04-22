@@ -339,6 +339,7 @@ public class Observable<T> : IReactiveProperty<T>, IDisposable
 
     public void Dispose()
     {
+        HasValue = false;
         IsDisposed = true;
         foreach (var observer in observers)
         {

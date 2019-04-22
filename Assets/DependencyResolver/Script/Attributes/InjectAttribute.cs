@@ -30,8 +30,8 @@ public class InjectAttribute : Attribute, IComponentResolvable, IComponentArrayR
     public InjectAttribute() : this(LifeCycle.Default)
     {
     }
-    
-    
+
+
 //    public object GetObject(MonoBehaviour behaviour, Type type)
 //    {
 //        var gameObject = GetGameObject(behaviour, Path);

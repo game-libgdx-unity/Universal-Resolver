@@ -10,7 +10,8 @@ namespace UnityIoC
         Singleton = 1 << 1,
         Component = 1 << 2,
         Prefab = 1 << 3,
-        SingletonComponent = Singleton | Component
+        Cache = 1 << 4,
+        SingletonComponent = Singleton | Component,
     }
 
     public static class LifeCycleExtension

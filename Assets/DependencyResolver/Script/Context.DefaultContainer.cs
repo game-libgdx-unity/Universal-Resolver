@@ -356,7 +356,7 @@ namespace UnityIoC
                 params object[] parameters
             )
             {
-                return ResolveObject(abstractType, preferredLifeCycle, resolveFrom?.GetType(), parameters);
+                return ResolveObject(abstractType, preferredLifeCycle, resolveFrom != null ? resolveFrom.GetType() : null, parameters);
             }
 
             public virtual object ResolveObject(

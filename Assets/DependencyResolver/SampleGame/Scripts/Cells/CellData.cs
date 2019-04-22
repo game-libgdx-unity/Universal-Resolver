@@ -10,6 +10,11 @@
     public BoolReactiveProperty IsMine = new BoolReactiveProperty();
     public BoolReactiveProperty IsFlagged = new BoolReactiveProperty();
 
+
+    public CellData()
+    {
+    }
+
     public CellData(int id, int x, int y)
     {
         ID = id;

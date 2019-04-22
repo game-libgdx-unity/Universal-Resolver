@@ -4,14 +4,9 @@ using Debug = UnityEngine.Debug;
 
 public class Benchmark
 {
-    static Stopwatch StopWatch = new Stopwatch(); 
-    public static void Stop(Stopwatch stopWatch = null)
+    static readonly Stopwatch stopWatch = new Stopwatch(); 
+    public static void Stop()
     {
-        if (stopWatch == null)
-        {
-            stopWatch = Benchmark.StopWatch;
-        }
-        
         stopWatch.Stop();
         TimeSpan ts = stopWatch.Elapsed;
         string elapsedTime = string.Format("{0:00}:{1:00}:{2:00}.{3:00}",
@@ -20,13 +15,8 @@ public class Benchmark
         Debug.Log("RunTime " + elapsedTime);
     }
 
-    public static Stopwatch Start(Stopwatch stopWatch = null)
+    public static Stopwatch Start()
     {
-        if (stopWatch == null)
-        {
-            stopWatch = Benchmark.StopWatch;
-        }
-
         stopWatch.Reset();
         stopWatch.Start();
         return stopWatch;

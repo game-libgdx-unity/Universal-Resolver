@@ -1,4 +1,4 @@
-﻿﻿/**
+﻿/**
  * Author:    Vinh Vu Thanh
  * This class is a part of Universal Resolver project that can be downloaded free at 
  * https://github.com/game-libgdx-unity/UnityEngine.IoC
@@ -21,7 +21,7 @@ namespace UnityIoC
 
     {
         /// <summary>
-        /// This is the name of the default assembly that unity generates to compile your code
+        /// This is the name of the default assembly that unity generated to compile your code
         /// </summary>
         private const string DefaultAssemblyName = "Assembly-CSharp";
 
@@ -31,12 +31,12 @@ namespace UnityIoC
         private readonly Logger debug = new Logger(typeof(Context));
 
         /// <summary>
-        /// cache inject attributes
+        /// cached inject attributes
         /// </summary>
         private List<InjectAttribute> injectAttributes = new List<InjectAttribute>();
 
         /// <summary>
-        /// cache objects from scene
+        /// cached objects from scene
         /// </summary>
         private Dictionary<Type, Component> monoScripts = new Dictionary<Type, Component>();
 
@@ -44,17 +44,17 @@ namespace UnityIoC
         /// Automatic binding a binding setting with the same name as the assembly's then process all monobehaviours in
         /// scene for [inject] attributes
         /// </summary>
-        public bool automaticBinding = false;
+        private bool automaticBinding = false;
 
         /// <summary>
         /// A Type that context will retrieve its assembly for initializations.
         /// </summary>
-        public Type TargetType { get; set; }
+        private Type targetType;
 
         /// <summary>
         /// If this context is available to use.
         /// </summary>
-        public bool initialized;
+        internal bool initialized;
 
         /// <summary>
         /// a container of references
@@ -62,7 +62,7 @@ namespace UnityIoC
         private Container container;
 
         /// <summary>
-        /// Name of an assembly that will be loaded when initialize the context and if TargetType is null
+        /// Name of an assembly that will be loaded when initializing the context in case TargetType is null
         /// </summary>
         private string assemblyName = DefaultAssemblyName;
 
@@ -352,7 +352,7 @@ namespace UnityIoC
             initialized = false;
             monoScripts.Clear();
             injectAttributes.Clear();
-            TargetType = null;
+            targetType = null;
 
             if (container != null)
             {
@@ -529,8 +529,11 @@ namespace UnityIoC
                 {
                     object component = null;
 
+                    //try get from cache if conditions are met
+                    component = TryGetObjectFromCache(inject, property.PropertyType);
+
                     //try to use IObjectResolvable to resolve objects
-                    if (!property.PropertyType.IsSubclassOf(typeof(Component)))
+                    if (component == null && !property.PropertyType.IsSubclassOf(typeof(Component)))
                     {
                         component = GetObjectFromGameObject(mono, property.PropertyType);
                     }
@@ -558,6 +561,19 @@ namespace UnityIoC
                 //resolve object as [Singleton], [Transient] or [AsComponent] if component attribute fails to resolve
                 ProcessMethodInfo(mono, setMethod, ignoreMonobehaviour, inject);
             }
+        }
+
+        private static object TryGetObjectFromCache(InjectAttribute inject, Type type)
+        {
+            if ((inject.LifeCycle == LifeCycle.Cache ||
+                (inject.LifeCycle & LifeCycle.Cache) == LifeCycle.Cache) &&
+                Context.ResolvedObjects.Count > 0)
+            {
+                return Context.ResolvedObjects.Last(o => type.IsInterface && type.IsAssignableFrom(o.GetType()) ||
+                                                         !type.IsInterface && o.GetType() == type);
+            }
+
+            return null;
         }
 
 
@@ -658,8 +674,12 @@ namespace UnityIoC
                 else
                 {
                     object component = null;
+
+                    //try get from cache if conditions are met
+                    component = TryGetObjectFromCache(inject, field.FieldType);
+
                     //try to use IObjectResolvable to resolve objects
-                    if (!field.FieldType.IsSubclassOf(typeof(Component)))
+                    if (component == null && !field.FieldType.IsSubclassOf(typeof(Component)))
                     {
                         component = GetObjectFromGameObject(mono, field.FieldType);
                     }
@@ -739,13 +759,16 @@ namespace UnityIoC
 
                 if (containsGenericObjectObtainableInterface)
                 {
-                    objectFromGameObject = objectObtainable.GetType().GetMethods()
-                        .FirstOrDefault(m => m.Name == "GetObject" && m.GetParameters().Length == 0)
-                        ?.Invoke(objectObtainable, null);
-                    if (objectFromGameObject != null)
+                    var method = objectObtainable.GetType().GetMethods()
+                        .FirstOrDefault(m => m.Name == "GetObject" && m.GetParameters().Length == 0);
+                    if (method != null)
                     {
-                        //quick return
-                        return objectFromGameObject;
+                        objectFromGameObject = method.Invoke(objectObtainable, null);
+                        if (objectFromGameObject != null)
+                        {
+                            //quick return
+                            return objectFromGameObject;
+                        }
                     }
                 }
             }
@@ -864,7 +887,7 @@ namespace UnityIoC
             }
 
             this.automaticBinding = automaticBinding;
-            this.TargetType = target;
+            this.targetType = target;
             container = new Container(this);
 
             InitialProcess();
@@ -884,6 +907,8 @@ namespace UnityIoC
             get { return SceneManager.GetActiveScene().name; }
         }
 
+        private Assembly _currentAssembly;
+
         /// <summary>
         /// Shortcut to get current assembly or just return the default one of unity
         /// </summary>
@@ -891,10 +916,27 @@ namespace UnityIoC
         {
             get
             {
-                return TargetType == null
-                    ? string.IsNullOrEmpty(assemblyName) ? Assembly.Load(DefaultAssemblyName) :
-                    Assembly.Load(assemblyName)
-                    : TargetType.Assembly;
+                if (_currentAssembly == null)
+                {
+                    if (targetType == null)
+                    {
+                        try
+                        {
+                            if (string.IsNullOrEmpty(assemblyName))
+                                _currentAssembly = Assembly.Load(DefaultAssemblyName);
+                            else
+                                _currentAssembly = Assembly.Load(assemblyName);
+                        }
+                        catch (Exception ex)
+                        {
+                            _currentAssembly = Assembly.GetExecutingAssembly();
+                        }
+                    }
+                    else
+                        _currentAssembly = targetType.Assembly;
+                }
+
+                return _currentAssembly;
             }
         }
 
@@ -1262,8 +1304,35 @@ namespace UnityIoC
 
         #region Static members
 
-        //subject to resolving object
-        public static Observable<object> OnResolved = new Observable<object>();
+        ///<summary>
+        /// cache of resolved objects
+        /// </summary>
+        /// 
+        public static List<object> ResolvedObjects = new List<object>();
+
+        private static Observable<object> onResolved;
+
+        /// <summary>
+        /// subject to resolving object
+        /// </summary>
+        public static Observable<object> OnResolved
+        {
+            get
+            {
+                if (onResolved == null)
+                {
+                    onResolved = new Observable<object>();
+                    onResolved.Subscribe(obj =>
+                        {
+                            if (obj != null) ResolvedObjects.Add(obj);
+                        }
+                    );
+                }
+
+                return onResolved;
+            }
+            private set { onResolved = value; }
+        }
 
         public static Observable<T> OnObjectResolved<T>(Component addTo)
         {
@@ -1404,13 +1473,17 @@ namespace UnityIoC
 
         public static void DisposeDefaultInstance()
         {
+            //remove cache of resolved objects
+            ResolvedObjects.Clear();
+
             //recycle the observable
             if (!OnResolved.IsDisposed)
             {
                 OnResolved.Dispose();
-                OnResolved.IsDisposed = false;
+                OnResolved = null;
             }
 
+            //recycle the defaultInstance
             if (_defaultInstance != null)
             {
                 _defaultInstance.Dispose();
@@ -1482,6 +1555,11 @@ namespace UnityIoC
             if (parents && obj)
             {
                 obj.transform.SetParent(parents);
+            }
+
+            if (obj != null)
+            {
+                obj.gameObject.SetActive(true);
             }
 
             return obj;

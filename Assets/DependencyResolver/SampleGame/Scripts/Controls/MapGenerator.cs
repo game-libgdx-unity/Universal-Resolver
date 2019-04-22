@@ -36,7 +36,10 @@ public class MapGenerator : MonoBehaviour
     {
         MyDebug.EnableLogging = false;
         Context.GetDefaultInstance(this);
+    }
 
+    private void Start()
+    {
         //setup game status, when it get changes
         gameStatus.Subscribe(status => { print("Game status: " + status.ToString()); })
             .AddTo(gameObject);
@@ -60,9 +63,8 @@ public class MapGenerator : MonoBehaviour
         {
             if (obj.GetType() == typeof(CellData))
             {
-                var cell = Context.ResolveFromPool<Cell>(container);
 //                var cell = Context.Resolve<Cell>(container);
-                cell.SetCellData((CellData) obj);
+                var cell = Context.ResolveFromPool<Cell>(container);
             }
         });
 
@@ -78,11 +80,12 @@ public class MapGenerator : MonoBehaviour
     private IEnumerator RestartRoutine()
     {
         Benchmark.Start();
-        //try to disable [Component] in Cell.cs to see if it's better for performance
 
         Context.DisposeDefaultInstance();
+
         SceneManager.LoadScene(SceneManager.GetActiveScene().name); //restart the game
 
+        yield return null;
         yield return null;
         //now scene loading is complete
 

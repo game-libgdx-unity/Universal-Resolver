@@ -135,17 +135,27 @@ namespace UnityIoC.Editor
             var func_output = Context.GetDefaultInstance(this).ResolveFunc(func, LifeCycle.Singleton);
             Assert.AreEqual(func_output, "Hello");
         }
+        
+        [Test]
+        public void t14_Preload_From_Pools()
+        {
+            var gameObjects = new List<GameObject>();
 
+            gameObjects.Preload(10, new GameObject());
+            Assert.AreEqual(gameObjects.Count, 10);
+        }
+
+
+#if UNITY_2018_3_OR_NEWER
 
         [Test]
         public void t11_resolve_with_parameters()
         {
-            var obj = Context.Resolve<Impl>(parameters: new object[] {1});
+            var obj = Context.Resolve<Impl>(1);
             Assert.AreEqual(obj.a, 1);
             obj = Context.Resolve<Impl>();
             Assert.AreEqual(obj.a, 0);
         }
-
         [Test]
         public void t12_resolve_with_inject_into()
         {
@@ -174,15 +184,7 @@ namespace UnityIoC.Editor
             Assert.IsInstanceOf<Impl>(i1);
         }
 
-        [Test]
-        public void t14_Preload_From_Pools()
-        {
-            var gameObjects = new List<GameObject>();
-
-            gameObjects.Preload(10, new GameObject());
-            Assert.AreEqual(gameObjects.Count, 10);
-        }
-
+       
         [Test]
         public void t15_Get_From_Pools()
         {
@@ -297,6 +299,7 @@ namespace UnityIoC.Editor
                 go.GetComponent<TestComponent5>().getFromGameObject
             );
         }
+#endif
 
 
         [Test]
@@ -312,7 +315,6 @@ namespace UnityIoC.Editor
 //assert
             Assert.IsFalse(Context.Initialized);
         }
-
 
         [TearDown]
         public void Dispose()

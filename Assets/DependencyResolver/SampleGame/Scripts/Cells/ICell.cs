@@ -11,5 +11,5 @@ using UnityEngine.EventSystems;
 public interface ICell
 {
     void SetParent(Transform parent);
-    void SetCellData(CellData cellType);
+    void SetCellData(CellData cellData);
 }

@@ -56,6 +56,7 @@ namespace App.Scripts.Boards
             {
                 for (var j = 1; j <= width; j++)
                 {
+                    
                     var cell = Context.Resolve<CellData>(id, j, i);
                     Cells.Add(cell);
                     id++;

@@ -6,35 +6,48 @@
  **/
 
 
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityIoC;
 
 
 /// <summary>
 /// UI implementation for cells
 /// </summary>
 [SelectionBase]
-public class Cell : MonoBehaviour, ICell, IObjectResolvable<CellData>
+public class Cell : MonoBehaviour
 {
-
-    public CellData GetObject()
+    private void Start()
     {
-        return cellData;
+        if (Context.ResolvedObjects.Count == 0)
+        {
+            return;
+        }
+        
+        Debug.Assert(cellData != null);
+        SetCellData(cellData);
+        
+        //find the last object
+//        var cellData = Context.ResolvedObjects.Last(o => o.GetType() == typeof(CellData));
+//        if (cellData != null)
+//        {
+//            SetCellData(cellData as CellData);
+//        }
     }
-    
-    //data layer
-    private CellData cellData { get; set; }
-    
+
     //presentation layer
     [Children] Text textUI;
     [Component] Image background;
     [Component] Outline outline;
 
+    [Cache] private CellData cellData;
+
     public void SetCellData(CellData data)
     {
-        Debug.Assert(data != null);
-        this.cellData = data;
-
+        var cellData = data;
+        Debug.Assert(cellData != null);
         outline.effectColor = Color.black;
 
         //when number of adjacent mines get changed
@@ -133,5 +146,4 @@ public class Cell : MonoBehaviour, ICell, IObjectResolvable<CellData>
     {
         this.transform.SetParent(parent);
     }
-
 }

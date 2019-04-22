@@ -13,7 +13,6 @@ using UnityEngine.SceneManagement;
 using UnityIoC;
 using Object = UnityEngine.Object;
 
-
 public class ComponentAttribute : InjectAttribute, IComponentResolvable, IComponentArrayResolvable
 {
     public ComponentAttribute()
