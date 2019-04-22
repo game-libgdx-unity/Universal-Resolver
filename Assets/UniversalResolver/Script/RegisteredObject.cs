@@ -27,7 +27,7 @@ namespace UnityIoC
 
             public object Instance { get; private set; }
 
-            public LifeCycle LifeCycle { get; private set; }
+            public LifeCycle LifeCycle { get; set; }
 
             public Type InjectInto { get; private set; }
 

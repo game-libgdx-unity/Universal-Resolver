@@ -1,4 +1,4 @@
-﻿/**
+﻿﻿/**
  * Author:    Vinh Vu Thanh
  * This class is a part of Universal Resolver project that can be downloaded free at 
  * https://github.com/game-libgdx-unity/UnityEngine.IoC
@@ -38,7 +38,7 @@ namespace UnityIoC
         /// <summary>
         /// cache objects from scene
         /// </summary>
-        private Dictionary<Type, MonoBehaviour> monoScripts = new Dictionary<Type, MonoBehaviour>();
+        private Dictionary<Type, Component> monoScripts = new Dictionary<Type, Component>();
 
         /// <summary>
         /// Automatic binding a binding setting with the same name as the assembly's then process all monobehaviours in
@@ -1268,7 +1268,7 @@ namespace UnityIoC
         public static Observable<T> OnObjectResolved<T>(Component addTo)
         {
             Observable<T> output = new Observable<T>();
-            OnResolved.SubscribeToComponent(addTo, o =>
+            OnResolved.Subscribe(addTo, o =>
             {
                 if (o.GetType() == typeof(T))
                 {
@@ -1278,25 +1278,25 @@ namespace UnityIoC
 
             return output;
         }
-        
+
         public static T ResolveFromPool<T>(
             Transform parentObject = null,
             int preload = 0,
             object resolveFrom = null,
             params object[] parameters) where T : Component
         {
-            if (preload > 0 && Pool<T>.List.Count == 0)
+            if (!Context.Initialized)
+            {
+                Context.GetDefaultInstance(typeof(T));
+            }
+
+            if (preload > 0 && preload > Pool<T>.List.Count)
             {
                 PreloadFromPool<T>(preload, parentObject, resolveFrom, parameters);
             }
 
             var instanceFromPool = Pool<T>.List.GetInstanceFromPool<T>(parentObject, resolveFrom, parameters);
-
-            if (instanceFromPool != null)
-            {
-                //trigger the subject
-                OnResolved.Value = instanceFromPool;
-            }
+            instanceFromPool.gameObject.SetActive(true);
 
             return instanceFromPool;
         }
@@ -1305,6 +1305,11 @@ namespace UnityIoC
             params object[] parameters)
             where T : Component
         {
+            if (!Context.Initialized)
+            {
+                Context.GetDefaultInstance(typeof(T));
+            }
+
             Pool<T>.List.Preload(preload, parentObject, resolveFrom, parameters);
         }
 
@@ -1339,21 +1344,47 @@ namespace UnityIoC
             set { _defaultInstance = value; }
         }
 
+        /// <summary>
+        /// Clone an object from an existing one
+        /// </summary>
+        /// <param name="origin"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         public static T Instantiate<T>(T origin) where T : Component
         {
             return DefaultInstance.CreateInstance(origin);
         }
 
+        /// <summary>
+        /// Clone an object from an existing one
+        /// </summary>
+        /// <param name="origin"></param>
+        /// <param name="parent"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         public static T Instantiate<T>(T origin, Object parent) where T : Component
         {
             return DefaultInstance.CreateInstance(origin, parent as Transform);
         }
 
+        /// <summary>
+        /// Clone an object from an existing one
+        /// </summary>
+        /// <param name="origin"></param>
+        /// <param name="parent"></param>
+        /// <returns></returns>
         public static GameObject Instantiate(GameObject origin, Object parent)
         {
             return DefaultInstance.CreateInstance(origin, parent as Transform);
         }
 
+        /// <summary>
+        /// Get default-static general purposes context
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="automaticBind"></param>
+        /// <param name="recreate"></param>
+        /// <returns></returns>
         public static Context GetDefaultInstance(object context, bool automaticBind = true,
             bool recreate = false)
         {
@@ -1373,6 +1404,13 @@ namespace UnityIoC
 
         public static void DisposeDefaultInstance()
         {
+            //recycle the observable
+            if (!OnResolved.IsDisposed)
+            {
+                OnResolved.Dispose();
+                OnResolved.IsDisposed = false;
+            }
+
             if (_defaultInstance != null)
             {
                 _defaultInstance.Dispose();
@@ -1380,24 +1418,48 @@ namespace UnityIoC
             }
         }
 
+        /// <summary>
+        /// Create a new brand object as [transient], existing object as [singleton] or [component] which has been gotten from inside gameObject
+        /// </summary>
+        /// <param name="typeToResolve"></param>
+        /// <param name="lifeCycle"></param>
+        /// <param name="resolveFrom"></param>
+        /// <param name="parameters"></param>
+        /// <returns></returns>
         public static object Resolve(
             Type typeToResolve,
             LifeCycle lifeCycle = LifeCycle.Default,
             object resolveFrom = null,
             params object[] parameters)
         {
-            var resolveObject = GetDefaultInstance(typeToResolve).ResolveObject(typeToResolve, lifeCycle, resolveFrom, parameters);
-            
+            var resolveObject = GetDefaultInstance(typeToResolve)
+                .ResolveObject(typeToResolve, lifeCycle, resolveFrom, parameters);
+
             if (resolveObject != null)
             {
                 //trigger the subject
                 OnResolved.Value = resolveObject;
             }
 
-            
+
             return resolveObject;
         }
 
+        /// <summary>
+        /// Resolve objects with parameters for constructors
+        /// </summary>
+        /// <param name="parameters"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static T Resolve<T>(
+            params object[] parameters)
+        {
+            return (T) Resolve(typeof(T), LifeCycle.Transient, null, parameters);
+        }
+
+        /// <summary>
+        /// Create a new brand object as [transient], existing object as [singleton] or [component] which has been gotten from inside gameObject
+        /// </summary>
         public static T Resolve<T>(
             LifeCycle lifeCycle = LifeCycle.Default,
             object resolveFrom = null,
@@ -1406,7 +1468,9 @@ namespace UnityIoC
             return (T) Resolve(typeof(T), lifeCycle, resolveFrom, parameters);
         }
 
-
+        /// <summary>
+        /// Create a new brand object as [transient], existing object as [singleton] or [component] which has been gotten from inside gameObject
+        /// </summary>
         public static T Resolve<T>(
             Transform parents,
             LifeCycle lifeCycle = LifeCycle.Default,
@@ -1419,6 +1483,7 @@ namespace UnityIoC
             {
                 obj.transform.SetParent(parents);
             }
+
             return obj;
         }
 

@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -16,12 +16,11 @@ public static class PoolExtension
     {
         if (objects.Count > 0)
         {
+            objects.RemoveAll(o => o == null);
             for (int i = 0; i < objects.Count; i++)
             {
                 if (!objects[i])
                 {
-                    objects.RemoveAt(i);
-                    i--;
                     continue;
                 }
 
@@ -29,12 +28,25 @@ public static class PoolExtension
                 {
                     var obj = objects[i];
                     obj.gameObject.SetActive(true);
+
+                    if (obj != null)
+                    {
+                        if (parentObject)
+                        {
+                            obj.transform.SetParent(parentObject, false);
+                        }
+
+                        //trigger the subject
+                        Context.OnResolved.Value = obj;
+                    }
+
+
                     return obj;
                 }
             }
         }
 
-        T g = Context.Resolve<T>(parentObject, LifeCycle.Transient, resolveFrom, parameters);
+        T g = Context.Resolve<T>(parentObject, LifeCycle.Prefab, resolveFrom, parameters);
         g.gameObject.SetActive(true);
 
         objects.Add(g);
@@ -58,6 +70,12 @@ public static class PoolExtension
                 {
                     GameObject obj = objects[i];
                     obj.SetActive(true);
+
+                    if (parentObject)
+                    {
+                        obj.transform.SetParent(parentObject, false);
+                    }
+
                     return obj;
                 }
             }
@@ -127,15 +145,17 @@ public static class PoolExtension
         {
             throw new InvalidOperationException("Input list must not be null!");
         }
-        else
+        else if (input.Count < num)
+        {
             input.Capacity = num;
+        }
 
         input.RemoveAll(o => !o);
 
         var i = 0;
         while (i++ < num)
         {
-            T t = Context.Resolve<T>(parentObject, LifeCycle.Transient, resolveFrom, parameters);
+            T t = Context.Resolve<T>(parentObject, LifeCycle.Prefab, resolveFrom, parameters);
             t.gameObject.SetActive(false);
             input.Add(t);
         }

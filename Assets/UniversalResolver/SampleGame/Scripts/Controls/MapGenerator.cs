@@ -25,8 +25,7 @@ public class MapGenerator : MonoBehaviour
     [SerializeField] private Button btnRestart;
     [SerializeField] private RectTransform container;
 
-    [Prefab] private Cell cell;
-    [Singleton] private List<CellData> cellData;
+//    [Prefab] private Cell cell;
     [Singleton] private IGameSolver gameSolver;
     [Singleton] private IGameBoard gameBoard;
 
@@ -35,15 +34,8 @@ public class MapGenerator : MonoBehaviour
 
     private void Awake()
     {
-        if (!Context.Initialized)
-        {
-            Benchmark.Start();
-
-            MyDebug.EnableLogging = false;
-            Context.GetDefaultInstance(this);
-
-            Benchmark.Stop();
-        }
+        MyDebug.EnableLogging = false;
+        Context.GetDefaultInstance(this);
 
         //setup game status, when it get changes
         gameStatus.Subscribe(status => { print("Game status: " + status.ToString()); })
@@ -61,32 +53,21 @@ public class MapGenerator : MonoBehaviour
         gridLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
         gridLayout.constraintCount = gameSetting.Width;
 
-        Context.PreloadFromPool<Cell>(gameSetting.Width * gameSetting.Height, container);
-        Context.OnResolved.Subscribe(obj =>
+//        Context.Bind<Cell>(LifeCycle.Prefab);
+//        Context.PreloadFromPool<Cell>(gameSetting.Width * gameSetting.Height, container);
+
+        Context.OnResolved.Subscribe(this, obj =>
         {
             if (obj.GetType() == typeof(CellData))
             {
-                //create cells
-                var cell = Context.ResolveFromPool<Cell>();
+                var cell = Context.ResolveFromPool<Cell>(container);
+//                var cell = Context.Resolve<Cell>(container);
                 cell.SetCellData((CellData) obj);
             }
         });
-        
+
         //build the board
-        gameBoard.Build();
-
-        //preload cell (optional)
-//        Context.PreloadFromPool<Cell>(gameSetting.Width * gameSetting.Height);
-
-        //create cells
-//        foreach (var data in cellData)
-//        {
-//            var cell = Context.ResolveFromPool<Cell>(container);
-//            cell.SetCellData(data);
-//        }
-
-//        cell.gameObject.SetActive(false);
-//        Destroy(cell.gameObject);
+        gameBoard.Build(gameSetting.Width, gameSetting.Height, gameSetting.MineCount);
 
         print("Map setup");
 

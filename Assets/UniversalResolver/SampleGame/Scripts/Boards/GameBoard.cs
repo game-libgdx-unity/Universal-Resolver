@@ -49,10 +49,6 @@ namespace App.Scripts.Boards
 
         public void Build(int width, int height, int mines)
         {
-//            GameSettings.Width = width;
-//            GameSettings.Height = height;
-//            GameSettings.MineCount = mines;
-
             Cells.Clear();
 
             var id = 1;
@@ -60,7 +56,7 @@ namespace App.Scripts.Boards
             {
                 for (var j = 1; j <= width; j++)
                 {
-                    var cell = Context.Resolve<CellData>(LifeCycle.Transient, null, id, j, i);
+                    var cell = Context.Resolve<CellData>(id, j, i);
                     Cells.Add(cell);
                     id++;
                 }

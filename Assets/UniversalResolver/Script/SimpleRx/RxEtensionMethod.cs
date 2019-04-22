@@ -253,7 +253,7 @@ public class Observable<T> : IReactiveProperty<T>, IDisposable
 
     public IDisposable Subscribe(IObserver<T> observer)
     {
-        if (isDisposed)
+        if (IsDisposed)
         {
             observer.OnCompleted();
             return Disposable.Empty;
@@ -279,17 +279,17 @@ public class Observable<T> : IReactiveProperty<T>, IDisposable
         return Subscribe(new ConsoleObserver<T>(subject));
     }
 
-    public IDisposable SubscribeToGameObject(GameObject gameObject, Action<T> onNext, Action<Exception> onError = null,
+    public IDisposable Subscribe(GameObject gameObject, Action<T> onNext, Action<Exception> onError = null,
         Action onCompleted = null)
     {
         var disposable = Subscribe(new ObserverGameObject<T>(gameObject, onNext, onError, onCompleted));
         return disposable.AddTo(gameObject);
     }
 
-    public IDisposable SubscribeToComponent(Component component, Action<T> onNext, Action<Exception> onError = null,
+    public IDisposable Subscribe(Component component, Action<T> onNext, Action<Exception> onError = null,
         Action onCompleted = null)
     {
-        return SubscribeToGameObject(component.gameObject, onNext, onError, onCompleted);
+        return Subscribe(component.gameObject, onNext, onError, onCompleted);
     }
 
     public T Value
@@ -297,7 +297,7 @@ public class Observable<T> : IReactiveProperty<T>, IDisposable
         get { return _value; }
         set
         {
-            if (isDisposed)
+            if (IsDisposed)
             {
                 return;
             }
@@ -331,9 +331,15 @@ public class Observable<T> : IReactiveProperty<T>, IDisposable
 
     public bool HasValue { get; private set; }
 
+    public bool IsDisposed
+    {
+        get { return isDisposed; }
+        set { isDisposed = value; }
+    }
+
     public void Dispose()
     {
-        isDisposed = true;
+        IsDisposed = true;
         foreach (var observer in observers)
         {
             observer.OnCompleted();

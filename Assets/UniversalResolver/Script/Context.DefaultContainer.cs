@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace UnityIoC
 {
@@ -116,7 +117,7 @@ namespace UnityIoC
             }
         }
         */
-        
+
         public class Container : IContainer
         {
             private const BindingFlags BindingFlags = System.Reflection.BindingFlags.Instance |
@@ -428,6 +429,27 @@ namespace UnityIoC
                             abstractType,
                             context,
                             preferredLifeCycle);
+
+                        if (abstractType.IsSubclassOf(typeof(Component)) &&
+                            !context.monoScripts.ContainsKey(abstractType))
+                        {
+                            var findObjOnScene = Object.FindObjectOfType(abstractType) as Component;
+                            if (findObjOnScene)
+                            {
+                                var asComp = findObjOnScene as Component;
+
+                                if (asComp)
+                                {
+                                    //register GameObject as prefab
+                                    registeredObject.GameObject = asComp.gameObject;
+                                    registeredObject.LifeCycle = LifeCycle.Prefab;
+                                    //inactive prefab
+                                    asComp.gameObject.SetActive(false);
+                                }
+                            }
+                            
+                            context.monoScripts[abstractType] = findObjOnScene;
+                        }
 
                         registeredObjects.Add(registeredObject);
                     }
