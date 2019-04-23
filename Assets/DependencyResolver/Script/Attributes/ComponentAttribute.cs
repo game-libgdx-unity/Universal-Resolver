@@ -40,21 +40,6 @@ public class ComponentAttribute : InjectAttribute, IComponentResolvable, ICompon
                     return componentFromGameObject;
                 }
             }
-
-            //not supported: get non-component from gameObject
-//            else
-//            {
-//                MyDebug.Log("Use IObjectObtainable for non-behaviour type of {0}", type);
-//                var values = gameObject.GetComponents<IObjectObtainable>();
-//                foreach (var value in values)
-//                {
-//                    var obj = value.TryObtain(type);
-//                    if (obj != null && obj.GetType() == type)
-//                    {
-//                        return obj;
-//                    }
-//                }                
-//            }
         }
 
         if (type.IsSubclassOf(typeof(MonoBehaviour)))
@@ -149,7 +134,7 @@ public class ComponentAttribute : InjectAttribute, IComponentResolvable, ICompon
         return gameObject;
     }
 
-    protected GameObject CreateObjectOnHierarchy(IEnumerable<string> nodes, Transform currentT)
+    private GameObject CreateObjectOnHierarchy(IEnumerable<string> nodes, Transform currentT)
     {
         GameObject gameObject;
         foreach (var child in nodes)

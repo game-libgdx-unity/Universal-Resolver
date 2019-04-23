@@ -56,9 +56,6 @@ public class MapGenerator : MonoBehaviour
         gridLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
         gridLayout.constraintCount = gameSetting.Width;
 
-//        Context.Bind<Cell>(LifeCycle.Prefab);
-//        Context.PreloadFromPool<Cell>(gameSetting.Width * gameSetting.Height, container);
-
         Context.OnResolved.Subscribe(this, obj =>
         {
             if (obj.GetType() == typeof(CellData))

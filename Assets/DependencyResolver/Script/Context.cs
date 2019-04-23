@@ -569,7 +569,7 @@ namespace UnityIoC
                 (inject.LifeCycle & LifeCycle.Cache) == LifeCycle.Cache) &&
                 Context.ResolvedObjects.Count > 0)
             {
-                return Context.ResolvedObjects.Last(o => type.IsInterface && type.IsAssignableFrom(o.GetType()) ||
+                return Context.ResolvedObjects.FindLast(o => type.IsInterface && type.IsAssignableFrom(o.GetType()) ||
                                                          !type.IsInterface && o.GetType() == type);
             }
 
@@ -590,9 +590,10 @@ namespace UnityIoC
 
             foreach (var field in fieldInfos)
             {
+                var type = field.FieldType;
                 if (ignoreMonobehaviour)
                 {
-                    if (field.FieldType.IsSubclassOf(typeof(Component)))
+                    if (type.IsSubclassOf(typeof(Component)))
                     {
                         continue;
                     }
@@ -651,7 +652,7 @@ namespace UnityIoC
                 //pass container to injectAttribute
                 inject.container = DefaultContainer;
 
-                if (field.FieldType.IsArray)
+                if (type.IsArray)
                 {
                     //check if field type is array for particular processing
                     var injectComponentArray = inject as IComponentArrayResolvable;
@@ -663,10 +664,10 @@ namespace UnityIoC
                     }
 
                     //try to resolve as monoBehaviour
-                    var components = GetComponentsFromGameObject(mono, field.FieldType, inject);
+                    var components = GetComponentsFromGameObject(mono, type, inject);
                     if (components != null && components.Length > 0)
                     {
-                        var array = ConvertComponentArrayTo(field.FieldType.GetElementType(), components);
+                        var array = ConvertComponentArrayTo(type.GetElementType(), components);
                         field.SetValue(mono, array);
                         continue;
                     }
@@ -676,18 +677,18 @@ namespace UnityIoC
                     object component = null;
 
                     //try get from cache if conditions are met
-                    component = TryGetObjectFromCache(inject, field.FieldType);
+                    component = TryGetObjectFromCache(inject, type);
 
                     //try to use IObjectResolvable to resolve objects
-                    if (component == null && !field.FieldType.IsSubclassOf(typeof(Component)))
+                    if (component == null && !type.IsSubclassOf(typeof(Component)))
                     {
-                        component = GetObjectFromGameObject(mono, field.FieldType);
+                        component = GetObjectFromGameObject(mono, type);
                     }
 
                     //try to use IComponentResolvable to resolve objects
                     if (component == null)
                     {
-                        component = GetComponentFromGameObject(mono, field.FieldType, inject);
+                        component = GetComponentFromGameObject(mono, type, inject);
                     }
 
                     if (component != null)
@@ -696,7 +697,7 @@ namespace UnityIoC
                         if (inject.LifeCycle == LifeCycle.Singleton ||
                             (inject.LifeCycle & LifeCycle.Singleton) == LifeCycle.Singleton)
                         {
-                            container.Bind(field.FieldType, component);
+                            container.Bind(type, component);
                         }
 
                         field.SetValue(mono, component);
@@ -706,12 +707,12 @@ namespace UnityIoC
                 }
 
 
-                debug.Log("IComponentResolvable attribute fails to resolve {0}", field.FieldType);
+                debug.Log("IComponentResolvable attribute fails to resolve {0}", type);
 
                 //resolve object as [Singleton], [Transient] or [AsComponent] if component attribute fails to resolve
                 field.SetValue(mono,
                     container.ResolveObject(
-                        field.FieldType,
+                        type,
                         inject.LifeCycle,
                         mono));
             }
