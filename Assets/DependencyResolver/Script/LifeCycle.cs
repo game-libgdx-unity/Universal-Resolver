@@ -12,6 +12,7 @@ namespace UnityIoC
         Prefab = 1 << 3,
         Cache = 1 << 4,
         SingletonComponent = Singleton | Component,
+        General = Default | Cache | Component | Prefab | Transient
     }
 
     public static class LifeCycleExtension

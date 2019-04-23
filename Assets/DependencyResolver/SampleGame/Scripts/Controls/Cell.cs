@@ -39,8 +39,8 @@ public class Cell : MonoBehaviour
 
     //presentation layer
     [Children] Text textUI;
-    [All] Image background;
-    [All] Outline outline;
+    [Component] Image background;
+    [Component] Outline outline;
 
     [Cache] private CellData cellData;
 
