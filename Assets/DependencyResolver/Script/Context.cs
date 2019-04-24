@@ -351,6 +351,10 @@ namespace UnityIoC
         {
             initialized = false;
             monoScripts.Clear();
+
+            if (allBehaviours != null)
+                Array.Clear(allBehaviours, 0, allBehaviours.Length);
+            
             injectAttributes.Clear();
             targetType = null;
 
@@ -429,7 +433,9 @@ namespace UnityIoC
         {
             if (inject == null)
             {
-                inject = method.GetCustomAttributes(typeof(InjectBaseAttribute), true).FirstOrDefault() as InjectBaseAttribute;
+                inject =
+                    method.GetCustomAttributes(typeof(InjectBaseAttribute), true).FirstOrDefault() as
+                        InjectBaseAttribute;
             }
 
             injectAttributes.Add(inject);
@@ -566,11 +572,11 @@ namespace UnityIoC
         private static object TryGetObjectFromCache(InjectBaseAttribute inject, Type type)
         {
             if ((inject.LifeCycle == LifeCycle.Cache ||
-                (inject.LifeCycle & LifeCycle.Cache) == LifeCycle.Cache) &&
+                 (inject.LifeCycle & LifeCycle.Cache) == LifeCycle.Cache) &&
                 Context.ResolvedObjects.Count > 0)
             {
                 return Context.ResolvedObjects.FindLast(o => type.IsInterface && type.IsAssignableFrom(o.GetType()) ||
-                                                         !type.IsInterface && o.GetType() == type);
+                                                             !type.IsInterface && o.GetType() == type);
             }
 
             return null;
@@ -600,7 +606,8 @@ namespace UnityIoC
                 }
 
                 var inject =
-                    field.GetCustomAttributes(typeof(InjectBaseAttribute), true).FirstOrDefault() as InjectBaseAttribute;
+                    field.GetCustomAttributes(typeof(InjectBaseAttribute), true)
+                        .FirstOrDefault() as InjectBaseAttribute;
 
                 if (inject == null)
                 {
@@ -987,7 +994,7 @@ namespace UnityIoC
                 return;
             }
 
-            var allBehaviours = Object.FindObjectsOfType<MonoBehaviour>();
+            allBehaviours = Resources.FindObjectsOfTypeAll<MonoBehaviour>();
 
             var ignoredUnityEngineScripts = allBehaviours.Where(m =>
                 {
@@ -1311,8 +1318,11 @@ namespace UnityIoC
         /// 
         public static List<object> ResolvedObjects = new List<object>();
 
-        private static Observable<object> onResolved;
-
+        /// <summary>
+        /// cached all monobehaviours
+        /// </summary>
+        public static MonoBehaviour[] allBehaviours;
+        
         /// <summary>
         /// subject to resolving object
         /// </summary>
@@ -1334,6 +1344,7 @@ namespace UnityIoC
             }
             private set { onResolved = value; }
         }
+        private static Observable<object> onResolved;
 
         public static Observable<T> OnObjectResolved<T>(Component addTo)
         {

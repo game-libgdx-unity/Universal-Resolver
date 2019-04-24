@@ -36,13 +36,13 @@ namespace UnityIoC.Editor
             method.Invoke(new object(), null);
         }
 
-        [TearDown]
-        public void TearDown()
-        {
-            if (TestContext.CurrentContext.Result.Outcome.Status == TestStatus.Failed)
-            {
-                stop = true;
-            }
-        }
+//        [TearDown]
+//        public void TearDown()
+//        {
+////            if (TestContext.CurrentContext.Result.Outcome.Status == TestStatus.Failed)
+////            {
+////                stop = true;
+////            }
+//        }
     }
 }

@@ -14,8 +14,6 @@ using UnityIoC;
 using Object = UnityEngine.Object;
 
 
-//public class 
-
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Constructor |
                 AttributeTargets.Field)]
 public class InjectBaseAttribute : Attribute, IComponentResolvable, IComponentArrayResolvable
@@ -64,7 +62,7 @@ public class InjectBaseAttribute : Attribute, IComponentResolvable, IComponentAr
 //        return null;
 //    }
 
-    public Component GetComponent(MonoBehaviour behaviour, Type type)
+    public virtual Component GetComponent(MonoBehaviour behaviour, Type type)
     {
         var gameObject = GetGameObject(behaviour, Path);
 
@@ -97,7 +95,7 @@ public class InjectBaseAttribute : Attribute, IComponentResolvable, IComponentAr
         return null;
     }
 
-    public Component[] GetComponents(MonoBehaviour behaviour, Type type)
+    public virtual Component[] GetComponents(MonoBehaviour behaviour, Type type)
     {
         var gameObject = GetGameObject(behaviour, Path);
 

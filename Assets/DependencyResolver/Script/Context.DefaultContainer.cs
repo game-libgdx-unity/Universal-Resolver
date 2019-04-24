@@ -356,7 +356,8 @@ namespace UnityIoC
                 params object[] parameters
             )
             {
-                return ResolveObject(abstractType, preferredLifeCycle, resolveFrom != null ? resolveFrom.GetType() : null, parameters);
+                return ResolveObject(abstractType, preferredLifeCycle,
+                    resolveFrom != null ? resolveFrom.GetType() : null, parameters);
             }
 
             public virtual object ResolveObject(
@@ -430,11 +431,24 @@ namespace UnityIoC
                             context,
                             preferredLifeCycle);
 
+
                         if (abstractType.IsSubclassOf(typeof(Component)) &&
                             !context.monoScripts.ContainsKey(abstractType))
                         {
-                            var findObjOnScene = Object.FindObjectOfType(abstractType) as Component;
-                            if (findObjOnScene)
+                            Component findObjOnScene = null;
+
+                            if (abstractType.IsSubclassOf(typeof(MonoBehaviour)) && Context.allBehaviours != null &&
+                                Context.allBehaviours.Length > 0)
+                            {
+                                findObjOnScene =
+                                    Context.allBehaviours.FirstOrDefault(
+                                        b => abstractType.IsAssignableFrom(b.GetType()));
+                            }
+
+                            if (findObjOnScene == null)
+                                findObjOnScene = Object.FindObjectOfType(abstractType) as Component;
+
+                            if (findObjOnScene != null)
                             {
                                 var asComp = findObjOnScene as Component;
 
@@ -447,7 +461,7 @@ namespace UnityIoC
                                     asComp.gameObject.SetActive(false);
                                 }
                             }
-                            
+
                             context.monoScripts[abstractType] = findObjOnScene;
                         }
 

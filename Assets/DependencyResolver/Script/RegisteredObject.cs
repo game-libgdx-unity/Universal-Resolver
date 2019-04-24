@@ -6,6 +6,7 @@
  **/
 
 using System;
+using System.Linq;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -161,7 +162,7 @@ namespace UnityIoC
             private Component TryGetGameObject(Context context, Type concreteType,
                 string TypeName, LifeCycle lifeCycle, object resolveFrom)
             {
-                Component instance;
+                Component instance = null;
 
                 //if resolve as singleton, try to get component from an existing one in current scene or from cached
                 if ((lifeCycle == LifeCycle.Singleton ||
@@ -179,7 +180,16 @@ namespace UnityIoC
                         //try to find component from current scene then
                         if (Instance == null)
                         {
-                            instance = Object.FindObjectOfType(concreteType) as MonoBehaviour;
+                            if (concreteType.IsSubclassOf(typeof(MonoBehaviour)) && Context.allBehaviours != null &&
+                                Context.allBehaviours.Length > 0)
+                            {
+                                instance =
+                                    Context.allBehaviours.FirstOrDefault(
+                                        b => concreteType.IsAssignableFrom(b.GetType()));
+                            }
+
+                            if (instance == null)
+                                instance = Object.FindObjectOfType(concreteType) as MonoBehaviour;
                         }
                         else
                         {

@@ -8,7 +8,7 @@ public class ContextBehaviour : MonoBehaviour
 	public InjectIntoBindingSetting customSetting;
 	void Awake ()
 	{
-		var context = Context.GetDefaultInstance();
+		var context = Context.GetDefaultInstance(this);
 
 		if (customSetting != null)
 		{

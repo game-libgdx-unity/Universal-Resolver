@@ -47,6 +47,20 @@ public class InjectAttribute : ComponentAttribute
             {
                 return go.AddComponent(type);
             }
+            
+            
+            var ancestors = go.Ancestors();
+            foreach (var gameObject in ancestors)
+            {
+                var arrayComponents = gameObject.GetComponents(type);
+                if (arrayComponents.Length > 0)
+                {
+                    foreach (var component in arrayComponents)
+                    {
+                        return component;
+                    }
+                }
+            }
         }
 
         return null;
