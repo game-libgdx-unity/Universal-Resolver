@@ -19,6 +19,13 @@ using UnityIoC;
 [SelectionBase]
 public class Cell : MonoBehaviour
 {
+    
+    //presentation layer
+    [Inject] Text textUI;
+    [Inject] Image background;
+    [Inject] Outline outline;
+    [Inject] CellData cellData;
+    
     private void Start()
     {
         if (Context.ResolvedObjects.Count == 0)
@@ -37,12 +44,6 @@ public class Cell : MonoBehaviour
 //        }
     }
 
-    //presentation layer
-    [Children] Text textUI;
-    [Component] Image background;
-    [Component] Outline outline;
-
-    [Cache] private CellData cellData;
 
     public void SetCellData(CellData data)
     {

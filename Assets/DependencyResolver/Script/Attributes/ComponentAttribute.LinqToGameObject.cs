@@ -1,6 +1,5 @@
-#if USE_LINQ_TO_GAMEOBJECT
-
 using System;
+using System.Reflection;
 using Object = UnityEngine.Object;
 using Unity.Linq;
 using UnityEngine;
@@ -61,10 +60,14 @@ public class DescendantsAttribute : InjectAttribute, IComponentResolvable
 {
     public Component GetComponent(MonoBehaviour behaviour, Type type)
     {
-        var descendants = behaviour.gameObject.Descendants();
+        var descendantsEnumerable = behaviour.gameObject.Descendants();
+//        var ofComponent = descendantsEnumerable.GetType().GetMethod("OfComponent");
+//        MethodInfo generic = ofComponent.MakeGenericMethod(type);
+//        generic.Invoke(this, null);
 
-        //search on descendants for needed component
-        foreach (var gameObject in descendants)
+
+        //search on descendants for the needed component
+        foreach (var gameObject in descendantsEnumerable)
         {
             var component = gameObject.GetComponent(type);
             if (component != null)
@@ -84,6 +87,3 @@ public class DescendantsAttribute : InjectAttribute, IComponentResolvable
         return null;
     }
 }
-
-
-#endif

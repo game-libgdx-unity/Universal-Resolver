@@ -301,6 +301,48 @@ namespace UnityIoC.Editor
         }
 #endif
 
+        [Test]
+        public void t21_test_inject_attributes_no_caches()
+        {
+            //resolve a component
+            var comp = Context.Resolve<JustUnityComponent>();
+            
+            //JustUnityComponent using [Inject] attribute, which returns a new obj if nothing found in the cache
+            Assert.IsNotNull(comp.justDTOClass);
+            
+        }
+        [Test]
+        public void t22_test_inject_attributes_caches()
+        {
+            //resolve a class
+            var justDtoClass = Context.Resolve<JustDTOClass>();
+            var value = 10;
+            
+            justDtoClass.justAField = value;
+            
+            //resolve a component
+            var comp = Context.Resolve<JustUnityComponent>();
+            
+            //JustUnityComponent using [Inject] attribute which support caches, so 
+            Assert.IsNotNull(comp.justDTOClass);
+            Assert.AreEqual(comp.justDTOClass.justAField, value);
+            Assert.AreSame(comp.justDTOClass, justDtoClass);
+            
+        }
+  [Test]
+        public void t23_test_inject_attributes_create_child()
+        {
+            //resolve a component
+            var comp = Context.Resolve<JustUnityComponent>();
+            
+            //JustUnityComponent using [Inject] attribute which support caches, so 
+            Assert.IsNotNull(comp.justDTOClass);
+            Assert.IsNotNull(comp.componentInChild);
+            Assert.AreEqual(comp.transform.childCount, 1);
+            Assert.IsNotNull(comp.transform.GetChild(0).gameObject);
+            Assert.IsNotNull(comp.transform.GetChild(0).GetComponent<TestComponent>());
+            Assert.AreSame(comp.componentInChild, comp.transform.GetChild(0).GetComponent<TestComponent>());
+        }
 
         [Test]
         public void t99_dispose_instance()

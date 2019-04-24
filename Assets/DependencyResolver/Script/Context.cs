@@ -33,7 +33,7 @@ namespace UnityIoC
         /// <summary>
         /// cached inject attributes
         /// </summary>
-        private List<InjectAttribute> injectAttributes = new List<InjectAttribute>();
+        private List<InjectBaseAttribute> injectAttributes = new List<InjectBaseAttribute>();
 
         /// <summary>
         /// cached objects from scene
@@ -404,7 +404,7 @@ namespace UnityIoC
         {
             Type objectType = mono.GetType();
             var methods = objectType.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-                .Where(method => method.IsDefined(typeof(InjectAttribute), true))
+                .Where(method => method.IsDefined(typeof(InjectBaseAttribute), true))
                 .ToArray();
 
             if (methods.Length <= 0) return;
@@ -425,11 +425,11 @@ namespace UnityIoC
         /// <param name="ignoreMonobehaviour"></param>
         /// <param name="inject"></param>
         private void ProcessMethodInfo(object mono, MethodInfo method, bool ignoreMonobehaviour,
-            InjectAttribute inject = null)
+            InjectBaseAttribute inject = null)
         {
             if (inject == null)
             {
-                inject = method.GetCustomAttributes(typeof(InjectAttribute), true).FirstOrDefault() as InjectAttribute;
+                inject = method.GetCustomAttributes(typeof(InjectBaseAttribute), true).FirstOrDefault() as InjectBaseAttribute;
             }
 
             injectAttributes.Add(inject);
@@ -464,7 +464,7 @@ namespace UnityIoC
             Type objectType = mono.GetType();
             var properties = objectType
                 .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-                .Where(property => property.IsDefined(typeof(InjectAttribute), false))
+                .Where(property => property.IsDefined(typeof(InjectBaseAttribute), false))
                 .ToArray();
 
             if (properties.Length <= 0) return;
@@ -482,8 +482,8 @@ namespace UnityIoC
                 }
 
                 var inject = property
-                    .GetCustomAttributes(typeof(InjectAttribute), true)
-                    .FirstOrDefault() as InjectAttribute;
+                    .GetCustomAttributes(typeof(InjectBaseAttribute), true)
+                    .FirstOrDefault() as InjectBaseAttribute;
 
                 if (inject == null)
                 {
@@ -563,7 +563,7 @@ namespace UnityIoC
             }
         }
 
-        private static object TryGetObjectFromCache(InjectAttribute inject, Type type)
+        private static object TryGetObjectFromCache(InjectBaseAttribute inject, Type type)
         {
             if ((inject.LifeCycle == LifeCycle.Cache ||
                 (inject.LifeCycle & LifeCycle.Cache) == LifeCycle.Cache) &&
@@ -582,7 +582,7 @@ namespace UnityIoC
             Type objectType = mono.GetType();
             var fieldInfos = objectType
                 .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-                .Where(fieldInfo => fieldInfo.IsDefined(typeof(InjectAttribute), true))
+                .Where(fieldInfo => fieldInfo.IsDefined(typeof(InjectBaseAttribute), true))
                 .ToArray();
 
             if (fieldInfos.Length > 0)
@@ -600,7 +600,7 @@ namespace UnityIoC
                 }
 
                 var inject =
-                    field.GetCustomAttributes(typeof(InjectAttribute), true).FirstOrDefault() as InjectAttribute;
+                    field.GetCustomAttributes(typeof(InjectBaseAttribute), true).FirstOrDefault() as InjectBaseAttribute;
 
                 if (inject == null)
                 {
@@ -794,7 +794,7 @@ namespace UnityIoC
         /// </summary>
         /// <param name="mono">object is expected as unity mono behaviour</param>
         /// <returns>the component</returns>
-        private Component GetComponentFromGameObject(object mono, Type type, InjectAttribute injectAttribute)
+        private Component GetComponentFromGameObject(object mono, Type type, InjectBaseAttribute injectAttribute)
         {
             var behaviour = mono as MonoBehaviour;
 
@@ -834,7 +834,7 @@ namespace UnityIoC
         /// </summary>
         /// <param name="mono">object is expected as unity mono behaviour</param>
         /// <returns>true if you want to stop other attribute process methods</returns>
-        private Component[] GetComponentsFromGameObject(object mono, Type type, InjectAttribute injectAttribute)
+        private Component[] GetComponentsFromGameObject(object mono, Type type, InjectBaseAttribute injectAttribute)
         {
             //not supported for transient or singleton injections
 //            if (injectAttribute.LifeCycle == LifeCycle.Transient ||

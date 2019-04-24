@@ -1,6 +1,6 @@
 using UnityIoC;
 
-public class CacheAttribute : InjectAttribute
+public class CacheAttribute : InjectBaseAttribute
 {
     public CacheAttribute()
         : base(LifeCycle.Cache, null)

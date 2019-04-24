@@ -991,7 +991,7 @@ namespace Unity.Linq
             }
         }
 
-        public struct DescendantsEnumerable : IEnumerable<GameObject>
+            public partial struct DescendantsEnumerable : IEnumerable<GameObject>
         {
             static readonly Func<Transform, bool> alwaysTrue = _ => true;
 

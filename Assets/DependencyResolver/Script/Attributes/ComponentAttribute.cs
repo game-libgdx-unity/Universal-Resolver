@@ -13,7 +13,7 @@ using UnityEngine.SceneManagement;
 using UnityIoC;
 using Object = UnityEngine.Object;
 
-public class ComponentAttribute : InjectAttribute, IComponentResolvable, IComponentArrayResolvable
+public class ComponentAttribute : InjectBaseAttribute, IComponentResolvable, IComponentArrayResolvable
 {
     public ComponentAttribute()
         : base(LifeCycle.Component | LifeCycle.Default, null)
@@ -25,7 +25,12 @@ public class ComponentAttribute : InjectAttribute, IComponentResolvable, ICompon
     {
     }
 
-    public Component GetComponent(MonoBehaviour behaviour, Type type)
+    protected ComponentAttribute(LifeCycle lifeCycle, string path)
+        : base(lifeCycle, path)
+    {
+    }
+
+    public override Component GetComponent(MonoBehaviour behaviour, Type type)
     {
         var gameObject = GetGameObject(behaviour, Path);
 
@@ -56,7 +61,7 @@ public class ComponentAttribute : InjectAttribute, IComponentResolvable, ICompon
         return null;
     }
 
-    public Component[] GetComponents(MonoBehaviour behaviour, Type type)
+    public override Component[] GetComponents(MonoBehaviour behaviour, Type type)
     {
         var gameObject = GetGameObject(behaviour, Path);
 
@@ -134,7 +139,7 @@ public class ComponentAttribute : InjectAttribute, IComponentResolvable, ICompon
         return gameObject;
     }
 
-    private GameObject CreateObjectOnHierarchy(IEnumerable<string> nodes, Transform currentT)
+    protected virtual GameObject CreateObjectOnHierarchy(IEnumerable<string> nodes, Transform currentT)
     {
         GameObject gameObject;
         foreach (var child in nodes)
@@ -154,7 +159,7 @@ public class ComponentAttribute : InjectAttribute, IComponentResolvable, ICompon
     }
 }
 
-public class ChildrenAttribute : InjectAttribute, IComponentResolvable, IComponentArrayResolvable
+public class ChildrenAttribute : InjectBaseAttribute, IComponentResolvable, IComponentArrayResolvable
 {
     public ChildrenAttribute()
         : base(LifeCycle.Component | LifeCycle.Default, null)
@@ -194,7 +199,7 @@ public class ChildrenAttribute : InjectAttribute, IComponentResolvable, ICompone
     }
 }
 
-public class ParentsAttribute : InjectAttribute, IComponentResolvable
+public class ParentsAttribute : InjectBaseAttribute, IComponentResolvable
 {
     public Component GetComponent(MonoBehaviour behaviour, Type type)
     {
@@ -217,7 +222,7 @@ public class ParentsAttribute : InjectAttribute, IComponentResolvable
     }
 }
 
-public class FindObjectOfTypeAttribute : InjectAttribute, IComponentResolvable
+public class FindObjectOfTypeAttribute : InjectBaseAttribute, IComponentResolvable
 {
     public Component GetComponent(MonoBehaviour behaviour, Type type)
     {
@@ -240,7 +245,7 @@ public class FindObjectOfTypeAttribute : InjectAttribute, IComponentResolvable
     }
 }
 
-public class FindGameObjectByNameAttribute : InjectAttribute, IComponentResolvable
+public class FindGameObjectByNameAttribute : InjectBaseAttribute, IComponentResolvable
 {
     public FindGameObjectByNameAttribute(string name)
     {
@@ -275,7 +280,7 @@ public class FindGameObjectByNameAttribute : InjectAttribute, IComponentResolvab
     }
 }
 
-public class FindGameObjectsByTagAttribute : InjectAttribute, IComponentResolvable
+public class FindGameObjectsByTagAttribute : InjectBaseAttribute, IComponentResolvable
 {
     public FindGameObjectsByTagAttribute(string tag)
     {
