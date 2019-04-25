@@ -9,7 +9,7 @@ public class ProcessingOrderAttribute : Attribute, IComparer
 {
     public int Order { get; set; }
 
-    public ProcessingOrderAttribute(int order = 10)
+    public ProcessingOrderAttribute(int order = 0)
     {
         this.Order = order;
     }

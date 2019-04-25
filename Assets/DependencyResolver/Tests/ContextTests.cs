@@ -339,7 +339,7 @@ namespace UnityIoC.Editor
             Assert.IsNotNull(comp.justDTOClass);
             Assert.IsNotNull(comp.componentInChild);
             Assert.AreEqual(comp.transform.childCount, 1);
-            Assert.IsNotNull(comp.transform.GetChild(0).gameObject);
+            Assert.IsNotNull(comp.transform.GetChild(0));
             Assert.IsNotNull(comp.transform.GetChild(0).GetComponent<TestComponent>());
             Assert.AreSame(comp.componentInChild, comp.transform.GetChild(0).GetComponent<TestComponent>());
         }

@@ -32,7 +32,7 @@ namespace UnityIoC
             if (secondAsByte < (byte) LifeCycle.Singleton)
                 secondAsByte = (byte) LifeCycle.Transient;
 
-            return firstAsByte.Equals(secondAsByte);
+            return (first & second) == second || firstAsByte.Equals(secondAsByte);
         }
     }
 }

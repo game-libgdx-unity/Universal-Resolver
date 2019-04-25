@@ -1,4 +1,4 @@
-﻿﻿/**
+﻿/**
  * Author:    Vinh Vu Thanh
  * This class is a part of Universal Resolver project that can be downloaded free at 
  * https://github.com/game-libgdx-unity/UnityEngine.IoC
@@ -109,7 +109,7 @@ namespace UnityIoC
                                (objectLifeCycle & LifeCycle.Prefab) == LifeCycle.Prefab;
 
                 object instance = null;
-                
+
                 if (Instance == null || !isSingleton)
                 {
                     if (ImplementedType.IsSubclassOf(typeof(Component)))
@@ -165,9 +165,8 @@ namespace UnityIoC
                 Component instance = null;
 
                 //if resolve as singleton, try to get component from an existing one in current scene or from cached
-                if ((lifeCycle == LifeCycle.Singleton ||
-                     lifeCycle == LifeCycle.Prefab ||
-                     (lifeCycle & LifeCycle.Singleton) == LifeCycle.Singleton) &&
+                if ((lifeCycle.IsEqual(LifeCycle.Singleton) ||
+                     lifeCycle.IsEqual(LifeCycle.Prefab)) &&
                     concreteType.IsSubclassOf(typeof(MonoBehaviour)))
                 {
                     //try to get from caches first                    
@@ -211,7 +210,7 @@ namespace UnityIoC
                             d.LifeCycle = LifeCycle.Prefab;
                             context.container.Bind(d).GameObject = gameObject;
                         }
-                        
+
                         Debug.Log("Found {0} component on gameObject {1} as {2} from current scene",
                             TypeName,
                             instance.gameObject.name,

@@ -43,12 +43,6 @@ public class InjectAttribute : ComponentAttribute
                 }
             }
 
-            if (type.IsSubclassOf(typeof(MonoBehaviour)))
-            {
-                return go.AddComponent(type);
-            }
-            
-            
             var ancestors = go.Ancestors();
             foreach (var gameObject in ancestors)
             {

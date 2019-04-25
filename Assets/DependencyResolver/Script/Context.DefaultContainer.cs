@@ -279,7 +279,7 @@ namespace UnityIoC
                 }
             }
 
-            public IEnumerable<Context.RegisteredObject> GetRegisteredObject(Type typeToResolve)
+            public IEnumerable<RegisteredObject> GetRegisteredObject(Type typeToResolve)
             {
                 return registeredObjects.Where(r => r.AbstractType == typeToResolve);
             }
@@ -437,12 +437,11 @@ namespace UnityIoC
                         {
                             Component findObjOnScene = null;
 
-                            if (abstractType.IsSubclassOf(typeof(MonoBehaviour)) && Context.allBehaviours != null &&
-                                Context.allBehaviours.Length > 0)
+                            if (abstractType.IsSubclassOf(typeof(MonoBehaviour)) && allBehaviours != null &&
+                                allBehaviours.Length > 0)
                             {
                                 findObjOnScene =
-                                    Context.allBehaviours.FirstOrDefault(
-                                        b => abstractType.IsAssignableFrom(b.GetType()));
+                                    allBehaviours.FirstOrDefault(b => abstractType.IsAssignableFrom(b.GetType()));
                             }
 
                             if (findObjOnScene == null)
