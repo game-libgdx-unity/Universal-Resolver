@@ -12,6 +12,6 @@ public class UIManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        btnShowList.onClick.AddListener(() => listUI.gameObject.SetActive(true));
+        btnShowList.onClick.AddListener(() => listUI.gameObject.SetActive(!listUI.gameObject.activeSelf));
     }
 }

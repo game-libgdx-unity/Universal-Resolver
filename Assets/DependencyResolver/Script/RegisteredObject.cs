@@ -167,7 +167,8 @@ namespace UnityIoC
                 //if resolve as singleton, try to get component from an existing one in current scene or from cached
                 if ((lifeCycle == LifeCycle.Singleton ||
                      lifeCycle == LifeCycle.Prefab ||
-                     (lifeCycle & LifeCycle.Singleton) == LifeCycle.Singleton) &&
+                     (lifeCycle & LifeCycle.Singleton) == LifeCycle.Singleton ||
+                     (lifeCycle & LifeCycle.Prefab) == LifeCycle.Prefab) &&
                     concreteType.IsSubclassOf(typeof(MonoBehaviour)))
                 {
                     //try to get from caches first                    

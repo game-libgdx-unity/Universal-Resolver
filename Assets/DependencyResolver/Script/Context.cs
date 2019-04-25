@@ -994,7 +994,7 @@ namespace UnityIoC
                 return;
             }
 
-            allBehaviours = Resources.FindObjectsOfTypeAll<MonoBehaviour>();
+            allBehaviours = Resources.FindObjectsOfTypeAll<MonoBehaviour>().Where(m=>m).ToArray();
 
             var ignoredUnityEngineScripts = allBehaviours.Where(m =>
                 {

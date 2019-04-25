@@ -19,4 +19,8 @@ namespace SceneTest
         [Inject] public JustDTOClass justDTOClass;
         [Inject("Child")] public TestComponent componentInChild;
     }
+    public class InjectChildComponent : MonoBehaviour
+    {
+        [Inject("Child")] public TestComponent componentInChild;
+    }
 }
