@@ -309,7 +309,6 @@ namespace UnityIoC.Editor
             
             //JustUnityComponent using [Inject] attribute, which returns a new obj if nothing found in the cache
             Assert.IsNotNull(comp.justDTOClass);
-            
         }
         [Test]
         public void t22_test_inject_attributes_caches()
@@ -333,10 +332,9 @@ namespace UnityIoC.Editor
         public void t23_test_inject_attributes_create_child()
         {
             //resolve a component
-            var comp = Context.Resolve<JustUnityComponent>();
+            var comp = Context.Resolve<InjectChildComponent>();
             
             //JustUnityComponent using [Inject] attribute which support caches, so 
-            Assert.IsNotNull(comp.justDTOClass);
             Assert.IsNotNull(comp.componentInChild);
             Assert.AreEqual(comp.transform.childCount, 1);
             Assert.IsNotNull(comp.transform.GetChild(0));

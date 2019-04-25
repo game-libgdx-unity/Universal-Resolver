@@ -994,7 +994,7 @@ namespace UnityIoC
                 return;
             }
 
-            allBehaviours = Resources.FindObjectsOfTypeAll<MonoBehaviour>().Where(m => m).ToArray();
+            allBehaviours = Resources.FindObjectsOfTypeAll<MonoBehaviour>().Where(m=>m).ToArray();
 
             var ignoredUnityEngineScripts = allBehaviours.Where(m =>
                 {
@@ -1322,7 +1322,7 @@ namespace UnityIoC
         /// cached all monobehaviours
         /// </summary>
         public static MonoBehaviour[] allBehaviours;
-
+        
         /// <summary>
         /// subject to resolving object
         /// </summary>
@@ -1344,7 +1344,6 @@ namespace UnityIoC
             }
             private set { onResolved = value; }
         }
-
         private static Observable<object> onResolved;
 
         public static Observable<T> OnObjectResolved<T>(Component addTo)
