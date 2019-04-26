@@ -5,13 +5,13 @@ using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
 {
-    [SerializeField, Inject] private PlayerListUI listUI;
+    [SerializeField, Inject] private PlayerListUI playerListUI;
 
-    [SerializeField, Inject] private Button btnShowList;
+    [SerializeField, Inject("Button")] private Button btnShowList;
 
     // Start is called before the first frame update
     void Start()
     {
-        btnShowList.onClick.AddListener(() => listUI.gameObject.SetActive(!listUI.gameObject.activeSelf));
+        btnShowList.onClick.AddListener(() => playerListUI.gameObject.SetActive(!playerListUI.gameObject.activeSelf));
     }
 }

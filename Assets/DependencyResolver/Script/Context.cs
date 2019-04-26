@@ -1401,6 +1401,52 @@ namespace UnityIoC
             }
         }
 
+        public static IEnumerator Post(
+            string link,
+            string request,
+            Action<string> result = null,
+            Action<string> error = null)
+        {
+            string jsonString = request == null ? "{}" : JsonUtility.ToJson(request);
+
+            Dictionary<string, string> header = new Dictionary<string, string>
+            {
+                {"Content-Type", "application/json"}
+            };
+
+            byte[] body = Encoding.UTF8.GetBytes(jsonString);
+
+            WWW www = new WWW(link, body, header);
+
+            yield return www;
+
+            if (www.error != null)
+            {
+                Debug.Log("API Call Failed: " + www.error);
+                if (error != null)
+                {
+                    error(www.error);
+                }
+            }
+            else
+            {
+                Debug.Log("API Call successful.");
+                if (result != null)
+                {
+                    result(www.text);
+                }
+            }
+        }
+
+        public static IEnumerator Post(
+            string link,
+            object request,
+            Action<string> result = null,
+            Action<string> error = null)
+        {
+            return Post(link, JsonUtility.ToJson(request), result, error);
+        }
+
         /// <summary>
         /// Call GET Method to REST api.
         /// </summary>
@@ -1599,7 +1645,7 @@ namespace UnityIoC
         }
 
         /// <summary>
-        /// Create a new brand object as [transient], existing object as [singleton] or getting [component] from inside gameObject
+        /// Create a brand new object as [transient], existing object as [singleton] or getting [component] from inside gameObject
         /// </summary>
         /// <param name="typeToResolve"></param>
         /// <param name="lifeCycle"></param>
@@ -1615,10 +1661,27 @@ namespace UnityIoC
             var resolveObject = GetDefaultInstance(typeToResolve)
                 .ResolveObject(typeToResolve, lifeCycle, resolveFrom, parameters);
 
-            if (resolveObject != null)
+            if (lifeCycle != LifeCycle.Singleton && (lifeCycle & LifeCycle.Singleton) != LifeCycle.Singleton)
             {
-                //trigger the subject
-                OnResolved.Value = resolveObject;
+                if (resolveObject != null)
+                {
+                    //trigger the subject
+                    OnResolved.Value = resolveObject;
+
+                    //check if the resolved object implements the IDataBinding interface
+                    var dataBindingType = resolveObject.GetType().GetInterfaces()
+                        .Where(i => i.IsGenericType)
+                        .FirstOrDefault(i => i.GetGenericTypeDefinition() == typeof(IDataBinding<>));
+
+                    if (dataBindingType != null)
+                    {
+                        var innerType = dataBindingType.GetGenericArguments().FirstOrDefault();
+                        if (innerType != null)
+                        {
+                            Context.Resolve(innerType, LifeCycle.Transient, resolveFrom, null);
+                        }
+                    }
+                }
             }
 
 
@@ -1626,7 +1689,7 @@ namespace UnityIoC
         }
 
         /// <summary>
-        /// Resolve objects with parameters for constructors
+        /// Resolve C# only objects with parameters for constructors
         /// </summary>
         /// <param name="parameters"></param>
         /// <typeparam name="T"></typeparam>
@@ -1638,7 +1701,7 @@ namespace UnityIoC
         }
 
         /// <summary>
-        /// Create a new brand object as [transient], existing object as [singleton] or [component] which has been gotten from inside gameObject
+        /// Create a brand new C#/Unity object as [transient], existing object as [singleton] or [component] which has been gotten from inside gameObject
         /// </summary>
         public static T Resolve<T>(
             LifeCycle lifeCycle = LifeCycle.Default,
@@ -1649,7 +1712,7 @@ namespace UnityIoC
         }
 
         /// <summary>
-        /// Create a new brand object as [transient], existing object as [singleton] or [component] which has been gotten from inside gameObject
+        /// Create a brand new object as [transient], existing object as [singleton] or [component] which has been gotten from inside gameObject
         /// </summary>
         public static T Resolve<T>(
             Transform parents,
@@ -1672,6 +1735,16 @@ namespace UnityIoC
             return obj;
         }
 
+        
+        /// <summary>
+        /// todo: Dispose an obj, which should be created by the Context
+        /// </summary>
+        /// <param name="obj"></param>
+        public static void Dispose(object obj)
+        {
+            
+        }
+        
         /// <summary>
         /// Set value for a property by its name
         /// </summary>

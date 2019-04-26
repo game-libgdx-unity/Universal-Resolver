@@ -5,7 +5,9 @@ using System.Reflection;
 using UnityEngine;
 using NUnit.Framework;
 using SceneTest;
+using UnityEditor.VersionControl;
 using UnityEngine.TestTools;
+using Object = UnityEngine.Object;
 
 namespace UnityIoC.Editor
 {
@@ -400,7 +402,25 @@ namespace UnityIoC.Editor
             //create obj from json
             var json = "{\"userId\": 1}";
             var userData = Context.ResolveFromJson<UserData>(json);
+
+            //verify it
+            Assert.AreEqual(1, userData.userId);
+        }
+
+        [UnityTest]
+        public IEnumerator t28_post_raw_result()
+        {
+            yield break;
             
+            //create obj from json
+            var json = "{\"userId\": 1}";
+            var userData = Context.ResolveFromJson<UserData>(json);
+            var link = "https://us-central1-zalgame-1ae27.cloudfunctions.net/checkServer";
+            var request = "{\"serverip\":\"127.0.0.1\"}";
+
+            //call the api
+            yield return UIThreadInvoker.Instance.StartCoroutine(Context.Post(link, request, null,
+                error => { Assert.Fail("Error: " + error); }));
             //verify it
             Assert.AreEqual(1, userData.userId);
         }
@@ -423,6 +443,17 @@ namespace UnityIoC.Editor
             //test a random api searched from the internet
             string link = "https://jsonplaceholder.typicode.com/todos/1";
             yield return Context.Get<UserData>(link, null, msg => { Assert.Fail("error: " + msg); });
+        }
+
+        [Test]
+        public void t29_test_IDataBinding()
+        {
+            //test a random api searched from the internet
+            Context.Resolve<UserData>();
+
+            var userDataView = Object.FindObjectOfType<UserDataView>();
+            
+            Assert.IsNotNull(userDataView);
         }
 
         [Test]

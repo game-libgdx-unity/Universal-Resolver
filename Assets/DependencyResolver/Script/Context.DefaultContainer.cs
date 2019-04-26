@@ -289,7 +289,10 @@ namespace UnityIoC
                 Bind(typeToResolve, instance.GetType(), instance);
             }
 
-            public void Bind(Type typeToResolve, Type typeConcrete, object instance)
+            public void Bind(
+                Type typeToResolve, 
+                Type typeConcrete, 
+                object instance)
             {
                 if (instance == null && (typeConcrete.IsAbstract))
                 {
@@ -326,24 +329,30 @@ namespace UnityIoC
                 Bind<TTypeToResolve, TTypeToResolve>(LifeCycle.Transient);
             }
 
-            public void Bind<TTypeToResolve>(object instance)
+            public void Bind<TTypeToResolve>(
+                object instance)
             {
                 Bind(typeof(TTypeToResolve), instance.GetType(), instance);
             }
 
-            public void Bind<TTypeToResolve>(LifeCycle lifeCycle)
+            public void Bind<TTypeToResolve>(
+                LifeCycle lifeCycle)
             {
                 Bind<TTypeToResolve, TTypeToResolve>(lifeCycle);
             }
 
-            public TTypeToResolve Resolve<TTypeToResolve>(LifeCycle lifeCycle = LifeCycle.Default,
+            public TTypeToResolve Resolve<TTypeToResolve>(
+                LifeCycle lifeCycle = LifeCycle.Default,
                 params object[] parameters)
             {
                 return (TTypeToResolve) ResolveObject(typeof(TTypeToResolve), lifeCycle, null, parameters);
             }
 
-            public object Resolve(Type typeToResolve, LifeCycle lifeCycle = LifeCycle.Default,
-                params object[] parameters)
+            public object Resolve(
+                Type typeToResolve,
+                LifeCycle lifeCycle = LifeCycle.Default,
+                params object[] parameters
+            )
             {
                 return ResolveObject(typeToResolve, lifeCycle, null, parameters);
             }

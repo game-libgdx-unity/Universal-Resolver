@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityIoC;
 
 namespace SceneTest
 {
@@ -27,11 +28,16 @@ namespace SceneTest
     }
 
     [Serializable]
-    public class UserData
+    public class UserData : IDataBinding<UserDataView>
     {
         public int userId;
         public int id;
         public string title;
         public bool completed;
+    }
+
+    public class UserDataView : MonoBehaviour
+    {
+        [Inject] UserData Data { get; set; }
     }
 }
