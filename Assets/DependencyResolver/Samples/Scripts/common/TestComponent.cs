@@ -22,7 +22,7 @@ namespace SceneTest
             }
             else
             {
-                Debug.Log("Abstract class fails to resolve");
+                Debug.Log("Abstract obj failed to resolve");
             }
         }
 

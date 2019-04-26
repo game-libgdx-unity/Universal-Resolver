@@ -6,10 +6,13 @@
  **/
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
 
@@ -41,13 +44,13 @@ namespace UnityIoC
         private Dictionary<Type, Component> monoScripts = new Dictionary<Type, Component>();
 
         /// <summary>
-        /// Automatic binding a binding setting with the same name as the assembly's then process all monobehaviours in
-        /// scene for [inject] attributes
+        /// Automatic binding a external setting file with the same name as the assembly's then process all mono-behaviours in
+        /// scene by [inject] attributes
         /// </summary>
         private bool automaticBinding = false;
 
         /// <summary>
-        /// A Type that context will retrieve its assembly for initializations.
+        /// A targeted Type that context will retrieve its assembly for initializations.
         /// </summary>
         private Type targetType;
 
@@ -354,7 +357,7 @@ namespace UnityIoC
 
             if (allBehaviours != null)
                 Array.Clear(allBehaviours, 0, allBehaviours.Length);
-            
+
             injectAttributes.Clear();
             targetType = null;
 
@@ -547,7 +550,7 @@ namespace UnityIoC
                     //try to use IComponentResolvable to resolve objects
                     if (component == null)
                     {
-                        component = GetComponentFromGameObject(mono, property.PropertyType, inject);
+                        component = GetComponent(mono, property.PropertyType, inject);
                     }
 
                     if (component != null)
@@ -695,7 +698,7 @@ namespace UnityIoC
                     //try to use IComponentResolvable to resolve objects
                     if (component == null)
                     {
-                        component = GetComponentFromGameObject(mono, type, inject);
+                        component = GetComponent(mono, type, inject);
                     }
 
                     if (component != null)
@@ -801,7 +804,7 @@ namespace UnityIoC
         /// </summary>
         /// <param name="mono">object is expected as unity mono behaviour</param>
         /// <returns>the component</returns>
-        private Component GetComponentFromGameObject(object mono, Type type, InjectBaseAttribute injectAttribute)
+        private Component GetComponent(object mono, Type type, InjectBaseAttribute injectAttribute)
         {
             var behaviour = mono as MonoBehaviour;
 
@@ -820,16 +823,13 @@ namespace UnityIoC
                 //unable to get it from gameObject
                 if (component != null)
                 {
-                    ProcessInjectAttribute(component);
+                    /////////////////////////////////
+//                    ProcessInjectAttribute(component);
 
-                    if (injectAttribute is PrefabAttribute || injectAttribute.LifeCycle == LifeCycle.Prefab)
+                    if (injectAttribute.LifeCycle == LifeCycle.Prefab)
                     {
                         component.gameObject.SetActive(false);
                     }
-                }
-                else
-                {
-                    debug.Log("Unable to resolve component of {0} for {1}", type, behaviour.name);
                 }
             }
 
@@ -891,7 +891,7 @@ namespace UnityIoC
         {
             if (!Initialized)
             {
-                _defaultInstance = this;
+                defaultInstance = this;
             }
 
             this.automaticBinding = automaticBinding;
@@ -994,7 +994,7 @@ namespace UnityIoC
                 return;
             }
 
-            allBehaviours = Resources.FindObjectsOfTypeAll<MonoBehaviour>().Where(m=>m).ToArray();
+            allBehaviours = Resources.FindObjectsOfTypeAll<MonoBehaviour>().Where(m => m).ToArray();
 
             var ignoredUnityEngineScripts = allBehaviours.Where(m =>
                 {
@@ -1322,7 +1322,7 @@ namespace UnityIoC
         /// cached all monobehaviours
         /// </summary>
         public static MonoBehaviour[] allBehaviours;
-        
+
         /// <summary>
         /// subject to resolving object
         /// </summary>
@@ -1330,34 +1330,129 @@ namespace UnityIoC
         {
             get
             {
-                if (onResolved == null)
+                if (_onResolved == null)
                 {
-                    onResolved = new Observable<object>();
-                    onResolved.Subscribe(obj =>
+                    _onResolved = new Observable<object>();
+                    _onResolved.Subscribe(obj =>
                         {
                             if (obj != null) ResolvedObjects.Add(obj);
                         }
                     );
                 }
 
-                return onResolved;
+                return _onResolved;
             }
-            private set { onResolved = value; }
+            private set { _onResolved = value; }
         }
-        private static Observable<object> onResolved;
 
-        public static Observable<T> OnObjectResolved<T>(Component addTo)
+        private static Observable<object> _onResolved;
+
+        public static Observable<T> OnResolvedAs<T>()
         {
-            Observable<T> output = new Observable<T>();
-            OnResolved.Subscribe(addTo, o =>
+            var output = new Observable<T>();
+            OnResolved.Subscribe(o =>
             {
                 if (o.GetType() == typeof(T))
                 {
                     output.Value = (T) o;
                 }
             });
-
             return output;
+        }
+
+        /// <summary>
+        /// Call POST Method to REST api.
+        /// </summary>
+        public static IEnumerator Post<T>(
+            string link,
+            object request,
+            Action<T> result = null,
+            Action<string> error = null)
+        {
+            string jsonString = request == null ? "{}" : JsonUtility.ToJson(request);
+
+            Dictionary<string, string> header = new Dictionary<string, string>
+            {
+                {"Content-Type", "application/json"}
+            };
+
+            byte[] body = Encoding.UTF8.GetBytes(jsonString);
+
+            WWW www = new WWW(link, body, header);
+
+            yield return www;
+
+            if (www.error != null)
+            {
+                Debug.Log("API Call Failed: " + www.error);
+                if (error != null)
+                {
+                    error(www.error);
+                }
+            }
+            else
+            {
+                Debug.Log("API Call successful.");
+                var fromJson = ResolveFromJson<T>(www.text);
+                if (result != null && fromJson != null)
+                {
+                    result(fromJson);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Call GET Method to REST api.
+        /// </summary>
+        public static IEnumerator Get<T>(
+            string link,
+            Action<T> result = null,
+            Action<string> error = null)
+        {
+            UnityWebRequest www = UnityWebRequest.Get(link);
+            var async = www.SendWebRequest();
+
+            while (!async.isDone)
+            {
+                yield return null;
+            }
+
+            if (www.isNetworkError || www.isHttpError)
+            {
+                Debug.Log(www.error);
+                if (error != null)
+                {
+                    error(www.error);
+                }
+            }
+            else
+            {
+                // Show results as text
+                Debug.Log(www.downloadHandler.text);
+                T t = ResolveFromJson<T>(www.downloadHandler.text);
+                if (result != null && t != null)
+                {
+                    result(t);
+                }
+            }
+        }
+
+        public static T ResolveFromJson<T>(string json)
+        {
+            if (!Context.Initialized)
+            {
+                Context.GetDefaultInstance(typeof(T));
+            }
+
+            var obj = JsonUtility.FromJson<T>(json);
+            if (obj != null)
+            {
+                ResolvedObjects.Add(obj);
+                OnResolved.Value = obj;
+                return obj;
+            }
+
+            return Resolve<T>();
         }
 
         public static T ResolveFromPool<T>(
@@ -1410,19 +1505,19 @@ namespace UnityIoC
             return new ObjectContext<T>(GetDefaultInstance(typeof(T)), data);
         }
 
-        private static Context _defaultInstance;
+        private static Context defaultInstance;
 
 //        private static Dictionary<Type, Context> _instances = new Dictionary<Type, Context>();
 
         public static bool Initialized
         {
-            get { return _defaultInstance != null && _defaultInstance.initialized; }
+            get { return defaultInstance != null && defaultInstance.initialized; }
         }
 
         public static Context DefaultInstance
         {
             get { return GetDefaultInstance(); }
-            set { _defaultInstance = value; }
+            set { defaultInstance = value; }
         }
 
         /// <summary>
@@ -1475,12 +1570,12 @@ namespace UnityIoC
         public static Context GetDefaultInstance(Type type = null, bool automaticBind = true,
             bool recreate = false)
         {
-            if (_defaultInstance == null || recreate)
+            if (defaultInstance == null || recreate)
             {
-                _defaultInstance = new Context(type, automaticBind);
+                defaultInstance = new Context(type, automaticBind);
             }
 
-            return _defaultInstance;
+            return defaultInstance;
         }
 
         public static void DisposeDefaultInstance()
@@ -1496,15 +1591,15 @@ namespace UnityIoC
             }
 
             //recycle the defaultInstance
-            if (_defaultInstance != null)
+            if (defaultInstance != null)
             {
-                _defaultInstance.Dispose();
-                _defaultInstance = null;
+                defaultInstance.Dispose();
+                defaultInstance = null;
             }
         }
 
         /// <summary>
-        /// Create a new brand object as [transient], existing object as [singleton] or [component] which has been gotten from inside gameObject
+        /// Create a new brand object as [transient], existing object as [singleton] or getting [component] from inside gameObject
         /// </summary>
         /// <param name="typeToResolve"></param>
         /// <param name="lifeCycle"></param>
@@ -1577,6 +1672,12 @@ namespace UnityIoC
             return obj;
         }
 
+        /// <summary>
+        /// Set value for a property by its name
+        /// </summary>
+        /// <param name="inputObject"></param>
+        /// <param name="propertyName"></param>
+        /// <param name="propertyVal"></param>
         public static void SetPropertyValue(object inputObject, string propertyName, object propertyVal)
         {
             Type type = inputObject.GetType();
@@ -1592,25 +1693,44 @@ namespace UnityIoC
 
         public static bool IsNullableType(Type type)
         {
-            return type.IsGenericType && type.GetGenericTypeDefinition().Equals(typeof(Nullable<>));
+            return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>);
         }
 
-        public static void Bind<T1, T2>(LifeCycle lifeCycle = LifeCycle.Default)
+        /// <summary>
+        /// Bind a TAbstract with a TConcrete
+        /// </summary>
+        /// <param name="lifeCycle"></param>
+        /// <typeparam name="TAbstract"></typeparam>
+        /// <typeparam name="TConcrete"></typeparam>
+        public static void Bind<TAbstract, TConcrete>(LifeCycle lifeCycle = LifeCycle.Default)
         {
-            GetDefaultInstance(typeof(T1)).container.Bind<T1, T2>(lifeCycle);
+            GetDefaultInstance(typeof(TAbstract)).container.Bind<TAbstract, TConcrete>(lifeCycle);
         }
 
+        /// <summary>
+        /// Bind a Type with itself
+        /// </summary>
+        /// <param name="lifeCycle"></param>
+        /// <typeparam name="T"></typeparam>
         public static void Bind<T>(LifeCycle lifeCycle = LifeCycle.Default)
         {
             GetDefaultInstance(typeof(T)).container.Bind<T>(lifeCycle);
         }
 
+        /// <summary>
+        /// Bind to an instance as singleton
+        /// </summary>
+        /// <param name="instance"></param>
         public static void Bind(object instance)
         {
             var typeToResolve = instance.GetType();
             GetDefaultInstance(typeToResolve).Bind(typeToResolve, instance);
         }
 
+        /// <summary>
+        /// Bind from a external setting file
+        /// </summary>
+        /// <param name="bindingSetting"></param>
         public static void Bind(BindingSetting bindingSetting)
         {
             if (bindingSetting.assemblyHolder)
@@ -1626,6 +1746,10 @@ namespace UnityIoC
             GetDefaultInstance().LoadBindingSetting(bindingSetting);
         }
 
+        /// <summary>
+        /// Bind from a external setting file
+        /// </summary>
+        /// <param name="bindingSetting"></param>
         public static void Bind(InjectIntoBindingSetting bindingSetting)
         {
             if (bindingSetting.assemblyHolder)
@@ -1641,11 +1765,121 @@ namespace UnityIoC
             GetDefaultInstance().LoadBindingSetting(bindingSetting);
         }
 
-        #endregion
+        /// <summary>
+        /// Get a component from a mono behaviour at a given path
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="component"></param>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public static Component GetComponent(
+            Type type,
+            MonoBehaviour component,
+            string path
+        )
+        {
+            var componentAttribute = ComponentAttribute.DefaultInstance;
+            componentAttribute.Path = path;
+            return componentAttribute.GetComponent(component, type);
+        }
 
-//        public static T AddComponent<T>(GameObject gameObj) where T : Component
-//        {
-//            return GetDefaultInstance(typeof(T)).Resolve<T>();
-//        }
+        /// <summary>
+        /// Get a component from a gameObject at a given path
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="gameObject"></param>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public static Component GetComponent(
+            Type type,
+            GameObject gameObject,
+            string path
+        )
+        {
+            var comp = gameObject.GetComponent(type) as MonoBehaviour;
+            if (comp)
+            {
+                //resolve with path
+                var component = GetComponent(type, comp, path);
+                if (component)
+                    return component;
+            }
+
+            //resolve without path
+            return Resolve(type) as Component;
+        }
+
+        /// <summary>
+        /// Get a component from a gameObject at a given path
+        /// </summary>
+        /// <param name="gameObject"></param>
+        /// <param name="path"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static T GetComponent<T>(
+            GameObject gameObject,
+            string path
+        )
+            where T : class
+        {
+            var type = typeof(T);
+            var comp = gameObject.GetComponent(type) as MonoBehaviour;
+            if (comp)
+            {
+                //resolve with path
+                var component = GetComponent(type, comp, path) as T;
+                if (component != null)
+                    return component;
+            }
+
+            //resolve without path
+            return Resolve(type) as T;
+        }
+
+        /// <summary>
+        /// Get a component from a mono behaviour at a given path
+        /// </summary>
+        /// <param name="component"></param>
+        /// <param name="path"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static T GetComponent<T>(
+            MonoBehaviour component,
+            string path
+        )
+            where T : class
+        {
+            return GetComponent(typeof(T), component, path) as T;
+        }
+
+        /// <summary>
+        /// Get an C# object from a mono behaviour at a given type
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        public static object GetObject(
+            MonoBehaviour obj,
+            Type type
+        )
+        {
+            return GetDefaultInstance(type).GetObjectFromGameObject(obj, type);
+        }
+
+        /// <summary>
+        /// Get an C# object from a mono behaviour at a given type
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static object GetObject<T>(
+            MonoBehaviour obj
+        )
+        {
+            Type type = typeof(T);
+            return GetDefaultInstance(type).GetObjectFromGameObject(obj, type);
+        }
+
+        #endregion
     }
 }

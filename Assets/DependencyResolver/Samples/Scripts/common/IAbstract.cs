@@ -14,13 +14,24 @@ namespace SceneTest
     {
         public int justAField = 1;
     }
+
     public class JustUnityComponent : MonoBehaviour
     {
         [Inject] public JustDTOClass justDTOClass;
         [Inject("Child")] public TestComponent componentInChild;
     }
+
     public class InjectChildComponent : MonoBehaviour
     {
         [Inject("Child")] public TestComponent componentInChild;
+    }
+
+    [Serializable]
+    public class UserData
+    {
+        public int userId;
+        public int id;
+        public string title;
+        public bool completed;
     }
 }

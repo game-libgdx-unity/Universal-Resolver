@@ -19,7 +19,7 @@ using Object = UnityEngine.Object;
 public class InjectBaseAttribute : Attribute, IComponentResolvable, IComponentArrayResolvable
 {
     public IContainer container { get; set; }
-    public string Path { get; protected set; }
+    public string Path { get; set; }
     public LifeCycle LifeCycle { get; private set; }
 
     public InjectBaseAttribute(LifeCycle lifeCycle = LifeCycle.Default, string path = null)

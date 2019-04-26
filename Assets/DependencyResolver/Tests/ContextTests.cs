@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 using NUnit.Framework;
 using SceneTest;
+using UnityEngine.TestTools;
 
 namespace UnityIoC.Editor
 {
@@ -135,7 +137,7 @@ namespace UnityIoC.Editor
             var func_output = Context.GetDefaultInstance(this).ResolveFunc(func, LifeCycle.Singleton);
             Assert.AreEqual(func_output, "Hello");
         }
-        
+
         [Test]
         public void t14_Preload_From_Pools()
         {
@@ -156,6 +158,7 @@ namespace UnityIoC.Editor
             obj = Context.Resolve<Impl>();
             Assert.AreEqual(obj.a, 0);
         }
+
         [Test]
         public void t12_resolve_with_inject_into()
         {
@@ -184,7 +187,7 @@ namespace UnityIoC.Editor
             Assert.IsInstanceOf<Impl>(i1);
         }
 
-       
+
         [Test]
         public void t15_Get_From_Pools()
         {
@@ -306,40 +309,120 @@ namespace UnityIoC.Editor
         {
             //resolve a component
             var comp = Context.Resolve<JustUnityComponent>();
-            
+
             //JustUnityComponent using [Inject] attribute, which returns a new obj if nothing found in the cache
             Assert.IsNotNull(comp.justDTOClass);
         }
+
         [Test]
         public void t22_test_inject_attributes_caches()
         {
             //resolve a class
             var justDtoClass = Context.Resolve<JustDTOClass>();
             var value = 10;
-            
+
             justDtoClass.justAField = value;
-            
+
             //resolve a component
             var comp = Context.Resolve<JustUnityComponent>();
-            
+
             //JustUnityComponent using [Inject] attribute which support caches, so 
             Assert.IsNotNull(comp.justDTOClass);
             Assert.AreEqual(comp.justDTOClass.justAField, value);
             Assert.AreSame(comp.justDTOClass, justDtoClass);
-            
         }
-  [Test]
+
+        [Test]
         public void t23_test_inject_attributes_create_child()
         {
             //resolve a component
             var comp = Context.Resolve<InjectChildComponent>();
-            
+
             //JustUnityComponent using [Inject] attribute which support caches, so 
             Assert.IsNotNull(comp.componentInChild);
             Assert.AreEqual(comp.transform.childCount, 1);
             Assert.IsNotNull(comp.transform.GetChild(0));
             Assert.IsNotNull(comp.transform.GetChild(0).GetComponent<TestComponent>());
             Assert.AreSame(comp.componentInChild, comp.transform.GetChild(0).GetComponent<TestComponent>());
+        }
+
+        [Test]
+        public void t24_test_get_component()
+        {
+            //create game obj
+            GameObject gameObject = new GameObject();
+            gameObject.GetOrAddComponent<TestComponent>();
+
+            //try to get its component
+            var comp = Context.GetComponent(typeof(IComponentAbstract), gameObject, null);
+            //resolve a component
+
+            Assert.IsNotNull(comp);
+            Assert.IsInstanceOf<TestComponent>(comp);
+            Assert.IsTrue(gameObject.GetComponents(typeof(IComponentAbstract)).Length == 1);
+        }
+
+        [Test]
+        public void t25_test_get_component_generic()
+        {
+            //create game obj
+            GameObject gameObject = new GameObject();
+            gameObject.GetOrAddComponent<TestComponent>();
+
+            //try to get its component
+            var comp = Context.GetComponent<IComponentAbstract>(gameObject, null);
+            //resolve a component
+
+            Assert.IsNotNull(comp);
+            Assert.IsInstanceOf<TestComponent>(comp);
+            Assert.IsTrue(gameObject.GetComponents<IComponentAbstract>().Length == 1);
+        }
+
+        [Test]
+        public void t26_test_get_object()
+        {
+            //create game obj
+            GameObject gameObject = new GameObject();
+            gameObject.GetOrAddComponent<TestComponent>();
+
+            //try to get its component
+            var comp = Context.GetComponent<IComponentAbstract>(gameObject, null);
+            //resolve a component
+
+            Assert.IsNotNull(comp);
+            Assert.IsInstanceOf<TestComponent>(comp);
+            Assert.IsTrue(gameObject.GetComponents<IComponentAbstract>().Length == 1);
+        }
+
+        [Test]
+        public void t27_get_from_json()
+        {
+            //create obj from json
+            var json = "{\"userId\": 1}";
+            var userData = Context.ResolveFromJson<UserData>(json);
+            
+            //verify it
+            Assert.AreEqual(1, userData.userId);
+        }
+
+        [UnityTest]
+        public IEnumerator t28_test_post_to_api()
+        {
+            //test a random api searched from the internet
+
+            yield break;
+
+            //insert ur api here
+            //string link = "https://jsonplaceholder.typicode.com/todos/1";
+            //yield return Context.Get<UserData>(link, null, msg => { Assert.Fail("error: " + msg); });
+        }
+
+        [UnityTest]
+        public IEnumerator t28_test_get_from_api()
+        {
+            //test a random api searched from the internet
+            string link = "https://jsonplaceholder.typicode.com/todos/1";
+            yield return Context.Get<UserData>(link, null, msg => { Assert.Fail("error: " + msg); });
         }
 
         [Test]

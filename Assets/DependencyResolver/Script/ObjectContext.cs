@@ -38,14 +38,14 @@ namespace UnityIoC
         }
     }
 
-    public class ObjectContext<T>
+    public class ObjectContext<TContext>
     {
         private Context context;
 
         public ObjectContext(Context context = null, BindingSetting bindingData = null)
         {
-            this.context = context ?? Context.GetDefaultInstance(typeof(T));
-            this.context.LoadBindingSettingForType(typeof(T), bindingData);
+            this.context = context ?? Context.GetDefaultInstance(typeof(TContext));
+            this.context.LoadBindingSettingForType(typeof(TContext), bindingData);
         }
 
         public object Resolve(Type typeToResolve, LifeCycle lifeCycle = LifeCycle.Default, params object[] parameters)
@@ -55,17 +55,17 @@ namespace UnityIoC
                 return null;
             }
 
-            return context.DefaultContainer.ResolveObject(typeToResolve, lifeCycle, typeof(T), parameters);
+            return context.DefaultContainer.ResolveObject(typeToResolve, lifeCycle, typeof(TContext), parameters);
         }
 
-        public V Resolve<V>(LifeCycle lifeCycle = LifeCycle.Default, params object[] parameters)
+        public TResolve Resolve<TResolve>(LifeCycle lifeCycle = LifeCycle.Default, params object[] parameters)
         {
             if (!context.initialized)
             {
-                return default(V);
+                return default(TResolve);
             }
 
-            return (V) context.DefaultContainer.ResolveObject(typeof(V), lifeCycle, typeof(T), parameters);
+            return (TResolve) context.DefaultContainer.ResolveObject(typeof(TResolve), lifeCycle, typeof(TContext), parameters);
         }
     }
 };

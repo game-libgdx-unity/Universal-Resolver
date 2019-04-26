@@ -15,6 +15,7 @@ using Object = UnityEngine.Object;
 
 public class ComponentAttribute : InjectBaseAttribute, IComponentResolvable, IComponentArrayResolvable
 {
+    public static ComponentAttribute DefaultInstance = new ComponentAttribute();
     public ComponentAttribute()
         : base(LifeCycle.Component | LifeCycle.Default, null)
     {

@@ -11,19 +11,8 @@ public class PlayerListUI : MonoBehaviour
 	{
 		foreach (var friendName in GetFriendNames())
 		{
-			var playerData = Context.Resolve<PlayerData>();
-
-			playerData.Name = friendName;
-
-			Context.OnResolved.Subscribe(obj =>
-			{
-				if (obj.GetType() == typeof(PlayerData))
-				{
-					var item = Context.Resolve<ItemUI>();
-				
-					item.transform.SetParent(transform);
-				}
-			});
+			Context.Resolve<PlayerData>().Name = friendName;
+			Context.Resolve<ItemUI>(transform);
 		}
 	}
 
