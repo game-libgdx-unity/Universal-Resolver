@@ -5,7 +5,6 @@ using System.Reflection;
 using UnityEngine;
 using NUnit.Framework;
 using SceneTest;
-using UnityEditor.VersionControl;
 using UnityEngine.TestTools;
 using Object = UnityEngine.Object;
 
@@ -410,33 +409,23 @@ namespace UnityIoC.Editor
         [UnityTest]
         public IEnumerator t28_post_raw_result()
         {
-            yield break;
-            
             //create obj from json
             var json = "{\"userId\": 1}";
-            var userData = Context.ResolveFromJson<UserData>(json);
             var link = "https://us-central1-zalgame-1ae27.cloudfunctions.net/checkServer";
             var request = "{\"serverip\":\"127.0.0.1\"}";
 
             //call the api
-            yield return UIThreadInvoker.Instance.StartCoroutine(Context.Post(link, request, null,
-                error => { Assert.Fail("Error: " + error); }));
-            //verify it
-            Assert.AreEqual(1, userData.userId);
+            yield return Context.Post(link, request, 
+                msg =>
+                {
+                    Assert.AreEqual("OK", msg);
+                },
+                error =>
+                {
+                    Assert.Fail("Error: " + error);
+                });
         }
-
-        [UnityTest]
-        public IEnumerator t28_test_post_to_api()
-        {
-            //test a random api searched from the internet
-
-            yield break;
-
-            //insert ur api here
-            //string link = "https://jsonplaceholder.typicode.com/todos/1";
-            //yield return Context.Get<UserData>(link, null, msg => { Assert.Fail("error: " + msg); });
-        }
-
+        
         [UnityTest]
         public IEnumerator t28_test_get_from_api()
         {
@@ -448,19 +437,33 @@ namespace UnityIoC.Editor
         [Test]
         public void t29_test_IDataBinding()
         {
-            //test a random api searched from the internet
             Context.Resolve<UserData>();
-
             var userDataView = Object.FindObjectOfType<UserDataView>();
-            
             Assert.IsNotNull(userDataView);
+        }
+
+        [Test]
+        public void t30_get_object_IObjectResolvable()
+        {
+            //arrange
+            var comp = Context.Resolve<TestComponent>();
+            var obj = comp.@abstract;
+
+            //act
+            //try to get object from the comp
+            var get = Context.GetObject<IAbstract>(comp);
+            
+            //assert
+            Assert.AreSame(obj, get);
         }
 
         [Test]
         public void t99_dispose_instance()
         {
+            //should be false as default
             Assert.IsFalse(Context.Initialized);
-//create
+            
+            //create
             Context.GetDefaultInstance(this);
 
             Assert.IsTrue(Context.Initialized);

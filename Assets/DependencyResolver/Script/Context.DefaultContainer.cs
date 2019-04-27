@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
+using UnityEngine.Assertions;
 using Object = UnityEngine.Object;
 
 namespace UnityIoC
@@ -290,8 +291,8 @@ namespace UnityIoC
             }
 
             public void Bind(
-                Type typeToResolve, 
-                Type typeConcrete, 
+                Type typeToResolve,
+                Type typeConcrete,
                 object instance)
             {
                 if (instance == null && (typeConcrete.IsAbstract))
@@ -416,7 +417,7 @@ namespace UnityIoC
                         return instance;
                     }
 
-                    filter = o => o.AbstractType == abstractType && o.InjectInto == null;
+                    filter = o => abstractType.IsAssignableFrom(o.AbstractType) && o.InjectInto == null;
 
                     registeredObject = registeredObjects.FirstOrDefault(filter);
                     if (registeredObject == null)
@@ -622,8 +623,12 @@ namespace UnityIoC
                         paramArray = parameters;
                     }
 
-                    var obj = registeredObject.CreateInstance(context, objectLifeCycle, resolveFrom,
-                        paramArray);
+                    var obj = registeredObject.CreateInstance(
+                        context,
+                        objectLifeCycle,
+                        resolveFrom,
+                        paramArray
+                    );
 
                     debug.Log("Successfully resolved " + registeredObject.AbstractType + " as " +
                               registeredObject.ImplementedType + " by " + objectLifeCycle + " from new object");

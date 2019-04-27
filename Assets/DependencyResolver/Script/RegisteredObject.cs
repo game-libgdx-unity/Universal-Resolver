@@ -7,6 +7,7 @@
 
 using System;
 using System.Linq;
+using Unity.Linq;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -136,6 +137,16 @@ namespace UnityIoC
                     }
                     else
                     {
+                        
+                        var defaultConstructor = ImplementedType.GetConstructors().FirstOrDefault(c=>c.GetParameters().Length == 0);
+                        if (defaultConstructor == null && args.Length == 0)
+                        {
+                            // if args are empty, cannot resolve with no default Constructor
+                            // this is most likely happened when you [inject] a field from Mono-behaviour
+                            // that doesn't have a default constructor
+                            return null;
+                        }
+                        
                         instance = Activator.CreateInstance(ImplementedType, args);
                         context.ProcessInjectAttribute(instance);
                     }
@@ -157,7 +168,6 @@ namespace UnityIoC
 
                 return instance;
             }
-
 
             private Component TryGetGameObject(Context context, Type concreteType,
                 string TypeName, LifeCycle lifeCycle, object resolveFrom)

@@ -578,8 +578,21 @@ namespace UnityIoC
                  (inject.LifeCycle & LifeCycle.Cache) == LifeCycle.Cache) &&
                 Context.ResolvedObjects.Count > 0)
             {
-                return Context.ResolvedObjects.FindLast(o => type.IsInterface && type.IsAssignableFrom(o.GetType()) ||
-                                                             !type.IsInterface && o.GetType() == type);
+                if (!ResolvedObjects.ContainsKey(type))
+                {
+                    ResolvedObjects[type] = new HashSet<object>();
+                }
+
+                var hashSet = Context.ResolvedObjects[type];
+
+                if (hashSet.Count == 0)
+                {
+                    return null;
+                }
+                
+                return hashSet.Last(
+                    o => type.IsInterface && type.IsAssignableFrom(o.GetType())
+                         || !type.IsInterface && o.GetType() == type);
             }
 
             return null;
@@ -1055,7 +1068,7 @@ namespace UnityIoC
         }
 
         /// <summary>
-        /// Process an unity Object for resolving every inject attributes inside
+        /// Clone an object with all [inject] attributes resolved inside
         /// </summary>
         /// <param name="obj"></param>
         /// <param name="parent"></param>
@@ -1312,16 +1325,38 @@ namespace UnityIoC
 
         #region Static members
 
+        /// <summary>
+        /// If the Context static API is ready to use
+        /// </summary>
+        public static bool Initialized
+        {
+            get { return defaultInstance != null && defaultInstance.initialized; }
+        }
+
+        /// <summary>
+        /// Get or Init the Context for the default assembly that Unity3d automatically created for your scripts
+        /// </summary>
+        public static Context DefaultInstance
+        {
+            get { return GetDefaultInstance(); }
+            set { defaultInstance = value; }
+        }
+
         ///<summary>
         /// cache of resolved objects
         /// </summary>
         /// 
-        public static List<object> ResolvedObjects = new List<object>();
+        public static Dictionary<Type, HashSet<object>> ResolvedObjects = new Dictionary<Type, HashSet<object>>();
 
         /// <summary>
         /// cached all monobehaviours
         /// </summary>
         public static MonoBehaviour[] allBehaviours;
+
+        /// <summary>
+        /// just a private variable
+        /// </summary>
+        private static Observable<object> _onResolved;
 
         /// <summary>
         /// subject to resolving object
@@ -1335,17 +1370,58 @@ namespace UnityIoC
                     _onResolved = new Observable<object>();
                     _onResolved.Subscribe(obj =>
                         {
-                            if (obj != null) ResolvedObjects.Add(obj);
+                            if (obj != null)
+                            {
+                                Type type = obj.GetType();
+                                if (!ResolvedObjects.ContainsKey(type))
+                                {
+                                    ResolvedObjects[type] = new HashSet<object>();
+                                }
+
+                                ResolvedObjects[obj.GetType()].Add(obj);
+                            }
                         }
                     );
                 }
 
                 return _onResolved;
             }
-            private set { _onResolved = value; }
         }
 
-        private static Observable<object> _onResolved;
+        /// <summary>
+        /// just a private variable
+        /// </summary>
+        private static Observable<object> _onDisposed;
+
+        /// <summary>
+        /// subject to resolving object
+        /// </summary>
+        public static Observable<object> OnDisposed
+        {
+            get
+            {
+                if (_onDisposed == null)
+                {
+                    _onDisposed = new Observable<object>();
+                    _onDisposed.Subscribe(obj =>
+                        {
+                            if (obj != null)
+                            {
+                                Type type = obj.GetType();
+                                if (!ResolvedObjects.ContainsKey(type))
+                                {
+                                    ResolvedObjects[type] = new HashSet<object>();
+                                }
+
+                                ResolvedObjects[obj.GetType()].Add(obj);
+                            }
+                        }
+                    );
+                }
+
+                return _onDisposed;
+            }
+        }
 
         public static Observable<T> OnResolvedAs<T>()
         {
@@ -1361,7 +1437,7 @@ namespace UnityIoC
         }
 
         /// <summary>
-        /// Call POST Method to REST api.
+        /// Call POST Method to REST api for results parsed from json.
         /// </summary>
         public static IEnumerator Post<T>(
             string link,
@@ -1370,92 +1446,27 @@ namespace UnityIoC
             Action<string> error = null)
         {
             string jsonString = request == null ? "{}" : JsonUtility.ToJson(request);
-
-            Dictionary<string, string> header = new Dictionary<string, string>
+            yield return Post(link, jsonString, text =>
             {
-                {"Content-Type", "application/json"}
-            };
-
-            byte[] body = Encoding.UTF8.GetBytes(jsonString);
-
-            WWW www = new WWW(link, body, header);
-
-            yield return www;
-
-            if (www.error != null)
-            {
-                Debug.Log("API Call Failed: " + www.error);
-                if (error != null)
+                T t = ResolveFromJson<T>(text);
+                if (result != null)
                 {
-                    error(www.error);
+                    result(t);
                 }
-            }
-            else
-            {
-                Debug.Log("API Call successful.");
-                var fromJson = ResolveFromJson<T>(www.text);
-                if (result != null && fromJson != null)
-                {
-                    result(fromJson);
-                }
-            }
+            }, error);
         }
 
+        /// <summary>
+        /// Call POST Method to REST api for raw string result.
+        /// </summary>
         public static IEnumerator Post(
             string link,
             string request,
             Action<string> result = null,
             Action<string> error = null)
         {
-            string jsonString = request == null ? "{}" : JsonUtility.ToJson(request);
-
-            Dictionary<string, string> header = new Dictionary<string, string>
-            {
-                {"Content-Type", "application/json"}
-            };
-
-            byte[] body = Encoding.UTF8.GetBytes(jsonString);
-
-            WWW www = new WWW(link, body, header);
-
-            yield return www;
-
-            if (www.error != null)
-            {
-                Debug.Log("API Call Failed: " + www.error);
-                if (error != null)
-                {
-                    error(www.error);
-                }
-            }
-            else
-            {
-                Debug.Log("API Call successful.");
-                if (result != null)
-                {
-                    result(www.text);
-                }
-            }
-        }
-
-        public static IEnumerator Post(
-            string link,
-            object request,
-            Action<string> result = null,
-            Action<string> error = null)
-        {
-            return Post(link, JsonUtility.ToJson(request), result, error);
-        }
-
-        /// <summary>
-        /// Call GET Method to REST api.
-        /// </summary>
-        public static IEnumerator Get<T>(
-            string link,
-            Action<T> result = null,
-            Action<string> error = null)
-        {
-            UnityWebRequest www = UnityWebRequest.Get(link);
+            UnityWebRequest www = UnityWebRequest.Put(link, request);
+            www.SetRequestHeader("Content-Type", "application/json");
             var async = www.SendWebRequest();
 
             while (!async.isDone)
@@ -1475,10 +1486,63 @@ namespace UnityIoC
             {
                 // Show results as text
                 Debug.Log(www.downloadHandler.text);
-                T t = ResolveFromJson<T>(www.downloadHandler.text);
-                if (result != null && t != null)
+                if (result != null)
+                {
+                    result(www.downloadHandler.text);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Call GET Method to REST api for results parsed from json.
+        /// </summary>
+        public static IEnumerator Get<T>(
+            string link,
+            Action<T> result = null,
+            Action<string> error = null)
+        {
+            yield return Get(link, text =>
+            {
+                T t = ResolveFromJson<T>(text);
+                if (result != null)
                 {
                     result(t);
+                }
+            }, error);
+        }
+
+        /// <summary>
+        /// Call GET Method to REST api for raw string result.
+        /// </summary>
+        public static IEnumerator Get(
+            string link,
+            Action<string> result = null,
+            Action<string> error = null)
+        {
+            UnityWebRequest www = UnityWebRequest.Get(link);
+            www.SetRequestHeader("Content-Type", "application/json");
+            var async = www.SendWebRequest();
+
+            while (!async.isDone)
+            {
+                yield return null;
+            }
+
+            if (www.isNetworkError || www.isHttpError)
+            {
+                Debug.Log(www.error);
+                if (error != null)
+                {
+                    error(www.error);
+                }
+            }
+            else
+            {
+                // Show results as text
+                Debug.Log(www.downloadHandler.text);
+                if (result != null)
+                {
+                    result(www.downloadHandler.text);
                 }
             }
         }
@@ -1493,12 +1557,18 @@ namespace UnityIoC
             var obj = JsonUtility.FromJson<T>(json);
             if (obj != null)
             {
-                ResolvedObjects.Add(obj);
+                Type type = obj.GetType();
+                if (!ResolvedObjects.ContainsKey(type))
+                {
+                    ResolvedObjects[type] = new HashSet<object>();
+                }
+
+                ResolvedObjects[obj.GetType()].Add(obj);
                 OnResolved.Value = obj;
                 return obj;
             }
 
-            return Resolve<T>();
+            return default(T);
         }
 
         public static T ResolveFromPool<T>(
@@ -1554,18 +1624,6 @@ namespace UnityIoC
         private static Context defaultInstance;
 
 //        private static Dictionary<Type, Context> _instances = new Dictionary<Type, Context>();
-
-        public static bool Initialized
-        {
-            get { return defaultInstance != null && defaultInstance.initialized; }
-        }
-
-        public static Context DefaultInstance
-        {
-            get { return GetDefaultInstance(); }
-            set { defaultInstance = value; }
-        }
-
         /// <summary>
         /// Clone an object from an existing one
         /// </summary>
@@ -1633,7 +1691,14 @@ namespace UnityIoC
             if (!OnResolved.IsDisposed)
             {
                 OnResolved.Dispose();
-                OnResolved = null;
+                _onResolved = null;
+            }
+
+            //recycle the observable
+            if (!OnDisposed.IsDisposed)
+            {
+                OnDisposed.Dispose();
+                _onDisposed = null;
             }
 
             //recycle the defaultInstance
@@ -1673,6 +1738,7 @@ namespace UnityIoC
                         .Where(i => i.IsGenericType)
                         .FirstOrDefault(i => i.GetGenericTypeDefinition() == typeof(IDataBinding<>));
 
+                    //resolve the type that is contained in the IDataBinding<> arguments
                     if (dataBindingType != null)
                     {
                         var innerType = dataBindingType.GetGenericArguments().FirstOrDefault();
@@ -1735,16 +1801,79 @@ namespace UnityIoC
             return obj;
         }
 
-        
         /// <summary>
-        /// todo: Dispose an obj, which should be created by the Context
+        /// Resolve a component with custom logic to find the register object
+        /// The default container of [Context] will not be used in this method
+        /// </summary>
+        /// <param name="parents"></param>
+        /// <param name="customLogic"></param>
+        /// <param name="parameters"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static T Resolve<T>(
+            Transform parents,
+            Func<RegisteredObject, bool> customLogic,
+            LifeCycle lifeCycle = LifeCycle.Default,
+            object resolveFrom = null,
+            params object[] parameters)
+            where T : Component
+        {
+            var context = GetDefaultInstance(typeof(T));
+            var registeredObjects = context.DefaultContainer.registeredObjects;
+            var registeredObject = registeredObjects
+                .Where(r => typeof(T).IsAssignableFrom(r.AbstractType))
+                .Where(customLogic)
+                .FirstOrDefault();
+
+            if (registeredObject != null)
+            {
+                var resolve = registeredObject.CreateInstance(context, lifeCycle, resolveFrom, parameters) as T;
+                if (resolve != null)
+                {
+                    Type type = resolve.GetType();
+                    if (!ResolvedObjects.ContainsKey(type))
+                    {
+                        ResolvedObjects[type] = new HashSet<object>();
+                    }
+
+                    ResolvedObjects[type].Add(resolve);
+                    OnResolved.Value = resolve;
+                }
+
+                return resolve;
+            }
+
+            //resolve as default approach
+            return Resolve<T>(parents, lifeCycle, resolveFrom, parameters);
+        }
+
+        /// <summary>
+        /// Dispose an obj, which should be created by the Context
         /// </summary>
         /// <param name="obj"></param>
         public static void Dispose(object obj)
         {
-            
+            if (obj != null)
+            {
+                Type type = obj.GetType();
+                if (!ResolvedObjects.ContainsKey(type))
+                {
+                    ResolvedObjects[type] = new HashSet<object>();
+                }
+
+                ResolvedObjects[obj.GetType()].Remove(obj);
+                OnDisposed.Value = obj;
+
+                var disposable = obj as IDisposable;
+                if (disposable != null)
+                {
+                    disposable.Dispose();
+                }
+
+                obj = null;
+            }
         }
-        
+
         /// <summary>
         /// Set value for a property by its name
         /// </summary>

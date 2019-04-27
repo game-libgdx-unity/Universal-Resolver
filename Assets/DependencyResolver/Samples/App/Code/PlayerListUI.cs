@@ -11,7 +11,7 @@ public class PlayerListUI : MonoBehaviour
     {
         foreach (var friendName in GetFriendNames())
         {
-            Context.Resolve<PlayerData>().Name = friendName;
+            Context.Resolve<PlayerData>(friendName);
         }
     }
 
