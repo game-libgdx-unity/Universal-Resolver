@@ -7,6 +7,7 @@ using System.Collections;
 using System.Collections.Generic;
 //using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.TestTools;
 using UnityEngine.UI;
 using UnityIoC;
 
@@ -41,6 +42,11 @@ namespace SceneTest
             text2.text = "Hello world";
             text3.text = "Hello world";
             text4.text = "Hello world";
+
+//            GameObject.Find("MonoBehaviourTest: TestRunner").GetComponent<ITestScene>().OpenNextTestScene();
+
+            Context.Resolve<ITestScene>().OpenNextTestScene();
         }
+        
     }
 }

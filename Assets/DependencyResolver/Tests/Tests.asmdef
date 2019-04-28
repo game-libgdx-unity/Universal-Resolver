@@ -1,8 +1,8 @@
 {
     "name": "Tests",
     "references": [
-        "SceneTest",
-        "UnityIoC"
+        "GUID:af0aab77d42be42459b7f639d82cea9f",
+        "GUID:c0b205490f55a4285be1ec5b04cc6e58"
     ],
     "optionalUnityReferences": [
         "TestAssemblies"
@@ -15,5 +15,6 @@
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": []
+    "defineConstraints": [],
+    "versionDefines": []
 }

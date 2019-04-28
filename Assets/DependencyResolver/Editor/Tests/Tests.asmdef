@@ -1,0 +1,17 @@
+{
+    "name": "TestRunner",
+    "references": [
+        "GUID:c0b205490f55a4285be1ec5b04cc6e58"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
+}

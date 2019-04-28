@@ -24,5 +24,5 @@ MonoBehaviour:
     - {fileID: 0}
     AbstractTypeHolder: {fileID: 11500000, guid: 29d387bd8529940c79f22aed5e11e17f,
       type: 3}
-    ImplementedTypeHolder: {fileID: 11500000, guid: 7af20c48a2e614548b06b175030f21df,
+    ImplementedTypeHolder: {fileID: 11500000, guid: 9f39ca5d48af14e63927c7de1d1ddd0a,
       type: 3}

@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "27463026710",
+    "firebase_url": "https://phonetest-70b3f.firebaseio.com",
+    "project_id": "phonetest-70b3f",
+    "storage_bucket": "phonetest-70b3f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:27463026710:android:f6b9ba4ef5e1a071",
+        "android_client_info": {
+          "package_name": "com.bagangames.zal"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "27463026710-ivuqc8gf8egi5l1u92pspp3phk7m49sa.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.bagangames.zal",
+            "certificate_hash": "2dd69628f0e3c239e302c6b4d9aab8e7a9ec4901"
+          }
+        },
+        {
+          "client_id": "27463026710-6vgsfgoc5tfob2211ihpsvivd8fv6fp2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDykmqoUZRNdlu2z5y4UaVZeTeTq_aXDqA"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "27463026710-6vgsfgoc5tfob2211ihpsvivd8fv6fp2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

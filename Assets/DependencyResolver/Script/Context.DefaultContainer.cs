@@ -417,6 +417,7 @@ namespace UnityIoC
                         return instance;
                     }
 
+//                    filter = o => abstractType.IsAssignableFrom(o.AbstractType) && o.InjectInto == null;
                     filter = o => abstractType.IsAssignableFrom(o.AbstractType) && o.InjectInto == null;
 
                     registeredObject = registeredObjects.FirstOrDefault(filter);
@@ -428,6 +429,17 @@ namespace UnityIoC
                         //if the typeToResolve is abstract, then we cannot resolve it, throw exceptions
                         if (abstractType.IsAbstract)
                         {
+                            
+                            //search the abstractType from all gameObjects
+                            foreach (var gameObject in Context.GameObjects)
+                            {
+                                var quick = gameObject.GetComponent(abstractType);
+                                if (quick != null)
+                                {
+                                    return quick;
+                                }
+                            }
+                            
                             throw new InvalidOperationException(
                                 "Cannot resolve the abstract type " + abstractType.Name +
                                 " with no respective registeredObject!");
@@ -541,12 +553,12 @@ namespace UnityIoC
                 debug.Log("Lower priority process is failed");
                 debug.Log("Lowest priority process: Create a new registeredObject to resolve");
 
-                if (abstractType.IsAbstract)
-                {
-                    throw new InvalidOperationException(
-                        "Cannot resolve the abstract type " + abstractType.Name +
-                        " with no respective registeredObject!");
-                }
+//                if (abstractType.IsAbstract)
+//                {
+//                    throw new InvalidOperationException(
+//                        "Cannot resolve the abstract type " + abstractType.Name +
+//                        " with no respective registeredObject!");
+//                }
 
                 debug.Log("trying to register {0} ", abstractType);
 

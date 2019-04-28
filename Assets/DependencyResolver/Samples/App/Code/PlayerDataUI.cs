@@ -11,14 +11,9 @@ public class PlayerDataUI : MonoBehaviour
 	
 	[SerializeField, Inject] Text txtName;
 	
-	[SerializeField, Singleton] PlayerListUI playerList;
-	
 	// Use this for initialization
 	void Start ()
 	{
 		txtName.text = playerData.Name;
-		
-		//set itself as a child of playerList 
-		transform.SetParent(playerList.transform);
 	}
 }

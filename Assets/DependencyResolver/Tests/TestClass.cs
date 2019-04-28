@@ -13,13 +13,4 @@ namespace UnityIoC.Editor
 			MyDebug.Log("TestClass"); 
 		}
 	}
-	public class TestClass2 : TestInterface {
-		public string JustAProperty { get; set; }
-
-		public void DoSomething()
-		{
-			MyDebug.Log("TestClass2"); 
-		}
-	}
-
 }

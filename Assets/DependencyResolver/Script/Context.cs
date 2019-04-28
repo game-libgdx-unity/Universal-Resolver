@@ -24,7 +24,7 @@ namespace UnityIoC
 
     {
         /// <summary>
-        /// This is the name of the default assembly that unity generated to compile your code
+        /// This is the default name of the default assembly that unity generated to compile your code
         /// </summary>
         private const string DefaultAssemblyName = "Assembly-CSharp";
 
@@ -356,7 +356,15 @@ namespace UnityIoC
             monoScripts.Clear();
 
             if (allBehaviours != null)
+            {
                 Array.Clear(allBehaviours, 0, allBehaviours.Length);
+            }
+
+            if (gameObjects != null)
+            {
+                Array.Clear(gameObjects, 0, gameObjects.Length);
+                gameObjects = null;
+            }
 
             injectAttributes.Clear();
             targetType = null;
@@ -589,7 +597,7 @@ namespace UnityIoC
                 {
                     return null;
                 }
-                
+
                 return hashSet.Last(
                     o => type.IsInterface && type.IsAssignableFrom(o.GetType())
                          || !type.IsInterface && o.GetType() == type);
@@ -1051,20 +1059,20 @@ namespace UnityIoC
             }
 
             //process for IRunBeforeUpdate interface
-            var runBeforeUpdateComp = allBehaviours.Where(m => m is IRunBeforeUpdate).ToArray();
-            foreach (var mono in runBeforeUpdateComp)
-            {
-                if (mono.GetType().GetCustomAttributes(typeof(IgnoreProcessingAttribute), true).Any())
-                {
-                    if (mono)
-                    {
-                        debug.Log("Process on object " + mono.GetType().Name);
-                        ProcessInjectAttribute(mono);
-                    }
-                }
-
-                mono.GetOrAddComponent<RunBeforeUpdate>();
-            }
+//            var runBeforeUpdateComp = allBehaviours.Where(m => m is IRunBeforeUpdate).ToArray();
+//            foreach (var mono in runBeforeUpdateComp)
+//            {
+//                if (mono.GetType().GetCustomAttributes(typeof(IgnoreProcessingAttribute), true).Any())
+//                {
+//                    if (mono)
+//                    {
+//                        debug.Log("Process on object " + mono.GetType().Name);
+//                        ProcessInjectAttribute(mono);
+//                    }
+//                }
+//
+//                mono.GetOrAddComponent<RunBeforeUpdate>();
+//            }
         }
 
         /// <summary>
@@ -1079,18 +1087,19 @@ namespace UnityIoC
             T clone = null;
             Component clonedComp = null;
             GameObject clonedGameObj = null;
-
-            if (obj is GameObject)
+            GameObject gameObject = obj as GameObject;
+            if (gameObject)
             {
-                clone = Object.Instantiate(obj, parent);
+                clone = Object.Instantiate(obj);
                 clonedGameObj = clone as GameObject;
+                clonedGameObj.transform.SetParent(parent != null ? parent : gameObject.transform.parent);
             }
             else
             {
                 var comp = obj as Component;
                 if (comp)
                 {
-                    clone = Object.Instantiate(comp.gameObject, parent).GetComponent(typeof(T)) as T;
+                    clone = Object.Instantiate(comp.gameObject).GetComponent(typeof(T)) as T;
                 }
                 else
                 {
@@ -1098,8 +1107,14 @@ namespace UnityIoC
                 }
 
                 clonedComp = clone as Component;
+
                 if (clonedComp)
                 {
+                    if (comp)
+                    {
+                        clonedComp.transform.SetParent(parent != null ? parent : comp.gameObject.transform.parent);
+                    }
+
                     foreach (var mono in clonedComp.gameObject.GetComponents(typeof(MonoBehaviour)))
                     {
                         ProcessInjectAttribute(mono);
@@ -1354,6 +1369,11 @@ namespace UnityIoC
         public static MonoBehaviour[] allBehaviours;
 
         /// <summary>
+        /// cached all gameObjects
+        /// </summary>
+        private static GameObject[] gameObjects;
+
+        /// <summary>
         /// just a private variable
         /// </summary>
         private static Observable<object> _onResolved;
@@ -1420,6 +1440,35 @@ namespace UnityIoC
                 }
 
                 return _onDisposed;
+            }
+        }
+
+        /// <summary>
+        /// cached all gameObjects
+        /// </summary>
+        public static GameObject[] GameObjects
+        {
+            get
+            {
+                if (gameObjects == null)
+                {
+                    var gameObjectList = new List<GameObject>();
+                    for (int i = 0; i < SceneManager.sceneCount; i++)
+                    {
+                        gameObjectList.AddRange(SceneManager.GetSceneAt(i).GetRootGameObjects());
+                    }
+
+                    gameObjects = gameObjectList.ToArray();
+                }
+
+                return gameObjects;
+
+//                if (gameObjects == null)
+//                {
+//                    gameObjects =  Resources.FindObjectsOfTypeAll<GameObject>().Where(m => m).ToArray();
+//                }
+//                
+//                return gameObjects;
             }
         }
 

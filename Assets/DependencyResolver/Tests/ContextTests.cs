@@ -5,6 +5,7 @@ using System.Reflection;
 using UnityEngine;
 using NUnit.Framework;
 using SceneTest;
+using UnityEditor.SceneManagement;
 using UnityEngine.TestTools;
 using Object = UnityEngine.Object;
 
@@ -12,6 +13,13 @@ namespace UnityIoC.Editor
 {
     public class AssemblyContextTests : TestBase
     {
+        [SetUp]
+        public void Setup()
+        {
+            EditorSceneManager.NewScene(NewSceneSetup.EmptyScene);
+            Context.DisposeDefaultInstance();
+        }
+        
         [Test]
         public void t1_get_default_instance()
         {
@@ -24,6 +32,7 @@ namespace UnityIoC.Editor
         {
             var obj = Context.Resolve<TestInterface>();
             Assert.IsNotNull(obj);
+            Assert.IsInstanceOf<TestClass>(obj);
         }
 
 
@@ -49,7 +58,7 @@ namespace UnityIoC.Editor
 
 
         [Test]
-        public void t5_bind_as()
+        public void t5_bind_life_cycle()
         {
             var instance = Context.Resolve<TestClass>(LifeCycle.Singleton);
             //assign singleton value to
@@ -77,6 +86,7 @@ namespace UnityIoC.Editor
             Context.Bind(Resources.Load<InjectIntoBindingSetting>("not_default"));
             var obj = Context.Resolve<TestInterface>();
             Assert.IsNotNull(obj);
+            Assert.IsInstanceOf<TestClass2>(obj);
         }
 
 
@@ -471,12 +481,6 @@ namespace UnityIoC.Editor
             Context.DisposeDefaultInstance();
 //assert
             Assert.IsFalse(Context.Initialized);
-        }
-
-        [TearDown]
-        public void Dispose()
-        {
-            Context.DisposeDefaultInstance();
         }
     }
 }

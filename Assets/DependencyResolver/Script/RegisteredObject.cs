@@ -119,6 +119,7 @@ namespace UnityIoC
                         if (GameObject != null)
                         {
                             var go = context.CreateInstance(GameObject);
+                            go.transform.parent = (GameObject.transform.parent);
                             instance = go.GetComponent(ImplementedType);
                             return instance;
                         }
