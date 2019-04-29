@@ -1015,8 +1015,6 @@ namespace UnityIoC
                 return;
             }
 
-            allBehaviours = Resources.FindObjectsOfTypeAll<MonoBehaviour>().Where(m => m).ToArray();
-
             var ignoredUnityEngineScripts = allBehaviours.Where(m =>
                 {
                     var type = m.GetType();
@@ -1725,6 +1723,7 @@ namespace UnityIoC
         {
             if (defaultInstance == null || recreate)
             {
+                allBehaviours = Resources.FindObjectsOfTypeAll<MonoBehaviour>().Where(m => m).ToArray();
                 defaultInstance = new Context(type, automaticBind);
             }
 
