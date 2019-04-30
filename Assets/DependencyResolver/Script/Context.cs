@@ -1353,7 +1353,7 @@ namespace UnityIoC
         /// <summary>
         /// Cache of data binding of data layer & view layer
         /// </summary>
-        public static Dictionary<object, object> DataBindings = new Dictionary<object, object>();
+        public static Dictionary<object, HashSet<object>> DataBindings = new Dictionary<object, HashSet<object>>();
 
         /// <summary>
         /// cached all monobehaviours
@@ -1816,41 +1816,37 @@ namespace UnityIoC
                     OnResolved.Value = resolveObject;
 
                     //check if the resolved object implements the IDataBinding interface
-                    var dataBindingType = resolveObject.GetType().GetInterfaces()
+                    var dataBindingTypes = resolveObject.GetType().GetInterfaces()
                         .Where(i => i.IsGenericType)
-                        .FirstOrDefault(i => i.GetGenericTypeDefinition() == typeof(IDataBinding<>));
+                        .Where(i => i.GetGenericTypeDefinition() == typeof(IDataBinding<>));
 
-                    //resolve the type that is contained in the IDataBinding<> arguments
-                    if (dataBindingType != null)
+                    foreach (var dataBindingType in dataBindingTypes)
                     {
+                        //resolve the type that is contained in the IDataBinding<> arguments
                         var innerType = dataBindingType.GetGenericArguments().FirstOrDefault();
                         if (innerType != null)
                         {
                             var viewObject = Resolve(innerType, LifeCycle.Transient, resolveFrom, null);
 
-                            //check if viewObject implements the IObserver interface
+                            //check if viewObject implements the IDataView interface
                             var observerType = viewObject.GetType().GetInterfaces()
                                 .Where(i => i.IsGenericType)
-                                .FirstOrDefault(i => i.GetGenericTypeDefinition() == typeof(IObserver<>));
+                                .FirstOrDefault(i => i.GetGenericTypeDefinition() == typeof(IDataView<>));
 
                             if (observerType != null)
                             {
-                                //check if the resolved object implements the IObservable interface
-                                var dataObservableType = resolveObject.GetType().GetInterfaces()
-                                    .Where(i => i.IsGenericType)
-                                    .FirstOrDefault(i => i.GetGenericTypeDefinition() == typeof(IObservable<>));
-
-//                                var innerObserverType = dataObservableType.GetGenericArguments().FirstOrDefault();
-                                //resolve the type that is contained in the IDataBinding<> arguments
-                                if (dataObservableType != null)
+                                var mi = viewObject.GetType().GetMethods()
+                                    .FirstOrDefault(m => m.Name == "OnNext");
+                                if (mi != null)
                                 {
-                                    var mi = resolveObject.GetType().GetMethods()
-                                        .FirstOrDefault(m => m.Name == "Subscribe");
-                                    if (mi != null)
+                                    mi.Invoke(viewObject, new[] {resolveObject});
+
+                                    if (!DataBindings.ContainsKey(resolveObject))
                                     {
-                                        mi.Invoke(resolveObject, new[] {viewObject});
-                                        DataBindings[resolveObject] = viewObject;
+                                        DataBindings[resolveObject] = new HashSet<object>();
                                     }
+
+                                    DataBindings[resolveObject].Add(viewObject);
                                 }
                             }
                         }
@@ -1961,42 +1957,51 @@ namespace UnityIoC
         /// <param name="filter"></param>
         /// <param name="updateAction"></param>
         /// <typeparam name="T"></typeparam>
-        public static void Update<T>(T obj, Action<T> updateAction) where T : class
+        public static T Update<T>(T obj, Action<T> updateAction) where T : class
         {
             var type = typeof(T);
             if (ResolvedObjects.ContainsKey(type))
             {
                 updateAction(obj);
                 UpdateView(ref obj);
+
+                return obj;
             }
+
+            return default(T);
         }
 
         /// <summary>
         /// Don't update the object but Will update the ViewLayer of the object
         /// </summary>
-        /// <param name="obj"></param>
+        /// <param name="obj">view object</param>
         /// <typeparam name="T"></typeparam>
-        public static void UpdateView<T>(ref T obj) where T : class
+        public static HashSet<object> UpdateView<T>(ref T obj) where T : class
         {
             Type type = typeof(T);
+            HashSet<object> viewLayers = null;
 //update the dataBindings
             if (DataBindings.ContainsKey(obj))
             {
-                var viewLayer = DataBindings[obj];
-                if (obj == null)
-                {
-                    //remove view if data is null
-                    if (viewLayer.GetType().IsSubclassOf(typeof(MonoBehaviour)))
-                    {
-                        Object.Destroy((viewLayer as MonoBehaviour).gameObject);
-                    }
+                viewLayers = DataBindings[obj];
 
-                    DataBindings.Remove(obj);
-                }
-                else
+                foreach (var viewLayer in viewLayers)
                 {
-                    var mi = viewLayer.GetType().GetMethod("OnNext");
-                    mi.Invoke(viewLayer, new object[] {obj});
+                    if (obj == null)
+                    {
+                        //remove view if data is null
+                        if (viewLayer.GetType().IsSubclassOf(typeof(MonoBehaviour)))
+                        {
+                            Object.Destroy((viewLayer as MonoBehaviour).gameObject);
+                        }
+
+                        DataBindings.Remove(obj);
+                    }
+                    else
+                    {
+                        var mi = viewLayer.GetType().GetMethod("OnNext");
+                        mi.Invoke(viewLayer, new object[] {obj});
+                    }
                 }
             }
 
@@ -2005,10 +2010,12 @@ namespace UnityIoC
                 //remove object if data is null
                 OnDisposed.Value = obj;
             }
+
+            return viewLayers;
         }
 
         /// <summary>
-        /// Detele an object from resolvedObject cache
+        /// Delete an object of a type from resolvedObject cache
         /// </summary>
         /// <param name="filter"></param>
         /// <param name="updateAction"></param>
@@ -2019,7 +2026,7 @@ namespace UnityIoC
         }
 
         /// <summary>
-        /// Detele an object from resolvedObject cache
+        /// Delete an object of a type from resolvedObject cache
         /// </summary>
         /// <param name="filter"></param>
         /// <param name="updateAction"></param>
@@ -2027,6 +2034,17 @@ namespace UnityIoC
         public static void Delete<T>(T @object) where T : class
         {
             Update(o => o == @object, (ref T obj) => obj = null);
+        }
+
+        /// <summary>
+        /// Delete all objects of a type from resolvedObject cache
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <param name="updateAction"></param>
+        /// <typeparam name="T"></typeparam>
+        public static void DeleteAll<T>() where T : class
+        {
+            Update(o => true, (ref T obj) => obj = null);
         }
 
         /// <summary>
@@ -2050,21 +2068,25 @@ namespace UnityIoC
                     //update the dataBindings
                     if (DataBindings.ContainsKey(objs[index]))
                     {
-                        var viewLayer = DataBindings[objs[index]];
-                        if (obj == null)
-                        {
-                            //remove view if data is null
-                            if (viewLayer.GetType().IsSubclassOf(typeof(MonoBehaviour)))
-                            {
-                                Object.Destroy((viewLayer as MonoBehaviour).gameObject);
-                            }
+                        var viewLayers = DataBindings[objs[index]];
 
-                            DataBindings.Remove(objs[index]);
-                        }
-                        else
+                        foreach (var viewLayer in viewLayers)
                         {
-                            var mi = viewLayer.GetType().GetMethod("OnNext");
-                            mi.Invoke(viewLayer, new object[] {obj});
+                            if (obj == null)
+                            {
+                                //remove view if data is null
+                                if (viewLayer.GetType().IsSubclassOf(typeof(MonoBehaviour)))
+                                {
+                                    Object.Destroy((viewLayer as MonoBehaviour).gameObject);
+                                }
+
+                                DataBindings.Remove(objs[index]);
+                            }
+                            else
+                            {
+                                var mi = viewLayer.GetType().GetMethod("OnNext");
+                                mi.Invoke(viewLayer, new object[] {obj});
+                            }
                         }
                     }
 
@@ -2098,9 +2120,12 @@ namespace UnityIoC
                     //update the dataBindings
                     if (DataBindings.ContainsKey(objs[index]))
                     {
-                        var viewLayer = DataBindings[objs[index]];
-                        var mi = viewLayer.GetType().GetMethod("OnNext");
-                        mi.Invoke(viewLayer, new object[] {obj});
+                        var viewLayers = DataBindings[objs[index]];
+                        foreach (var viewLayer in viewLayers)
+                        {
+                            var mi = viewLayer.GetType().GetMethod("OnNext");
+                            mi.Invoke(viewLayer, new object[] {obj});
+                        }
                     }
                 }
             }
@@ -2115,7 +2140,7 @@ namespace UnityIoC
         {
             return ResolvedObjects[typeof(T)].Cast<T>().ToArray();
         }
-        
+
         /// <summary>
         /// Get all resolved objects of a type by a filter
         /// </summary>

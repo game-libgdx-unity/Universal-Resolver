@@ -5,10 +5,13 @@ using UnityIoC;
 
 public class ContextBehaviour : MonoBehaviour
 {
+	public bool enableLogging = false;
 	public InjectIntoBindingSetting customSetting;
 	void Awake ()
 	{
-		var context = Context.GetDefaultInstance(this);
+		MyDebug.EnableLogging = enableLogging;
+		
+		var context = Context.GetDefaultInstance();
 
 		if (customSetting != null)
 		{

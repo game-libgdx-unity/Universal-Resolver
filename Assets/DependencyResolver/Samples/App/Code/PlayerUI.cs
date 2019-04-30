@@ -7,20 +7,10 @@ using UnityEngine.UI;
 using UnityIoC;
 using Object = UnityEngine.Object;
 
-public class PlayerUI : MonoBehaviour, IObserver<PlayerData>
+public class PlayerUI : MonoBehaviour, IDataView<PlayerData>
 {
     [SerializeField, Inject] Text txtName;
     [SerializeField, Inject] Button btnDelete;
-
-    public void OnCompleted()
-    {
-        Destroy(gameObject);
-    }
-
-    public void OnError(Exception error)
-    {
-        //Msg.Error(exception);
-    }
 
     public void OnNext(PlayerData playerData)
     {

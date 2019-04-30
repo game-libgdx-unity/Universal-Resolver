@@ -485,6 +485,9 @@ namespace UnityIoC.Editor
                 data => data.name = "Vinh" //update John to Vinh from cache
             );
 
+            var vinh = Context.GetObject<PlayerData>(p => p.name == "Vinh");
+            Assert.AreEqual(vinh.name, "Vinh");
+            
             //delete by filter
             Context.Delete<PlayerData>(
                 p => p.name == "Jim"
@@ -515,6 +518,12 @@ namespace UnityIoC.Editor
 
             Assert.IsTrue(jimmy.name == "Dung");
             Assert.IsTrue(jane.name == "Nguyen");
+            
+            Context.DeleteAll<PlayerData>();
+            //now check number of cached object
+            objCount = Context.ResolvedObjects[typeof(PlayerData)].Count;
+            Assert.IsTrue(objCount == 0);
+            
         }
 
         IEnumerable<string> GetFriendNames()
