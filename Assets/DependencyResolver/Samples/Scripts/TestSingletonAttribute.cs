@@ -21,6 +21,9 @@ public class TestSingletonAttribute : MonoBehaviour
 		
 		//a new object will be created if using [Transient] attribute
 		Debug.Log("transient component count: " + FindObjectsOfType<TestComponent2>().Length);
+
+		Context.DisposeDefaultInstance();
+		Context.Resolve<ITestSceneRunner>(LifeCycle.Singleton).OpenNextTestScene();
 	}
 	
 	

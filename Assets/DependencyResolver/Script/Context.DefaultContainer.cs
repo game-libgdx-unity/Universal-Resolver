@@ -431,12 +431,21 @@ namespace UnityIoC
                         {
                             
                             //search the abstractType from all gameObjects
-                            foreach (var gameObject in Context.GameObjects)
+                            foreach (var gameObject in Context.AllGameObjects)
                             {
-                                var quick = gameObject.GetComponent(abstractType);
-                                if (quick != null)
+                                var component = gameObject.GetComponent(abstractType);
+                                if (component != null)
                                 {
-                                    return quick;
+                                    registeredObject = new RegisteredObject(
+                                        abstractType,
+                                        abstractType,
+                                        context,
+                                        preferredLifeCycle);
+                                    
+                                    registeredObject.GameObject = component.gameObject;
+                                    registeredObjects.Add(registeredObject);
+                                    
+                                    return component;
                                 }
                             }
                             
@@ -459,11 +468,11 @@ namespace UnityIoC
                         {
                             Component findObjOnScene = null;
 
-                            if (abstractType.IsSubclassOf(typeof(MonoBehaviour)) && allBehaviours != null &&
-                                allBehaviours.Length > 0)
+                            if (abstractType.IsSubclassOf(typeof(MonoBehaviour)) && Behaviours != null &&
+                                Behaviours.Length > 0)
                             {
                                 findObjOnScene =
-                                    allBehaviours.FirstOrDefault(b => abstractType.IsAssignableFrom(b.GetType()));
+                                    Behaviours.FirstOrDefault(b => abstractType.IsAssignableFrom(b.GetType()));
                             }
 
                             if (findObjOnScene == null)

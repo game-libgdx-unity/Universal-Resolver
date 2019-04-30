@@ -29,45 +29,51 @@ public class NewBehaviourScript : MonoBehaviour
             EditorApplication.ExecuteMenuItem("Assets/Open");
         }
 
-        [MenuItem("Tools/Force recompile %#R")]
-        public static void ForceRebuild()
+        [MenuItem("Tools/Run Scene Test %R")]
+        static void RunSceneTest()
         {
-//            string[] rebuildSymbols = {"RebuildToggle1", "RebuildToggle2"};
-//            string definesString = PlayerSettings.GetScriptingDefineSymbolsForGroup(
-//                EditorUserBuildSettings.selectedBuildTargetGroup);
-//            if (definesString.Contains(rebuildSymbols[0]))
-//            {
-//                definesString = definesString.Replace(rebuildSymbols[0], rebuildSymbols[1]);
-//            }
-//            else if (definesString.Contains(rebuildSymbols[1]))
-//            {
-//                definesString = definesString.Replace(rebuildSymbols[1], rebuildSymbols[0]);
-//            }
-//            else
-//            {
-//                definesString += ";" + rebuildSymbols[0];
-//            }
-//
-//            PlayerSettings.SetScriptingDefineSymbolsForGroup(
-//                EditorUserBuildSettings.selectedBuildTargetGroup,
-//                definesString);
-
-//			EditorUtility.SetDirty(AssetDatabase.GetAssetPath ( EditorSceneManager.GetActiveScene());
-//            EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
-
-            var comps = FindObjectsOfType<MonoBehaviour>();
-            foreach (var comp in comps)
-            {
-                if(comp)
-                    Debug.Log("Found mono behaviour");
-                
-                var mono = comp.GetComponent<IRunScriptOnEditor>();
-                if (mono != null)
-                {
-                    mono.DoAction();
-                }
-            }
+            TestSceneRunner.AddScenesToBuildAndRunTest();
         }
+
+//        [MenuItem("Tools/Force recompile %#R")]
+//        public static void ForceRebuild()
+//        {
+////            string[] rebuildSymbols = {"RebuildToggle1", "RebuildToggle2"};
+////            string definesString = PlayerSettings.GetScriptingDefineSymbolsForGroup(
+////                EditorUserBuildSettings.selectedBuildTargetGroup);
+////            if (definesString.Contains(rebuildSymbols[0]))
+////            {
+////                definesString = definesString.Replace(rebuildSymbols[0], rebuildSymbols[1]);
+////            }
+////            else if (definesString.Contains(rebuildSymbols[1]))
+////            {
+////                definesString = definesString.Replace(rebuildSymbols[1], rebuildSymbols[0]);
+////            }
+////            else
+////            {
+////                definesString += ";" + rebuildSymbols[0];
+////            }
+////
+////            PlayerSettings.SetScriptingDefineSymbolsForGroup(
+////                EditorUserBuildSettings.selectedBuildTargetGroup,
+////                definesString);
+//
+////			EditorUtility.SetDirty(AssetDatabase.GetAssetPath ( EditorSceneManager.GetActiveScene());
+////            EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
+//
+//            var comps = FindObjectsOfType<MonoBehaviour>();
+//            foreach (var comp in comps)
+//            {
+//                if(comp)
+//                    Debug.Log("Found mono behaviour");
+//                
+//                var mono = comp.GetComponent<IRunScriptOnEditor>();
+//                if (mono != null)
+//                {
+//                    mono.DoAction();
+//                }
+//            }
+//        }
 
         public static void CreateAsset<T>() where T : ScriptableObject
         {

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = TestRunner.TestConfigName, menuName = "IoC/Test Config")]
+[CreateAssetMenu(fileName = TestSceneRunner.TestConfigName, menuName = "IoC/Test Config")]
 
 public class TestConfiguration :ScriptableObject
 {

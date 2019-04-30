@@ -119,7 +119,7 @@ namespace UnityIoC
                         if (GameObject != null)
                         {
                             var go = context.CreateInstance(GameObject);
-                            go.transform.parent = (GameObject.transform.parent);
+                            go.transform.SetParent(GameObject.transform.parent);
                             instance = go.GetComponent(ImplementedType);
                             return instance;
                         }
@@ -192,11 +192,11 @@ namespace UnityIoC
                         //try to find component from current scene then
                         if (Instance == null)
                         {
-                            if (concreteType.IsSubclassOf(typeof(MonoBehaviour)) && Context.allBehaviours != null &&
-                                Context.allBehaviours.Length > 0)
+                            if (concreteType.IsSubclassOf(typeof(MonoBehaviour)) && Context.Behaviours != null &&
+                                Context.Behaviours.Length > 0)
                             {
                                 instance =
-                                    Context.allBehaviours.FirstOrDefault(
+                                    Context.Behaviours.FirstOrDefault(
                                         b => concreteType.IsAssignableFrom(b.GetType()));
                             }
 

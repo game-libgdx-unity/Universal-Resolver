@@ -3,6 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Built-in a public static shared Instance for singleton pattern
+/// In case extended classes use "Awake" method, need to add override to the base method. "Start" are free to write.
+/// </summary>
+/// <typeparam name="T"></typeparam>
 public class SingletonBehaviour<T> : MonoBehaviour where T : MonoBehaviour
 {
     static T _instance;
@@ -48,12 +53,15 @@ public class SingletonBehaviour<T> : MonoBehaviour where T : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Should be set from the inspector
+    /// </summary>
     public bool isPersistent;
     protected virtual void Awake()
     {
         if (_instance == null)
         {
-            if (Application.isPlaying && isPersistent)
+            if (Application.isPlaying && isPersistent && !applicationIsQuitting)
             {
                 DontDestroyOnLoad(this);
             }

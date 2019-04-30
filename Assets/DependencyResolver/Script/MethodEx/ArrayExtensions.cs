@@ -32,6 +32,11 @@ public static class ArrayExtensions {
 	}
 	public static T[] Where<T>(this T[] source, Predicate<T> func)
 	{
+		if (source == null || source.Length == 0)
+		{
+			return Array.CreateInstance(typeof(T), 0) as T[];
+		}
+		
 		return Array.FindAll(source, func);
 	}
 	

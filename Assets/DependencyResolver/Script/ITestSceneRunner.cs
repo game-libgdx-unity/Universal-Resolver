@@ -1,6 +1,6 @@
 namespace UnityIoC
 {
-    public interface ITestScene
+    public interface ITestSceneRunner
     {
         void OpenNextTestScene();
     }

@@ -12,7 +12,9 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityIoC;
+using Object = UnityEngine.Object;
 using PropertyAttribute = UnityEngine.PropertyAttribute;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -33,18 +35,35 @@ public static class RxEtensionMethod
         return source;
     }
 
-//    public static IDisposable AddTo<T>(this Observer<T> source, Component component)
-//    {
-//        return AddTo(source, component.gameObject);
-//    }
-//
-//    public static IDisposable AddTo<T>(this Observer<T> source, GameObject gameObject)
-//    {
-//        var addTo = gameObject.GetComponent<AddTo>() ?? gameObject.AddComponent<AddTo>();
-//        addTo.observers.
-//        addTo.disposables.Add(source);
-//        return source;
-//    }
+    public static IDisposable SubscribeToText(this Observable<string> source, Text text)
+    {
+        return source.Subscribe(new TextUIObserver(text));
+    }
+}
+
+public class TextUIObserver : IObserver<string>
+{
+    private Text textUI;
+
+    public TextUIObserver(Text textUi)
+    {
+        this.textUI = textUi;
+    }
+
+    public void OnCompleted()
+    {
+        Object.Destroy(textUI.gameObject);
+    }
+
+    public void OnError(Exception error)
+    {
+        textUI.text = error.Message;
+    }
+
+    public void OnNext(string value)
+    {
+        textUI.text = value;
+    }
 }
 
 public interface IReactiveProperty<T> : IObservable<T>
@@ -217,7 +236,6 @@ public class ObservableDisposable<T> : IDisposable
 //        Property.Value = transient;
 //    }
 //}
-
 
 
 public class Observable<T> : IReactiveProperty<T>, IDisposable

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using NUnit.Framework;
@@ -441,7 +442,7 @@ namespace UnityIoC.Editor
         {
             //test a random api searched from the internet
             string link = "https://jsonplaceholder.typicode.com/todos/1";
-            yield return Context.Get<UserData>(link, null, msg => { Assert.Fail("error: " + msg); });
+            yield return Context.GetObjects<UserData>(link, null, msg => { Assert.Fail("error: " + msg); });
         }
 
         [Test]
@@ -466,6 +467,63 @@ namespace UnityIoC.Editor
             //assert
             Assert.AreSame(obj, get);
         }
+        [Test]
+        public void t31_get_update_delete()
+        {
+            foreach (var friendName in GetFriendNames())
+            {
+                Context.Resolve<PlayerData>(friendName);
+            }
+
+            // check number of cached object
+            var objCount = Context.ResolvedObjects[typeof(PlayerData)].Count;
+            Assert.IsTrue(GetFriendNames().Count() == objCount);
+
+            //update by filter
+            Context.Update<PlayerData>(
+                p => p.name == "John",
+                data => data.name = "Vinh" //update John to Vinh from cache
+            );
+
+            //delete by filter
+            Context.Delete<PlayerData>(
+                p => p.name == "Jim"
+            );
+
+            //update by ref
+            var jane = Context.GetObject<PlayerData>(p => p.name == "Jane");
+            Context.Update(jane, p => p.name = "Nguyen");
+
+            //update by filter but this object has been deleted already
+            Context.Update<PlayerData>(
+                p => p.name == "Jim",
+                data => data.name = "Hm... not found" //should have no action
+            );
+
+            //now check number of cached object
+            objCount = Context.ResolvedObjects[typeof(PlayerData)].Count;
+            Assert.IsTrue(objCount == 3);
+
+            //continue trying to create another player
+            var jimmy = Context.Resolve<PlayerData>("Jimmy");
+
+            //update by ref
+            Context.Update(jimmy, p => p.name = "Dung");
+
+            //try to delete david
+            Context.Delete<PlayerData>(p => p.name == "David");
+
+            Assert.IsTrue(jimmy.name == "Dung");
+            Assert.IsTrue(jane.name == "Nguyen");
+        }
+
+        IEnumerable<string> GetFriendNames()
+        {
+            yield return "Jane";
+            yield return "John";
+            yield return "Jim";
+            yield return "David";
+        }
 
         [Test]
         public void t99_dispose_instance()
@@ -481,6 +539,17 @@ namespace UnityIoC.Editor
             Context.DisposeDefaultInstance();
 //assert
             Assert.IsFalse(Context.Initialized);
+        }
+    }
+    
+    
+    [Serializable]
+    public class PlayerData
+    {
+        public string name;
+        public PlayerData(string name)
+        {
+            this.name = name;
         }
     }
 }

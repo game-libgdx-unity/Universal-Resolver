@@ -128,7 +128,7 @@ namespace UnityIoC
 
             //try to load a default InjectIntoBindingSetting setting for context
             var injectIntoBindingSetting =
-                UnityEngine.Resources.Load<InjectIntoBindingSetting>(CurrentAssembly.GetName().Name);
+                Resources.Load<InjectIntoBindingSetting>(CurrentAssembly.GetName().Name);
 
             if (injectIntoBindingSetting)
             {
@@ -137,7 +137,7 @@ namespace UnityIoC
             }
 
             //try to get the default InjectIntoBindingSetting setting for current scene
-            var sceneInjectIntoBindingSetting = UnityEngine.Resources.Load<InjectIntoBindingSetting>(
+            var sceneInjectIntoBindingSetting = Resources.Load<InjectIntoBindingSetting>(
                 string.Format("{0}_{1}", CurrentAssembly.GetName().Name, SceneManager.GetActiveScene().name)
             );
 
@@ -149,7 +149,7 @@ namespace UnityIoC
 
             //try to load a default BindingSetting setting for context
             var bindingSetting =
-                UnityEngine.Resources.Load<BindingSetting>(CurrentAssembly.GetName().Name);
+                Resources.Load<BindingSetting>(CurrentAssembly.GetName().Name);
 
             if (bindingSetting)
             {
@@ -158,7 +158,7 @@ namespace UnityIoC
             }
 
             //try to get the default BindingSetting setting for current scene
-            var sceneBindingSetting = UnityEngine.Resources.Load<BindingSetting>(
+            var sceneBindingSetting = Resources.Load<BindingSetting>(
                 string.Format("{0}_{1}", CurrentAssembly.GetName().Name, SceneManager.GetActiveScene().name)
             );
 
@@ -354,17 +354,6 @@ namespace UnityIoC
         {
             initialized = false;
             monoScripts.Clear();
-
-            if (allBehaviours != null)
-            {
-                Array.Clear(allBehaviours, 0, allBehaviours.Length);
-            }
-
-            if (gameObjects != null)
-            {
-                Array.Clear(gameObjects, 0, gameObjects.Length);
-                gameObjects = null;
-            }
 
             injectAttributes.Clear();
             targetType = null;
@@ -584,14 +573,14 @@ namespace UnityIoC
         {
             if ((inject.LifeCycle == LifeCycle.Cache ||
                  (inject.LifeCycle & LifeCycle.Cache) == LifeCycle.Cache) &&
-                Context.ResolvedObjects.Count > 0)
+                ResolvedObjects.Count > 0)
             {
                 if (!ResolvedObjects.ContainsKey(type))
                 {
                     ResolvedObjects[type] = new HashSet<object>();
                 }
 
-                var hashSet = Context.ResolvedObjects[type];
+                var hashSet = ResolvedObjects[type];
 
                 if (hashSet.Count == 0)
                 {
@@ -916,7 +905,7 @@ namespace UnityIoC
             }
 
             this.automaticBinding = automaticBinding;
-            this.targetType = target;
+            targetType = target;
             container = new Container(this);
 
             InitialProcess();
@@ -1015,7 +1004,7 @@ namespace UnityIoC
                 return;
             }
 
-            var ignoredUnityEngineScripts = allBehaviours.Where(m =>
+            var ignoredUnityEngineScripts = Behaviours.Where(m =>
                 {
                     var type = m.GetType();
                     var ns = type.Namespace;
@@ -1271,7 +1260,7 @@ namespace UnityIoC
 
         public void LoadBindingSetting(string settingName)
         {
-            LoadBindingSetting(UnityIoC.MyResources.Load<InjectIntoBindingSetting>(settingName));
+            LoadBindingSetting(MyResources.Load<InjectIntoBindingSetting>(settingName));
         }
 
         public void LoadBindingSetting(InjectIntoBindingSetting bindingSetting)
@@ -1362,14 +1351,31 @@ namespace UnityIoC
         public static Dictionary<Type, HashSet<object>> ResolvedObjects = new Dictionary<Type, HashSet<object>>();
 
         /// <summary>
-        /// cached all monobehaviours
+        /// Cache of data binding of data layer & view layer
         /// </summary>
-        public static MonoBehaviour[] allBehaviours;
+        public static Dictionary<object, object> DataBindings = new Dictionary<object, object>();
 
         /// <summary>
-        /// cached all gameObjects
+        /// cached all monobehaviours
         /// </summary>
-        private static GameObject[] gameObjects;
+        private static MonoBehaviour[] _allBehaviours;
+
+
+        /// <summary>
+        /// cached all monobehaviours
+        /// </summary>
+        public static MonoBehaviour[] Behaviours
+        {
+            get
+            {
+                if (_allBehaviours == null)
+                {
+                    _allBehaviours = Resources.FindObjectsOfTypeAll<MonoBehaviour>().Where(m => m).ToArray();
+                }
+
+                return _allBehaviours;
+            }
+        }
 
         /// <summary>
         /// just a private variable
@@ -1396,7 +1402,7 @@ namespace UnityIoC
                                     ResolvedObjects[type] = new HashSet<object>();
                                 }
 
-                                ResolvedObjects[obj.GetType()].Add(obj);
+                                ResolvedObjects[type].Add(obj);
                             }
                         }
                     );
@@ -1431,7 +1437,8 @@ namespace UnityIoC
                                     ResolvedObjects[type] = new HashSet<object>();
                                 }
 
-                                ResolvedObjects[obj.GetType()].Add(obj);
+                                ResolvedObjects[type].Remove(obj);
+                                DataBindings.Remove(obj);
                             }
                         }
                     );
@@ -1442,13 +1449,18 @@ namespace UnityIoC
         }
 
         /// <summary>
-        /// cached all gameObjects
+        /// cached all root gameObjects
+        /// </summary>
+        private static GameObject[] _gameObjects;
+
+        /// <summary>
+        /// cached all root gameObjects
         /// </summary>
         public static GameObject[] GameObjects
         {
             get
             {
-                if (gameObjects == null)
+                if (_gameObjects == null)
                 {
                     var gameObjectList = new List<GameObject>();
                     for (int i = 0; i < SceneManager.sceneCount; i++)
@@ -1456,10 +1468,10 @@ namespace UnityIoC
                         gameObjectList.AddRange(SceneManager.GetSceneAt(i).GetRootGameObjects());
                     }
 
-                    gameObjects = gameObjectList.ToArray();
+                    _gameObjects = gameObjectList.ToArray();
                 }
 
-                return gameObjects;
+                return _gameObjects;
 
 //                if (gameObjects == null)
 //                {
@@ -1468,6 +1480,14 @@ namespace UnityIoC
 //                
 //                return gameObjects;
             }
+        }
+
+        /// <summary>
+        /// Get all gameObjects
+        /// </summary>
+        public static GameObject[] AllGameObjects
+        {
+            get { return Object.FindObjectsOfType<GameObject>().Where(m => m).ToArray(); }
         }
 
         public static Observable<T> OnResolvedAs<T>()
@@ -1543,12 +1563,12 @@ namespace UnityIoC
         /// <summary>
         /// Call GET Method to REST api for results parsed from json.
         /// </summary>
-        public static IEnumerator Get<T>(
+        public static IEnumerator GetObjects<T>(
             string link,
             Action<T> result = null,
             Action<string> error = null)
         {
-            yield return Get(link, text =>
+            yield return GetObjects(link, text =>
             {
                 T t = ResolveFromJson<T>(text);
                 if (result != null)
@@ -1561,7 +1581,7 @@ namespace UnityIoC
         /// <summary>
         /// Call GET Method to REST api for raw string result.
         /// </summary>
-        public static IEnumerator Get(
+        public static IEnumerator GetObjects(
             string link,
             Action<string> result = null,
             Action<string> error = null)
@@ -1596,21 +1616,9 @@ namespace UnityIoC
 
         public static T ResolveFromJson<T>(string json)
         {
-            if (!Context.Initialized)
-            {
-                Context.GetDefaultInstance(typeof(T));
-            }
-
             var obj = JsonUtility.FromJson<T>(json);
             if (obj != null)
             {
-                Type type = obj.GetType();
-                if (!ResolvedObjects.ContainsKey(type))
-                {
-                    ResolvedObjects[type] = new HashSet<object>();
-                }
-
-                ResolvedObjects[obj.GetType()].Add(obj);
                 OnResolved.Value = obj;
                 return obj;
             }
@@ -1624,9 +1632,9 @@ namespace UnityIoC
             object resolveFrom = null,
             params object[] parameters) where T : Component
         {
-            if (!Context.Initialized)
+            if (!Initialized)
             {
-                Context.GetDefaultInstance(typeof(T));
+                GetDefaultInstance(typeof(T));
             }
 
             if (preload > 0 && preload > Pool<T>.List.Count)
@@ -1634,7 +1642,7 @@ namespace UnityIoC
                 PreloadFromPool<T>(preload, parentObject, resolveFrom, parameters);
             }
 
-            var instanceFromPool = Pool<T>.List.GetInstanceFromPool<T>(parentObject, resolveFrom, parameters);
+            var instanceFromPool = Pool<T>.List.GetInstanceFromPool(parentObject, resolveFrom, parameters);
             instanceFromPool.gameObject.SetActive(true);
 
             return instanceFromPool;
@@ -1644,9 +1652,9 @@ namespace UnityIoC
             params object[] parameters)
             where T : Component
         {
-            if (!Context.Initialized)
+            if (!Initialized)
             {
-                Context.GetDefaultInstance(typeof(T));
+                GetDefaultInstance(typeof(T));
             }
 
             Pool<T>.List.Preload(preload, parentObject, resolveFrom, parameters);
@@ -1723,17 +1731,24 @@ namespace UnityIoC
         {
             if (defaultInstance == null || recreate)
             {
-                allBehaviours = Resources.FindObjectsOfTypeAll<MonoBehaviour>().Where(m => m).ToArray();
+                SceneManager.sceneUnloaded += SceneManagerOnSceneLoaded;
                 defaultInstance = new Context(type, automaticBind);
             }
 
             return defaultInstance;
         }
 
+        /// <summary>
+        /// Reset static members to default, should be called if you have changed scene
+        /// </summary>
         public static void DisposeDefaultInstance()
         {
+            //remove delegate
+            SceneManager.sceneUnloaded -= SceneManagerOnSceneLoaded;
+
             //remove cache of resolved objects
             ResolvedObjects.Clear();
+            DataBindings.Clear();
 
             //recycle the observable
             if (!OnResolved.IsDisposed)
@@ -1755,6 +1770,25 @@ namespace UnityIoC
                 defaultInstance.Dispose();
                 defaultInstance = null;
             }
+
+            //remove cache of behaviours
+            if (Behaviours != null)
+            {
+                Array.Clear(Behaviours, 0, Behaviours.Length);
+                _allBehaviours = null;
+            }
+
+            //remove cache of root game objects
+            if (_gameObjects != null)
+            {
+                Array.Clear(_gameObjects, 0, _gameObjects.Length);
+                _gameObjects = null;
+            }
+        }
+
+        private static void SceneManagerOnSceneLoaded(Scene arg0)
+        {
+            DisposeDefaultInstance();
         }
 
         /// <summary>
@@ -1792,7 +1826,33 @@ namespace UnityIoC
                         var innerType = dataBindingType.GetGenericArguments().FirstOrDefault();
                         if (innerType != null)
                         {
-                            Context.Resolve(innerType, LifeCycle.Transient, resolveFrom, null);
+                            var viewObject = Resolve(innerType, LifeCycle.Transient, resolveFrom, null);
+
+                            //check if viewObject implements the IObserver interface
+                            var observerType = viewObject.GetType().GetInterfaces()
+                                .Where(i => i.IsGenericType)
+                                .FirstOrDefault(i => i.GetGenericTypeDefinition() == typeof(IObserver<>));
+
+                            if (observerType != null)
+                            {
+                                //check if the resolved object implements the IObservable interface
+                                var dataObservableType = resolveObject.GetType().GetInterfaces()
+                                    .Where(i => i.IsGenericType)
+                                    .FirstOrDefault(i => i.GetGenericTypeDefinition() == typeof(IObservable<>));
+
+//                                var innerObserverType = dataObservableType.GetGenericArguments().FirstOrDefault();
+                                //resolve the type that is contained in the IDataBinding<> arguments
+                                if (dataObservableType != null)
+                                {
+                                    var mi = resolveObject.GetType().GetMethods()
+                                        .FirstOrDefault(m => m.Name == "Subscribe");
+                                    if (mi != null)
+                                    {
+                                        mi.Invoke(resolveObject, new[] {viewObject});
+                                        DataBindings[resolveObject] = viewObject;
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -1803,7 +1863,7 @@ namespace UnityIoC
         }
 
         /// <summary>
-        /// Resolve C# only objects with parameters for constructors
+        /// Create a new brand C# only objects with parameters for its constructors
         /// </summary>
         /// <param name="parameters"></param>
         /// <typeparam name="T"></typeparam>
@@ -1815,7 +1875,7 @@ namespace UnityIoC
         }
 
         /// <summary>
-        /// Create a brand new C#/Unity object as [transient], existing object as [singleton] or [component] which has been gotten from inside gameObject
+        /// Create a new brand C#/Unity object as [transient], existing object as [singleton] or [component] which has been gotten from inside gameObject
         /// </summary>
         public static T Resolve<T>(
             LifeCycle lifeCycle = LifeCycle.Default,
@@ -1826,7 +1886,7 @@ namespace UnityIoC
         }
 
         /// <summary>
-        /// Create a brand new object as [transient], existing object as [singleton] or [component] which has been gotten from inside gameObject
+        /// Create an Unity Component as [transient], existing object as [singleton] or [component] which has been gotten from inside gameObject
         /// </summary>
         public static T Resolve<T>(
             Transform parents,
@@ -1896,10 +1956,195 @@ namespace UnityIoC
         }
 
         /// <summary>
+        /// Update objects from resolvedObject cache by an action
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <param name="updateAction"></param>
+        /// <typeparam name="T"></typeparam>
+        public static void Update<T>(T obj, Action<T> updateAction) where T : class
+        {
+            var type = typeof(T);
+            if (ResolvedObjects.ContainsKey(type))
+            {
+                updateAction(obj);
+                UpdateView(ref obj);
+            }
+        }
+
+        /// <summary>
+        /// Don't update the object but Will update the ViewLayer of the object
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <typeparam name="T"></typeparam>
+        public static void UpdateView<T>(ref T obj) where T : class
+        {
+            Type type = typeof(T);
+//update the dataBindings
+            if (DataBindings.ContainsKey(obj))
+            {
+                var viewLayer = DataBindings[obj];
+                if (obj == null)
+                {
+                    //remove view if data is null
+                    if (viewLayer.GetType().IsSubclassOf(typeof(MonoBehaviour)))
+                    {
+                        Object.Destroy((viewLayer as MonoBehaviour).gameObject);
+                    }
+
+                    DataBindings.Remove(obj);
+                }
+                else
+                {
+                    var mi = viewLayer.GetType().GetMethod("OnNext");
+                    mi.Invoke(viewLayer, new object[] {obj});
+                }
+            }
+
+            if (obj == null)
+            {
+                //remove object if data is null
+                OnDisposed.Value = obj;
+            }
+        }
+
+        /// <summary>
+        /// Detele an object from resolvedObject cache
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <param name="updateAction"></param>
+        /// <typeparam name="T"></typeparam>
+        public static void Delete<T>(Func<T, bool> filter) where T : class
+        {
+            Update(filter, (ref T obj) => obj = null);
+        }
+
+        /// <summary>
+        /// Detele an object from resolvedObject cache
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <param name="updateAction"></param>
+        /// <typeparam name="T"></typeparam>
+        public static void Delete<T>(T @object) where T : class
+        {
+            Update(o => o == @object, (ref T obj) => obj = null);
+        }
+
+        /// <summary>
+        /// Update an object from resolvedObject cache by a ref action
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <param name="updateAction"></param>
+        /// <typeparam name="T"></typeparam>
+        public static void Update<T>(Func<T, bool> filter, RefAction<T> updateAction) where T : class
+        {
+            var type = typeof(T);
+            if (ResolvedObjects.ContainsKey(type))
+            {
+                var objs = ResolvedObjects[type].Where(o => filter(o as T)).ToArray();
+                for (var index = 0; index < objs.Length; index++)
+                {
+                    //call the delegate
+                    var obj = objs[index] as T;
+                    updateAction(ref obj);
+
+                    //update the dataBindings
+                    if (DataBindings.ContainsKey(objs[index]))
+                    {
+                        var viewLayer = DataBindings[objs[index]];
+                        if (obj == null)
+                        {
+                            //remove view if data is null
+                            if (viewLayer.GetType().IsSubclassOf(typeof(MonoBehaviour)))
+                            {
+                                Object.Destroy((viewLayer as MonoBehaviour).gameObject);
+                            }
+
+                            DataBindings.Remove(objs[index]);
+                        }
+                        else
+                        {
+                            var mi = viewLayer.GetType().GetMethod("OnNext");
+                            mi.Invoke(viewLayer, new object[] {obj});
+                        }
+                    }
+
+                    if (obj == null)
+                    {
+                        //remove object if data is null
+                        OnDisposed.Value = objs[index];
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Update an object from resolvedObject cache by an action
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <param name="updateAction"></param>
+        /// <typeparam name="T"></typeparam>
+        public static void Update<T>(Func<T, bool> filter, Action<T> updateAction) where T : class
+        {
+            var type = typeof(T);
+            if (ResolvedObjects.ContainsKey(type))
+            {
+                var objs = ResolvedObjects[type].Where(o => filter(o as T)).ToArray();
+                for (var index = 0; index < objs.Length; index++)
+                {
+                    //call the delegate
+                    var obj = objs[index] as T;
+                    updateAction(obj);
+
+                    //update the dataBindings
+                    if (DataBindings.ContainsKey(objs[index]))
+                    {
+                        var viewLayer = DataBindings[objs[index]];
+                        var mi = viewLayer.GetType().GetMethod("OnNext");
+                        mi.Invoke(viewLayer, new object[] {obj});
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Get all resolved objects of a type
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static T[] GetObjects<T>() where T : class
+        {
+            return ResolvedObjects[typeof(T)].Cast<T>().ToArray();
+        }
+        
+        /// <summary>
+        /// Get all resolved objects of a type by a filter
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static T[] GetObjects<T>(Func<T, bool> filter) where T : class
+        {
+            return ResolvedObjects[typeof(T)].Where(p => filter(p as T)).Cast<T>().ToArray();
+        }
+
+        /// <summary>
+        /// Get the first resolved object of a type
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static T GetObject<T>(Func<T, bool> filter) where T : class
+        {
+            return ResolvedObjects[typeof(T)].FirstOrDefault(p => filter(p as T)) as T;
+        }
+
+        public delegate void RefAction<T>(ref T obj);
+
+        /// <summary>
         /// Dispose an obj, which should be created by the Context
         /// </summary>
         /// <param name="obj"></param>
-        public static void Dispose(object obj)
+        public static void Dispose(ref object obj)
         {
             if (obj != null)
             {
@@ -1909,7 +2154,7 @@ namespace UnityIoC
                     ResolvedObjects[type] = new HashSet<object>();
                 }
 
-                ResolvedObjects[obj.GetType()].Remove(obj);
+                DataBindings.Remove(obj);
                 OnDisposed.Value = obj;
 
                 var disposable = obj as IDisposable;

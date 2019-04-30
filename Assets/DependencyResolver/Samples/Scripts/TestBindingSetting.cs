@@ -19,7 +19,7 @@ namespace SceneTest
         [Component("/Canvas/Text/Text2")] private Text text2;
         [Component("Canvas/Text/Text2")] private Text text4;
         [Transient] private Text text3;
-        
+
         void Start()
         {
             //create context which will automatically load binding setting by the assembly name
@@ -33,7 +33,7 @@ namespace SceneTest
 
             //you should see a log of this action in unity console
             obj.DoSomething();
-            
+
             //check ReferenceEquals, should be true
             Debug.Log("OKKKKK: " + ReferenceEquals(obj, obj2));
             Debug.Log("OKKKKK: " + !ReferenceEquals(obj3, obj2));
@@ -45,8 +45,8 @@ namespace SceneTest
 
 //            GameObject.Find("MonoBehaviourTest: TestRunner").GetComponent<ITestScene>().OpenNextTestScene();
 
-            Context.Resolve<ITestScene>().OpenNextTestScene();
+            Context.DisposeDefaultInstance();
+            Context.Resolve<ITestSceneRunner>(LifeCycle.Singleton).OpenNextTestScene();
         }
-        
     }
 }

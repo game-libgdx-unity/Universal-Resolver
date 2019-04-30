@@ -15,4 +15,9 @@ public class ContextBehaviour : MonoBehaviour
 			context.LoadBindingSetting(customSetting);
 		}
 	}
+
+	private void OnDestroy()
+	{
+		Context.DisposeDefaultInstance();
+	}
 }
