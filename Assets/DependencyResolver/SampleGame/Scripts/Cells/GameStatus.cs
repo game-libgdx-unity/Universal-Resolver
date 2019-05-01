@@ -2,5 +2,6 @@
 {
     InProgress,
     Failed,
+    Success,
     Completed
 }

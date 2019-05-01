@@ -49,16 +49,22 @@ namespace App.Scripts.Boards
                 EndTurn_OpenAllCells();
             }
 
+            yield return new WaitForSeconds(waitForNextStep);
+
             RevealAllMines();
 
             if (Status.Value == GameStatus.Failed)
             {
                 Debug.Log("Solver Failed!");
             }
-            else if (Status.Value == GameStatus.Completed)
+            else if (Status.Value == GameStatus.Success)
             {
                 Debug.Log("Solver Success");
             }
+            
+            
+            yield return new WaitForSeconds(waitForNextStep);
+            Status.Value = GameStatus.Completed;
         }
 
         private void RevealAllMines()

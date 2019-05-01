@@ -26,41 +26,6 @@ public class PlayerListUI : MonoBehaviour
         var objCount = Context.ResolvedObjects[typeof(PlayerData)].Count;
         Debug.Log(objCount);
         Debug.Assert(GetFriendNames().Count() == objCount);
-
-        //update by filter
-        Context.Update<PlayerData>(
-            p => p.name == "John",
-            data => data.name = "Vinh" //update John to Vinh from cache
-        );
-
-        //delete by filter
-        Context.Delete<PlayerData>(
-            p => p.name == "Jim"
-        );
-
-        //update by ref
-        var jane = Context.GetObject<PlayerData>(p => p.name == "Jane");
-        Context.Update(jane, p => p.name = "Nguyen");
-
-        //update by filter but this object has been deleted already
-        Context.Update<PlayerData>(
-            p => p.name == "Jim",
-            data => data.name = "Hm... not found" //should have no action
-        );
-
-        //now check number of cached object
-        objCount = Context.ResolvedObjects[typeof(PlayerData)].Count;
-        Debug.Log(objCount);
-        Debug.Assert(objCount == 3);
-
-        //continue trying to create another player
-        var jimmy = Context.Resolve<PlayerData>("Jimmy");
-
-        //update by ref
-        Context.Update(jimmy, p => p.name = "Dung");
-
-        //try to delete david
-        Context.Delete<PlayerData>(p => p.name == "David");
     }
 
     IEnumerable<string> GetFriendNames()

@@ -8,7 +8,7 @@ using UnityIoC;
 /// <summary>
 /// General solutions for injecting most of types, also support getting from context caches
 /// </summary>
-public class InjectAttribute : ComponentAttribute
+public class InjectAttribute : ComponentAttribute, IObjectResolvable
 {
     public InjectAttribute() : base(LifeCycle.Inject, null)
     {
@@ -18,6 +18,16 @@ public class InjectAttribute : ComponentAttribute
     {
     }
 
+    public object GetObject(Type type)
+    {
+        //can't get object if Path is empty
+        if (string.IsNullOrEmpty(Path))
+        {
+            return null;
+        }
+
+        return Resources.Load(Path, type);
+    }
 
     public override Component GetComponent(MonoBehaviour behaviour, Type type)
     {
@@ -42,7 +52,7 @@ public class InjectAttribute : ComponentAttribute
                     return component;
                 }
             }
-            
+
             var ancestors = go.Ancestors();
             foreach (var gameObject in ancestors)
             {
@@ -55,7 +65,7 @@ public class InjectAttribute : ComponentAttribute
                     }
                 }
             }
-            
+
             if (!string.IsNullOrEmpty(Path) && type.IsSubclassOf(typeof(MonoBehaviour)))
             {
                 return go.AddComponent(type);

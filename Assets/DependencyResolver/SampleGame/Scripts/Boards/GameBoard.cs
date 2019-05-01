@@ -164,7 +164,7 @@ namespace App.Scripts.Boards
             var mineCells = Cells.Where(x => x.IsMine.Value).Select(x => x.ID);
             if (!hiddenCells.Except(mineCells).Any())
             {
-                Status.Value = GameStatus.Completed;
+                Status.Value = GameStatus.Success;
             }
         }
 

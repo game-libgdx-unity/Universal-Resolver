@@ -35,15 +35,7 @@ public class Cell : MonoBehaviour
         
         Debug.Assert(cellData != null);
         SetCellData(cellData);
-        
-        //find the last object
-//        var cellData = Context.ResolvedObjects.Last(o => o.GetType() == typeof(CellData));
-//        if (cellData != null)
-//        {
-//            SetCellData(cellData as CellData);
-//        }
     }
-
 
     public void SetCellData(CellData data)
     {

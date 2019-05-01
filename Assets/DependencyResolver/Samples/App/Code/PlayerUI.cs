@@ -14,7 +14,7 @@ public class PlayerUI : MonoBehaviour, IDataView<PlayerData>
 
     public void OnNext(PlayerData playerData)
     {
-        txtName.text = playerData.name;
+        txtName.text = playerData.meta.DisplayName;
         btnDelete.onClick.AddListener(() => { Context.Delete(playerData); });
     }
 }

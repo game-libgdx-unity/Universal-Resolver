@@ -28,9 +28,9 @@ public class MapGenerator : MonoBehaviour
 //    [Prefab] private Cell cell;
     [Singleton] private IGameSolver gameSolver;
     [Singleton] private IGameBoard gameBoard;
+    [Singleton] private Observable<GameStatus> gameStatus;
 
     private GameSetting gameSetting = new GameSetting();
-    private Observable<GameStatus> gameStatus = new Observable<GameStatus>();
 
     private void Awake()
     {
@@ -41,7 +41,18 @@ public class MapGenerator : MonoBehaviour
     private void Start()
     {
         //setup game status, when it get changes
-        gameStatus.Subscribe(status => { print("Game status: " + status.ToString()); })
+        gameStatus.Subscribe(status =>
+            {
+                print("Game status: " + status.ToString());
+                if (status == GameStatus.Completed)
+                {
+                    print("Finished");
+                    btnRestart.gameObject.SetActive(true);
+                    
+                    //try to delete all cells
+                    Context.DeleteAll<CellData>();
+                }
+            })
             .AddTo(gameObject);
 
         //setup button restart
@@ -92,8 +103,5 @@ public class MapGenerator : MonoBehaviour
     IEnumerator SolveRoutine()
     {
         yield return gameSolver.Solve(1f);
-
-        print("Finished");
-        btnRestart.gameObject.SetActive(true);
     }
 }

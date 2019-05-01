@@ -8,6 +8,8 @@ namespace SceneTest
 	{
 		[Transient] public IAbstract @abstract;
 
+		[Inject("ATestScriptableObject")] public TestScriptableObject ScriptableObject;
+
 		// Use this for initialization
 		void Start()
 		{

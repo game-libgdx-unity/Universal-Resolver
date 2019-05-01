@@ -366,7 +366,7 @@ namespace UnityIoC.Editor
             gameObject.GetOrAddComponent<TestComponent>();
 
             //try to get its component
-            var comp = Context.GetComponent(typeof(IComponentAbstract), gameObject, null);
+            var comp = Context.ResolveFromGameObject(typeof(IComponentAbstract), gameObject, null);
             //resolve a component
 
             Assert.IsNotNull(comp);
@@ -382,7 +382,7 @@ namespace UnityIoC.Editor
             gameObject.GetOrAddComponent<TestComponent>();
 
             //try to get its component
-            var comp = Context.GetComponent<IComponentAbstract>(gameObject, null);
+            var comp = Context.ResolveFromGameObject<IComponentAbstract>(gameObject, null);
             //resolve a component
 
             Assert.IsNotNull(comp);
@@ -398,7 +398,7 @@ namespace UnityIoC.Editor
             gameObject.GetOrAddComponent<TestComponent>();
 
             //try to get its component
-            var comp = Context.GetComponent<IComponentAbstract>(gameObject, null);
+            var comp = Context.ResolveFromGameObject<IComponentAbstract>(gameObject, null);
             //resolve a component
 
             Assert.IsNotNull(comp);
@@ -524,6 +524,14 @@ namespace UnityIoC.Editor
             objCount = Context.ResolvedObjects[typeof(PlayerData)].Count;
             Assert.IsTrue(objCount == 0);
             
+        }
+        
+        [Test]
+        public void t32_resolve_scriptable_object()
+        {
+             var t4 =  Context.Resolve<TestComponent4>();
+            Assert.IsNotNull(t4.ScriptableObject);
+            Assert.AreEqual(100, t4.ScriptableObject.Amount);
         }
 
         IEnumerable<string> GetFriendNames()

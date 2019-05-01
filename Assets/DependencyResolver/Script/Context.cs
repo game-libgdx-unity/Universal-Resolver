@@ -19,10 +19,9 @@ using Object = UnityEngine.Object;
 namespace UnityIoC
 {
     public partial class Context
-
+    {
         #region Variables & Constants
 
-    {
         /// <summary>
         /// This is the default name of the default assembly that unity generated to compile your code
         /// </summary>
@@ -538,6 +537,17 @@ namespace UnityIoC
                     //try get from cache if conditions are met
                     component = TryGetObjectFromCache(inject, property.PropertyType);
 
+                    //link view object to data object
+                    if (mono is Component && component != null)
+                    {
+                        if (!DataBindings.ContainsKey(component))
+                        {
+                            DataBindings[component] = new HashSet<object>();
+                        }
+
+                        DataBindings[component].Add(mono);
+                    }
+
                     //try to use IObjectResolvable to resolve objects
                     if (component == null && !property.PropertyType.IsSubclassOf(typeof(Component)))
                     {
@@ -547,7 +557,7 @@ namespace UnityIoC
                     //try to use IComponentResolvable to resolve objects
                     if (component == null)
                     {
-                        component = GetComponent(mono, property.PropertyType, inject);
+                        component = ResolveFromGameObject(mono, property.PropertyType, inject);
                     }
 
                     if (component != null)
@@ -699,6 +709,17 @@ namespace UnityIoC
                     //try get from cache if conditions are met
                     component = TryGetObjectFromCache(inject, type);
 
+                    //link view object to data object
+                    if (mono is Component && component != null)
+                    {
+                        if (!DataBindings.ContainsKey(component))
+                        {
+                            DataBindings[component] = new HashSet<object>();
+                        }
+
+                        DataBindings[component].Add(mono);
+                    }
+
                     //try to use IObjectResolvable to resolve objects
                     if (component == null && !type.IsSubclassOf(typeof(Component)))
                     {
@@ -708,7 +729,7 @@ namespace UnityIoC
                     //try to use IComponentResolvable to resolve objects
                     if (component == null)
                     {
-                        component = GetComponent(mono, type, inject);
+                        component = ResolveFromGameObject(mono, type, inject);
                     }
 
                     if (component != null)
@@ -814,7 +835,7 @@ namespace UnityIoC
         /// </summary>
         /// <param name="mono">object is expected as unity mono behaviour</param>
         /// <returns>the component</returns>
-        private Component GetComponent(object mono, Type type, InjectBaseAttribute injectAttribute)
+        private object ResolveFromGameObject(object mono, Type type, InjectBaseAttribute injectAttribute)
         {
             var behaviour = mono as MonoBehaviour;
 
@@ -823,27 +844,42 @@ namespace UnityIoC
             //output component
             Component component = null;
 
-            //resolve by inject component to the gameobject
-            var injectComponent = injectAttribute as IComponentResolvable;
-
-            //try get/add component with IInjectComponent interface
-            if (injectComponent != null)
+            if (type.IsSubclassOf(typeof(Component)))
             {
-                component = injectComponent.GetComponent(behaviour, type);
-                //unable to get it from gameObject
-                if (component != null)
+                //try get/add component with IInjectComponent interface
+                //resolve by IComponentResolvable to get component to the gameobject
+                var componentResolvable = injectAttribute as IComponentResolvable;
+                if (componentResolvable != null)
                 {
-                    /////////////////////////////////
-//                    ProcessInjectAttribute(component);
-
-                    if (injectAttribute.LifeCycle == LifeCycle.Prefab)
+                    component = componentResolvable.GetComponent(behaviour, type);
+                    //unable to get it from gameObject
+                    if (component != null)
                     {
-                        component.gameObject.SetActive(false);
+                        if (injectAttribute.LifeCycle == LifeCycle.Prefab)
+                        {
+                            component.gameObject.SetActive(false);
+                        }
+
+                        return component;
                     }
                 }
             }
 
-            return component;
+            if (type.IsSubclassOf(typeof(ScriptableObject)))
+            {
+                //resolve by IObjectResolvable to get the scriptableObject
+                var objectResolvable = injectAttribute as IObjectResolvable;
+                if (objectResolvable != null)
+                {
+                    var obj = objectResolvable.GetObject(type);
+                    if (obj != null)
+                    {
+                        return obj;
+                    }
+                }
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -1614,6 +1650,18 @@ namespace UnityIoC
             }
         }
 
+        public static T PatchObjectFromJson<T>(object obj, string json) where T : class
+        {
+            JsonUtility.FromJsonOverwrite(json, obj);
+            UpdateView(ref obj);
+            if (obj != null)
+            {
+                return obj as T;
+            }
+
+            return default(T);
+        }
+
         public static T ResolveFromJson<T>(string json)
         {
             var obj = JsonUtility.FromJson<T>(json);
@@ -1972,6 +2020,26 @@ namespace UnityIoC
         }
 
         /// <summary>
+        /// Update objects as ref from resolvedObject cache by an action
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <param name="updateAction"></param>
+        /// <typeparam name="T"></typeparam>
+        public static T Update<T>(ref T obj, RefAction<T> updateAction) where T : class
+        {
+            var type = typeof(T);
+            if (ResolvedObjects.ContainsKey(type))
+            {
+                updateAction(ref obj);
+                UpdateView(ref obj);
+
+                return obj;
+            }
+
+            return default(T);
+        }
+
+        /// <summary>
         /// Don't update the object but Will update the ViewLayer of the object
         /// </summary>
         /// <param name="obj">view object</param>
@@ -2092,7 +2160,7 @@ namespace UnityIoC
 
                     if (obj == null)
                     {
-                        //remove object if data is null
+                        //remove the old object if data is null
                         OnDisposed.Value = objs[index];
                     }
                 }
@@ -2132,7 +2200,7 @@ namespace UnityIoC
         }
 
         /// <summary>
-        /// Get all resolved objects of a type
+        /// Get all resolved objects of a type from resolvedObjects cache
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
@@ -2142,7 +2210,7 @@ namespace UnityIoC
         }
 
         /// <summary>
-        /// Get all resolved objects of a type by a filter
+        /// Get all resolved objects of a type by a filter from resolvedObjects cache
         /// </summary>
         /// <param name="filter"></param>
         /// <typeparam name="T"></typeparam>
@@ -2153,7 +2221,7 @@ namespace UnityIoC
         }
 
         /// <summary>
-        /// Get the first resolved object of a type
+        /// Get the first matching object of a type from resolvedObjects cache
         /// </summary>
         /// <param name="filter"></param>
         /// <typeparam name="T"></typeparam>
@@ -2166,7 +2234,7 @@ namespace UnityIoC
         public delegate void RefAction<T>(ref T obj);
 
         /// <summary>
-        /// Dispose an obj, which should be created by the Context
+        /// Dispose an obj, which has been created by the Context before.
         /// </summary>
         /// <param name="obj"></param>
         public static void Dispose(ref object obj)
@@ -2292,7 +2360,7 @@ namespace UnityIoC
         /// <param name="component"></param>
         /// <param name="path"></param>
         /// <returns></returns>
-        public static Component GetComponent(
+        public static Component ResolveFromGameObject(
             Type type,
             MonoBehaviour component,
             string path
@@ -2310,7 +2378,7 @@ namespace UnityIoC
         /// <param name="gameObject"></param>
         /// <param name="path"></param>
         /// <returns></returns>
-        public static Component GetComponent(
+        public static Component ResolveFromGameObject(
             Type type,
             GameObject gameObject,
             string path
@@ -2320,7 +2388,7 @@ namespace UnityIoC
             if (comp)
             {
                 //resolve with path
-                var component = GetComponent(type, comp, path);
+                var component = ResolveFromGameObject(type, comp, path);
                 if (component)
                     return component;
             }
@@ -2336,7 +2404,7 @@ namespace UnityIoC
         /// <param name="path"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static T GetComponent<T>(
+        public static T ResolveFromGameObject<T>(
             GameObject gameObject,
             string path
         )
@@ -2347,7 +2415,7 @@ namespace UnityIoC
             if (comp)
             {
                 //resolve with path
-                var component = GetComponent(type, comp, path) as T;
+                var component = ResolveFromGameObject(type, comp, path) as T;
                 if (component != null)
                     return component;
             }
@@ -2363,13 +2431,13 @@ namespace UnityIoC
         /// <param name="path"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static T GetComponent<T>(
+        public static T ResolveFromGameObject<T>(
             MonoBehaviour component,
             string path
         )
             where T : class
         {
-            return GetComponent(typeof(T), component, path) as T;
+            return ResolveFromGameObject(typeof(T), component, path) as T;
         }
 
         /// <summary>
