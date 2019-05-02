@@ -92,7 +92,7 @@ namespace Unity.Linq
             if (detachParent)
             {
                 var l = new List<GameObject>(source); // avoid halloween problem
-                var e = l.GetEnumerator(); // get struct enumerator for avoid unity's compiler bug(avoid boxing)
+                var e = l.GetEnumerator();
                 while (e.MoveNext())
                 {
                     e.Current.Destroy(useDestroyImmediate, true);

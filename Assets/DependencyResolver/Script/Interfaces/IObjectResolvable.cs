@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 
 /// <summary>
-/// Should be implemented in mono behaviour to get a non-component when processing mono-behaviour
+/// Should be implemented in inject attributes / mono behaviour to get a non-component when processing mono-behaviour
 /// </summary>
 public interface IObjectResolvable
 {

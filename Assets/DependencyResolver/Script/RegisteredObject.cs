@@ -142,7 +142,7 @@ namespace UnityIoC
                         var defaultConstructor = ImplementedType.GetConstructors().FirstOrDefault(c=>c.GetParameters().Length == 0);
                         if (defaultConstructor == null && args.Length == 0)
                         {
-                            // if args are empty, cannot resolve with no default Constructor
+                            // if args are empty, cannot resolve with non-default Constructors
                             // this is most likely happened when you [inject] a field from Mono-behaviour
                             // that doesn't have a default constructor
                             return null;

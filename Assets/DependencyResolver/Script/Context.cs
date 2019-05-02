@@ -585,26 +585,11 @@ namespace UnityIoC
                  (inject.LifeCycle & LifeCycle.Cache) == LifeCycle.Cache) &&
                 ResolvedObjects.Count > 0)
             {
-                if (!ResolvedObjects.ContainsKey(type))
-                {
-                    ResolvedObjects[type] = new HashSet<object>();
-                }
-
-                var hashSet = ResolvedObjects[type];
-
-                if (hashSet.Count == 0)
-                {
-                    return null;
-                }
-
-                return hashSet.Last(
-                    o => type.IsInterface && type.IsAssignableFrom(o.GetType())
-                         || !type.IsInterface && o.GetType() == type);
+                return GetObjectFromCache(type);
             }
 
             return null;
         }
-
 
         private void ProcessVariables(object mono, bool ignoreMonobehaviour)
         {
@@ -1028,6 +1013,26 @@ namespace UnityIoC
             var arg2 = (Input2) ResolveObject(typeof(Input2), lifeCycle2, resultFrom2);
             return func(arg1, arg2);
         }
+
+        public static object GetObjectFromCache(Type type)
+        {
+            if (!ResolvedObjects.ContainsKey(type))
+            {
+                ResolvedObjects[type] = new HashSet<object>();
+            }
+
+            var hashSet = ResolvedObjects[type];
+
+            if (hashSet.Count == 0)
+            {
+                return null;
+            }
+
+            return hashSet.Last(
+                o => type.IsInterface && type.IsAssignableFrom(o.GetType())
+                     || !type.IsInterface && o.GetType() == type);
+        }
+
 
 
         /// <summary>
@@ -1870,32 +1875,49 @@ namespace UnityIoC
 
                     foreach (var dataBindingType in dataBindingTypes)
                     {
-                        //resolve the type that is contained in the IDataBinding<> arguments
+                        //resolve the type that is the type argument of IDataBinding<> 
                         var innerType = dataBindingType.GetGenericArguments().FirstOrDefault();
                         if (innerType != null)
                         {
-                            var viewObject = Resolve(innerType, LifeCycle.Transient, resolveFrom, null);
+                            var viewObject = GetDefaultInstance(typeToResolve)
+                                .ResolveObject(innerType, LifeCycle.Transient, resolveFrom, null);
 
                             //check if viewObject implements the IDataView interface
-                            var observerType = viewObject.GetType().GetInterfaces()
+                            var observerTypes = viewObject.GetType().GetInterfaces()
                                 .Where(i => i.IsGenericType)
-                                .FirstOrDefault(i => i.GetGenericTypeDefinition() == typeof(IDataView<>));
+                                .Where(i => i.GetGenericTypeDefinition() == typeof(IDataView<>));
 
-                            if (observerType != null)
+                            foreach (var observerType in observerTypes)
                             {
+                                var observerInnerType = observerType.GetGenericArguments().FirstOrDefault();
+                                
                                 var mi = viewObject.GetType().GetMethods()
-                                    .FirstOrDefault(m => m.Name == "OnNext");
-                                if (mi != null)
+                                    .FirstOrDefault(m => m.Name == "OnNext" && m.GetParameters().FirstOrDefault().ParameterType == observerInnerType);
+                                
+                                if (resolveObject.GetType() != observerInnerType)
                                 {
-                                    mi.Invoke(viewObject, new[] {resolveObject});
-
-                                    if (!DataBindings.ContainsKey(resolveObject))
+                                    try
                                     {
-                                        DataBindings[resolveObject] = new HashSet<object>();
-                                    }
+                                        var cachedObj =
+                                            GetObjectFromCache(observerInnerType) ?? GetDefaultInstance(typeToResolve)
+                                                .ResolveObject(typeToResolve, LifeCycle.Transient);
 
-                                    DataBindings[resolveObject].Add(viewObject);
+                                        resolveObject = cachedObj;
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        resolveObject = Activator.CreateInstance(observerInnerType);
+                                    }
                                 }
+                                
+                                mi.Invoke(viewObject, new[] {resolveObject});
+
+                                if (!DataBindings.ContainsKey(resolveObject))
+                                {
+                                    DataBindings[resolveObject] = new HashSet<object>();
+                                }
+
+                                DataBindings[resolveObject].Add(viewObject);
                             }
                         }
                     }

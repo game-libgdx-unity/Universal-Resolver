@@ -20,7 +20,7 @@ namespace UnityIoC.Editor
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene);
             Context.DisposeDefaultInstance();
         }
-        
+
         [Test]
         public void t1_get_default_instance()
         {
@@ -426,17 +426,11 @@ namespace UnityIoC.Editor
             var request = "{\"serverip\":\"127.0.0.1\"}";
 
             //call the api
-            yield return Context.Post(link, request, 
-                msg =>
-                {
-                    Assert.AreEqual("OK", msg);
-                },
-                error =>
-                {
-                    Assert.Fail("Error: " + error);
-                });
+            yield return Context.Post(link, request,
+                msg => { Assert.AreEqual("OK", msg); },
+                error => { Assert.Fail("Error: " + error); });
         }
-        
+
         [UnityTest]
         public IEnumerator t28_test_get_from_api()
         {
@@ -463,10 +457,11 @@ namespace UnityIoC.Editor
             //act
             //try to get object from the comp
             var get = Context.GetObject<IAbstract>(comp);
-            
+
             //assert
             Assert.AreSame(obj, get);
         }
+
         [Test]
         public void t31_get_update_delete()
         {
@@ -487,7 +482,7 @@ namespace UnityIoC.Editor
 
             var vinh = Context.GetObject<PlayerData>(p => p.name == "Vinh");
             Assert.AreEqual(vinh.name, "Vinh");
-            
+
             //delete by filter
             Context.Delete<PlayerData>(
                 p => p.name == "Jim"
@@ -518,20 +513,32 @@ namespace UnityIoC.Editor
 
             Assert.IsTrue(jimmy.name == "Dung");
             Assert.IsTrue(jane.name == "Nguyen");
-            
+            Assert.IsTrue(Context.GetObject<PlayerData>(p => p.name == "David") == null);
+
             Context.DeleteAll<PlayerData>();
             //now check number of cached object
             objCount = Context.ResolvedObjects[typeof(PlayerData)].Count;
             Assert.IsTrue(objCount == 0);
-            
         }
-        
+
         [Test]
         public void t32_resolve_scriptable_object()
         {
-             var t4 =  Context.Resolve<TestComponent4>();
+            var t4 = Context.Resolve<TestComponent4>();
             Assert.IsNotNull(t4.ScriptableObject);
             Assert.AreEqual(100, t4.ScriptableObject.Amount);
+        }
+
+        [Test]
+        public void t33_context_object_from_cache()
+        {
+            Context.Resolve<PlayerData>("Vinh");
+            Context.Resolve<PlayerData>("John");
+            Context.Resolve<PlayerData>().name="Dan";
+            Context.Resolve<PlayerData>("Jim");
+
+            Assert.AreEqual(4, Context.GetObjects<PlayerData>().Length);
+            Assert.AreEqual("Jim", (Context.GetObjectFromCache(typeof(PlayerData)) as PlayerData).name);
         }
 
         IEnumerable<string> GetFriendNames()
@@ -547,7 +554,7 @@ namespace UnityIoC.Editor
         {
             //should be false as default
             Assert.IsFalse(Context.Initialized);
-            
+
             //create
             Context.GetDefaultInstance(this);
 
@@ -558,15 +565,20 @@ namespace UnityIoC.Editor
             Assert.IsFalse(Context.Initialized);
         }
     }
-    
-    
+
+
     [Serializable]
     public class PlayerData
     {
         public string name;
+
         public PlayerData(string name)
         {
             this.name = name;
         }
+
+//        public PlayerData()
+//        {
+//        }
     }
 }

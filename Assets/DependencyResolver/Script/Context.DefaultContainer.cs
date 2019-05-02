@@ -123,7 +123,7 @@ namespace UnityIoC
         {
             private const BindingFlags BindingFlags = System.Reflection.BindingFlags.Instance |
                                                       System.Reflection.BindingFlags.NonPublic |
-                                                      System.Reflection.BindingFlags.NonPublic;
+                                                      System.Reflection.BindingFlags.Public;
 
             private Dictionary<ResolveInput, RegisteredObject> CachedResolveResults =
                 new Dictionary<ResolveInput, RegisteredObject>(new CacheEqualityComparer());
@@ -378,6 +378,16 @@ namespace UnityIoC
             )
             {
                 ResolveInput resolveInput = new ResolveInput();
+                
+                if(abstractType.IsValueType)
+                {
+                    return Activator.CreateInstance(abstractType);
+                }
+
+                if (abstractType == typeof(string))
+                {
+                    return string.Empty;
+                }
 
                 //only cache for non-array types
                 if (!abstractType.IsArray)
@@ -632,12 +642,12 @@ namespace UnityIoC
 
                     if (parameters == null || parameters.Length == 0)
                     {
-                        paramArray = ResolveConstructorParameters(registeredObject).ToArray();
+                        paramArray = ResolveConstructorParameters(registeredObject.ImplementedType).ToArray();
                     }
                     else if (parameters.GetType().GetElementType() == typeof(Type))
                     {
                         var elementTypes = parameters.Select(p => p as Type).ToArray();
-                        paramArray = ResolveConstructorParameters(registeredObject, elementTypes).ToArray();
+                        paramArray = ResolveConstructorParameters(registeredObject.ImplementedType, elementTypes).ToArray();
                     }
                     else
                     {
@@ -662,20 +672,20 @@ namespace UnityIoC
                 return registeredObject.Instance;
             }
 
-            private IEnumerable<object> ResolveConstructorParameters(RegisteredObject registeredObject,
+            private IEnumerable<object> ResolveConstructorParameters(Type type,
                 Type[] elementTypes = null)
             {
                 ConstructorInfo constructorInfo = null;
 
                 if (elementTypes == null || elementTypes.Length == 0)
                 {
-                    constructorInfo = registeredObject.ImplementedType
+                    constructorInfo = type
                         .GetConstructors(BindingFlags)
                         .FirstOrDefault();
                 }
                 else
                 {
-                    constructorInfo = registeredObject.ImplementedType
+                    constructorInfo = type
                         .GetConstructor(elementTypes);
                 }
 
@@ -683,7 +693,7 @@ namespace UnityIoC
                 {
                     debug.Log(
                         "No constructor to resolve object of {0} found, will use the default constructor",
-                        registeredObject.ImplementedType);
+                        type);
                     yield break;
                 }
 
