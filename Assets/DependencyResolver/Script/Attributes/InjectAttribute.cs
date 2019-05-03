@@ -4,6 +4,7 @@ using System.Linq;
 using Unity.Linq;
 using UnityEngine;
 using UnityIoC;
+using Object = UnityEngine.Object;
 
 /// <summary>
 /// General solutions for injecting most of types, also support getting from context caches
@@ -26,7 +27,7 @@ public class InjectAttribute : ComponentAttribute, IObjectResolvable
             return null;
         }
 
-        return Resources.Load(Path, type);
+        return MyResources.Load<Object>(Path, type);
     }
 
     public override Component GetComponent(MonoBehaviour behaviour, Type type)

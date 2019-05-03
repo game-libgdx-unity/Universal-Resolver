@@ -541,6 +541,16 @@ namespace UnityIoC.Editor
             Assert.AreEqual("Jim", (Context.GetObjectFromCache(typeof(PlayerData)) as PlayerData).name);
         }
 
+        [Test]
+        public void t34_context_resolve_ScriptableObject()
+        {
+            var obj = Context.Resolve<TestScriptableObject>("ATestScriptableObject");
+           Assert.AreEqual(100, obj.Amount);
+
+            Assert.AreEqual(1, Context.GetObjects<TestScriptableObject>().Length);
+            Assert.AreEqual(obj, Context.GetObjectFromCache(typeof(TestScriptableObject)));
+        }
+
         IEnumerable<string> GetFriendNames()
         {
             yield return "Jane";

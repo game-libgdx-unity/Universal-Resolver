@@ -379,6 +379,8 @@ namespace UnityIoC
             {
                 ResolveInput resolveInput = new ResolveInput();
                 
+                //quick return for some particular types //
+                
                 if(abstractType.IsValueType)
                 {
                     return Activator.CreateInstance(abstractType);
@@ -389,6 +391,12 @@ namespace UnityIoC
                     return string.Empty;
                 }
 
+                if (abstractType.IsSubclassOf(typeof(ScriptableObject)) && parameters.Cast<string>().Count() == 1)
+                {
+                    return MyResources.Load(parameters[0] as string);
+                }
+
+                //process for other reference types
                 //only cache for non-array types
                 if (!abstractType.IsArray)
                 {
