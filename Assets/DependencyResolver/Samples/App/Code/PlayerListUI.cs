@@ -9,6 +9,8 @@ public class PlayerListUI : MonoBehaviour
     // Use this for initialization
     void Start()
     {
+        Context.CreateViewFromPool = true;
+        
         foreach (var friendName in GetFriendNames())
         {
             Context.Resolve<PlayerData>(friendName);

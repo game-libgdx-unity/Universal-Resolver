@@ -13,6 +13,8 @@ namespace SceneTest
         void Start()
         {
             @abstract.DoSomething();
+            
+            print("TestComponent2 Start()");
         }
 
         public object GetObject(Type type)

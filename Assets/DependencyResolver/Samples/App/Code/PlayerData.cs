@@ -24,6 +24,7 @@ public class PlayerData : IDataBinding<PlayerUI>
     public class Combat
     {
         public int Hitpoint;
+        public int MaxHitpoint;
         public int PhysicDamage;
         public int Amor;
         public int MagicResistent;

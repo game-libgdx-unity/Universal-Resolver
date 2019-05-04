@@ -2,7 +2,8 @@
     "name": "TestRunner",
     "references": [
         "UnityIoC",
-        "DREditor"
+        "DREditor",
+        "SceneTest"
     ],
     "optionalUnityReferences": [
         "TestAssemblies"

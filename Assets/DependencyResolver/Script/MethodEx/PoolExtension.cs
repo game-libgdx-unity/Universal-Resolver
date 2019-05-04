@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -56,6 +56,42 @@ public static class PoolExtension
             g.transform.SetParent(parentObject, false);
         }
 
+        return g;
+    }
+
+    public static T GetObjectFromPool<T>(
+        this List<T> objects,
+        object resolveFrom = null,
+        params object[] parameters)
+        where T : IPoolable
+    {
+        if (objects.Count > 0)
+        {
+            objects.RemoveAll(o => o == null);
+            for (int i = 0; i < objects.Count; i++)
+            {
+                if (objects[i] == null)
+                {
+                    continue;
+                }
+
+                if (!objects[i].Alive)
+                {
+                    var obj = objects[i];
+                    obj.Alive = true;
+                    obj.OnRecycle();
+                    
+                    return obj;
+                }
+            }
+        }
+
+        //not found in pool, create a new one
+        T g =  Context.GetDefaultInstance(typeof(T)).ResolveObject<T>(LifeCycle.Transient, resolveFrom, parameters);
+        g.Alive = true;
+        g.OnRecycle();
+        objects.Add(g);
+        
         return g;
     }
 
@@ -157,6 +193,57 @@ public static class PoolExtension
         {
             T t = Context.Resolve<T>(parentObject, LifeCycle.Prefab, resolveFrom, parameters);
             t.gameObject.SetActive(false);
+            input.Add(t);
+        }
+
+        return input;
+    }
+    public static List<T> Preload<T>(this List<T> input, int num, Func<T> CreateObject)
+        where T : Component
+    {
+        if (input == null)
+        {
+            throw new InvalidOperationException("Input list must not be null!");
+        }
+        else if (input.Count < num)
+        {
+            input.Capacity = num;
+        }
+
+        input.RemoveAll(o => !o);
+
+        var i = 0;
+        while (i++ < num)
+        {
+            T t = CreateObject();
+            t.gameObject.SetActive(false);
+            input.Add(t);
+        }
+
+        return input;
+    }
+
+    public static List<T> Preload<T>(this List<T> input, int num,
+        object resolveFrom = null,
+        params object[] parameters)
+        where T : IPoolable
+    {
+        if (input == null)
+        {
+            throw new InvalidOperationException("Input list must not be null!");
+        }
+        else if (input.Count < num)
+        {
+            input.Capacity = num;
+        }
+
+        input.RemoveAll(o => o == null);
+
+        var i = 0;
+        while (i++ < num)
+        {
+            T t = Context.Resolve<T>(LifeCycle.Transient, resolveFrom, parameters);
+            t.Alive = false;
             input.Add(t);
         }
 

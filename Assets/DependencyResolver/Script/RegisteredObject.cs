@@ -125,7 +125,7 @@ namespace UnityIoC
                         }
 
                         //resolve by Prefab from resources or asset bundles
-                        instance = TryGetGameObject(context, ImplementedType, ImplementedType.Name,
+                        instance = TryGetComponent(context, ImplementedType,
                             preferredLifeCycle, resolveFrom);
 
                         var isUnityBehaviour = ImplementedType.Namespace != null &&
@@ -144,7 +144,7 @@ namespace UnityIoC
                         {
                             // if args are empty, cannot resolve with non-default Constructors
                             // this is most likely happened when you [inject] a field from Mono-behaviour
-                            // that doesn't have a default constructor
+                            // that doesn't have the default constructor
                             return null;
                         }
                         
@@ -170,9 +170,10 @@ namespace UnityIoC
                 return instance;
             }
 
-            private Component TryGetGameObject(Context context, Type concreteType,
-                string TypeName, LifeCycle lifeCycle, object resolveFrom)
+            private Component TryGetComponent(Context context, Type concreteType,
+                 LifeCycle lifeCycle, object resolveFrom)
             {
+                string TypeName = concreteType.Name;
                 Component instance = null;
 
                 //if resolve as singleton, try to get component from an existing one in current scene or from cached

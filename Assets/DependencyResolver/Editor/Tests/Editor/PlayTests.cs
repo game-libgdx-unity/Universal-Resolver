@@ -1,7 +1,10 @@
 using System.Collections;
 using NUnit.Framework;
+using SceneTest;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
+using UnityIoC;
 
 [TestFixture]
 public class PlayTests
@@ -9,13 +12,22 @@ public class PlayTests
     [SetUp]
     public void Setup()
     {
-//        SceneManager.CreateScene("Test");
+        SceneManager.CreateScene("Test");
     }
 
     [UnityTest]
     public IEnumerator _UnityPlayModeTestRunner()
     {
         yield return new MonoBehaviourTest<TestSceneRunner>();
+    }
+    
+    
+    [Test]
+    public void context_resolve_before_start_call()
+    {
+        Context.Resolve<TestComponent2>();
+        Context.Resolve<TestComponent2>(LifeCycle.Transient);
+        Context.Resolve<TestComponent2>(LifeCycle.Prefab);
     }
 
     [Test]

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 using UnityIoC;
 
 /// <summary>
@@ -20,22 +21,91 @@ public class Pool<T>
                 poolTypes.Add(typeof(T));
                 list = new List<T>();
             }
+
             return list;
         }
     }
 
     static HashSet<Type> poolTypes = new HashSet<Type>();
+
     public static void Clear()
     {
         foreach (var type in poolTypes)
         {
             //todo: try to get Pool<type>.List then clear it.
         }
-        
+
         poolTypes.Clear();
     }
 }
 
+public class ViewPool
+{
+    private Dictionary<Type, List<Component>> caches = new Dictionary<Type, List<Component>>();
+
+    public List<Component> GetPools(Type type)
+    {
+        if (!caches.ContainsKey(type))
+        {
+            caches[type] = new List<Component>();
+        }
+
+        return caches[type];
+    }
+
+    public void Clear()
+    {
+        caches.Clear();
+    }
+
+    public Component GetObject(
+        Type type,
+        Func<Component> CreateObject)
+    {
+        var objects = GetPools(type);
+
+        if (objects.Count > 0)
+        {
+            objects.RemoveAll(o => o == null);
+            for (int i = 0; i < objects.Count; i++)
+            {
+                if (!objects[i])
+                {
+                    continue;
+                }
+
+                if (!objects[i].gameObject.activeSelf)
+                {
+                    var obj = objects[i];
+                    obj.gameObject.SetActive(true);
+                    obj.transform.SetAsLastSibling();
+                    if (obj != null)
+                    {
+                        //trigger the subject
+                        Context.OnResolved.Value = obj;
+                    }
+
+
+                    return obj;
+                }
+            }
+        }
+
+        var g = CreateObject();
+        g.gameObject.SetActive(true);
+        objects.Add(g);
+        return g;
+    }
+
+    public void Preload(
+        int preload,
+        Type type,
+        Func<Component> CreateObject)
+    {
+        var pool = GetPools(type);
+        pool.Preload(preload, CreateObject);
+    }
+}
 
 // obsoleted code 
 ///// <summary>

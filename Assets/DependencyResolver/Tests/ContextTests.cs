@@ -205,7 +205,7 @@ namespace UnityIoC.Editor
         {
             var gameObjects = new List<TestComponent>();
 
-            var obj = gameObjects.GetInstanceFromPool();
+            var obj = gameObjects.GetInstanceFromPool<TestComponent>();
             var obj2 = gameObjects.GetInstanceFromPool();
             var obj3 = gameObjects.GetInstanceFromPool();
 
@@ -442,6 +442,7 @@ namespace UnityIoC.Editor
         [Test]
         public void t29_test_IDataBinding()
         {
+            Context.DisposeDefaultInstance();
             Context.Resolve<UserData>();
             var userDataView = Object.FindObjectOfType<UserDataView>();
             Assert.IsNotNull(userDataView);
@@ -544,12 +545,23 @@ namespace UnityIoC.Editor
         [Test]
         public void t34_context_resolve_ScriptableObject()
         {
+            var obj = Context.ResolveFromAssets<TestScriptableObject>("ATestScriptableObject");
+           Assert.AreEqual(100, obj.Amount);
+
+            Assert.AreEqual(1, Context.GetObjects<TestScriptableObject>().Length);
+            Assert.AreEqual(obj, Context.GetObjectFromCache(typeof(TestScriptableObject)));
+        }
+
+        [Test]
+        public void t35_context_resolve_ScriptableObject()
+        {
             var obj = Context.Resolve<TestScriptableObject>("ATestScriptableObject");
            Assert.AreEqual(100, obj.Amount);
 
             Assert.AreEqual(1, Context.GetObjects<TestScriptableObject>().Length);
             Assert.AreEqual(obj, Context.GetObjectFromCache(typeof(TestScriptableObject)));
         }
+
 
         IEnumerable<string> GetFriendNames()
         {

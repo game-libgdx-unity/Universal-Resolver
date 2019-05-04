@@ -1034,7 +1034,6 @@ namespace UnityIoC
         }
 
 
-
         /// <summary>
         /// Process inject attributes in every mono behaviour in scene
         /// </summary>
@@ -1369,6 +1368,16 @@ namespace UnityIoC
         #region Static members
 
         /// <summary>
+        /// Get views from pools rather than a new object.
+        /// </summary>
+        public static bool CreateViewFromPool { get; set; }
+
+        /// <summary>
+        /// if true, when a new scene is unloaded, call the Dispose method.
+        /// </summary>
+        public static bool AutoDisposeWhenSceneChanged { get; set; }
+
+        /// <summary>
         /// If the Context static API is ready to use
         /// </summary>
         public static bool Initialized
@@ -1395,6 +1404,11 @@ namespace UnityIoC
         /// Cache of data binding of data layer & view layer
         /// </summary>
         public static Dictionary<object, HashSet<object>> DataBindings = new Dictionary<object, HashSet<object>>();
+
+        /// <summary>
+        /// General pools for mono-behaviour-based Views
+        /// </summary>
+        public static ViewPool ViewPools = new ViewPool();
 
         /// <summary>
         /// cached all monobehaviours
@@ -1513,13 +1527,6 @@ namespace UnityIoC
                 }
 
                 return _gameObjects;
-
-//                if (gameObjects == null)
-//                {
-//                    gameObjects =  Resources.FindObjectsOfTypeAll<GameObject>().Where(m => m).ToArray();
-//                }
-//                
-//                return gameObjects;
             }
         }
 
@@ -1545,7 +1552,7 @@ namespace UnityIoC
         }
 
         /// <summary>
-        /// Call POST Method to REST api for results parsed from json.
+        /// Call POST Method to REST api for getting objects which are parsed from json.
         /// </summary>
         public static IEnumerator Post<T>(
             string link,
@@ -1655,6 +1662,13 @@ namespace UnityIoC
             }
         }
 
+        /// <summary>
+        /// Update an object by a Json patch
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <param name="json"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         public static T PatchObjectFromJson<T>(object obj, string json) where T : class
         {
             JsonUtility.FromJsonOverwrite(json, obj);
@@ -1667,6 +1681,12 @@ namespace UnityIoC
             return default(T);
         }
 
+        /// <summary>
+        /// Get C# object from a given json as string
+        /// </summary>
+        /// <param name="json"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
         public static T ResolveFromJson<T>(string json)
         {
             var obj = JsonUtility.FromJson<T>(json);
@@ -1679,6 +1699,28 @@ namespace UnityIoC
             return default(T);
         }
 
+        /// <summary>
+        /// Get an Unity Object from Resources or AssetBundles by a given path
+        /// </summary>
+        /// <param name="atestscriptableobject"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public static T ResolveFromAssets<T>(string path) where T : class
+        {
+            var obj = MyResources.Load(path) as T;
+            if (obj != null)
+            {
+                OnResolved.Value = obj;
+                return obj;
+            }
+
+            return obj;
+        }
+
+        /// <summary>
+        /// Get or Create instances from Object Pools
+        /// </summary>
         public static T ResolveFromPool<T>(
             Transform parentObject = null,
             int preload = 0,
@@ -1701,7 +1743,42 @@ namespace UnityIoC
             return instanceFromPool;
         }
 
-        public static void PreloadFromPool<T>(int preload, Transform parentObject = null, object resolveFrom = null,
+
+        /// <summary>
+        /// Get or Create instances from Object Pools
+        /// </summary>
+        public static T ResolveFromPool<T>(
+            int preload = 0,
+            object resolveFrom = null,
+            params object[] parameters) where T : IPoolable
+        {
+            if (!Initialized)
+            {
+                GetDefaultInstance(typeof(T));
+            }
+
+            if (preload > 0 && preload > Pool<T>.List.Count)
+            {
+                PreloadFromPool<T>(preload, resolveFrom, parameters);
+            }
+
+            var instanceFromPool = Pool<T>.List.GetObjectFromPool(resolveFrom, parameters);
+
+            if (instanceFromPool != null)
+            {
+                OnResolved.Value = instanceFromPool;
+            }
+
+            return instanceFromPool;
+        }
+
+        /// <summary>
+        /// initialize pools by creating instances in advance
+        /// </summary>
+        public static void PreloadFromPool<T>(
+            int preload,
+            Transform parentObject = null,
+            object resolveFrom = null,
             params object[] parameters)
             where T : Component
         {
@@ -1713,17 +1790,43 @@ namespace UnityIoC
             Pool<T>.List.Preload(preload, parentObject, resolveFrom, parameters);
         }
 
+        /// <summary>
+        /// initialize pools by creating instances in advance
+        /// </summary>
+        public static void PreloadFromPool<T>(
+            int preload,
+            object resolveFrom = null,
+            params object[] parameters)
+            where T : IPoolable
+        {
+            if (!Initialized)
+            {
+                GetDefaultInstance(typeof(T));
+            }
 
+            Pool<T>.List.Preload(preload, resolveFrom, parameters);
+        }
+
+        /// <summary>
+        /// Get all instances of a pools by a given type T
+        /// </summary>
         public static List<T> GetFromPool<T>() where T : Component
         {
+            T t;
             return Pool<T>.List;
         }
 
+        /// <summary>
+        /// Create a objectContext from the defaultInstance of Context
+        /// </summary>
         public static ObjectContext FromObject(object obj, BindingSetting data = null)
         {
             return new ObjectContext(obj, GetDefaultInstance(obj), data);
         }
 
+        /// <summary>
+        /// Create a objectContext from the defaultInstance of Context
+        /// </summary>
         public static ObjectContext<T> FromObject<T>(BindingSetting data = null)
         {
             return new ObjectContext<T>(GetDefaultInstance(typeof(T)), data);
@@ -1746,10 +1849,6 @@ namespace UnityIoC
         /// <summary>
         /// Clone an object from an existing one
         /// </summary>
-        /// <param name="origin"></param>
-        /// <param name="parent"></param>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
         public static T Instantiate<T>(T origin, Object parent) where T : Component
         {
             return DefaultInstance.CreateInstance(origin, parent as Transform);
@@ -1758,9 +1857,6 @@ namespace UnityIoC
         /// <summary>
         /// Clone an object from an existing one
         /// </summary>
-        /// <param name="origin"></param>
-        /// <param name="parent"></param>
-        /// <returns></returns>
         public static GameObject Instantiate(GameObject origin, Object parent)
         {
             return DefaultInstance.CreateInstance(origin, parent as Transform);
@@ -1769,22 +1865,25 @@ namespace UnityIoC
         /// <summary>
         /// Get default-static general purposes context
         /// </summary>
-        /// <param name="context"></param>
-        /// <param name="automaticBind"></param>
-        /// <param name="recreate"></param>
-        /// <returns></returns>
         public static Context GetDefaultInstance(object context, bool automaticBind = true,
             bool recreate = false)
         {
             return GetDefaultInstance(context.GetType(), automaticBind, recreate);
         }
 
+        /// <summary>
+        /// Get default-static general purposes context
+        /// </summary>
         public static Context GetDefaultInstance(Type type = null, bool automaticBind = true,
             bool recreate = false)
         {
             if (defaultInstance == null || recreate)
             {
-                SceneManager.sceneUnloaded += SceneManagerOnSceneLoaded;
+                if (AutoDisposeWhenSceneChanged)
+                {
+                    SceneManager.sceneUnloaded += SceneManagerOnSceneLoaded;
+                }
+
                 defaultInstance = new Context(type, automaticBind);
             }
 
@@ -1797,11 +1896,15 @@ namespace UnityIoC
         public static void DisposeDefaultInstance()
         {
             //remove delegate
-            SceneManager.sceneUnloaded -= SceneManagerOnSceneLoaded;
+            if (AutoDisposeWhenSceneChanged)
+            {
+                SceneManager.sceneUnloaded -= SceneManagerOnSceneLoaded;
+            }
 
-            //remove cache of resolved objects
+            //remove caches
             ResolvedObjects.Clear();
             DataBindings.Clear();
+            ViewPools.Clear();
 
             //recycle the observable
             if (!OnResolved.IsDisposed)
@@ -1858,7 +1961,8 @@ namespace UnityIoC
             object resolveFrom = null,
             params object[] parameters)
         {
-            var resolveObject = GetDefaultInstance(typeToResolve)
+            var context = GetDefaultInstance(typeToResolve);
+            var resolveObject = context
                 .ResolveObject(typeToResolve, lifeCycle, resolveFrom, parameters);
 
             if (lifeCycle != LifeCycle.Singleton && (lifeCycle & LifeCycle.Singleton) != LifeCycle.Singleton)
@@ -1875,57 +1979,72 @@ namespace UnityIoC
 
                     foreach (var dataBindingType in dataBindingTypes)
                     {
-                        //resolve the type that is the type argument of IDataBinding<> 
-                        var innerType = dataBindingType.GetGenericArguments().FirstOrDefault();
-                        if (innerType != null)
+                        //resolve the type that is in the type argument of IDataBinding<> 
+                        var viewObjectType = dataBindingType.GetGenericArguments().FirstOrDefault();
+                        object viewObject;
+
+                        if (CreateViewFromPool)
                         {
-                            var viewObject = GetDefaultInstance(typeToResolve)
-                                .ResolveObject(innerType, LifeCycle.Transient, resolveFrom, null);
-
-                            //check if viewObject implements the IDataView interface
-                            var observerTypes = viewObject.GetType().GetInterfaces()
-                                .Where(i => i.IsGenericType)
-                                .Where(i => i.GetGenericTypeDefinition() == typeof(IDataView<>));
-
-                            foreach (var observerType in observerTypes)
-                            {
-                                var observerInnerType = observerType.GetGenericArguments().FirstOrDefault();
-                                
-                                var mi = viewObject.GetType().GetMethods()
-                                    .FirstOrDefault(m => m.Name == "OnNext" && m.GetParameters().FirstOrDefault().ParameterType == observerInnerType);
-                                
-                                if (resolveObject.GetType() != observerInnerType)
+                            viewObject = ViewPools.GetObject(viewObjectType,
+                                () =>
                                 {
-                                    try
-                                    {
-                                        var cachedObj =
-                                            GetObjectFromCache(observerInnerType) ?? GetDefaultInstance(typeToResolve)
-                                                .ResolveObject(typeToResolve, LifeCycle.Transient);
-
-                                        resolveObject = cachedObj;
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        resolveObject = Activator.CreateInstance(observerInnerType);
-                                    }
-                                }
-                                
-                                mi.Invoke(viewObject, new[] {resolveObject});
-
-                                if (!DataBindings.ContainsKey(resolveObject))
-                                {
-                                    DataBindings[resolveObject] = new HashSet<object>();
-                                }
-
-                                DataBindings[resolveObject].Add(viewObject);
-                            }
+                                    var component = context.ResolveObject(viewObjectType, LifeCycle.Transient, resolveFrom,
+                                        null) as Component;
+                                    component.transform.SetAsLastSibling();
+                                    return component;
+                                });
                         }
+                        else
+                        {
+                            viewObject = context.ResolveObject(viewObjectType, LifeCycle.Transient, resolveFrom, null);
+                        }
+
+                        BindDataWithView(typeToResolve, viewObject, resolveObject, resolveFrom);
                     }
                 }
             }
 
 
             return resolveObject;
+        }
+
+        public static object BindDataWithView(Type typeToResolve, object viewObject, object dataObject,
+            object resolveFrom)
+        {
+            var observerTypes = viewObject.GetType().GetInterfaces()
+                .Where(i => i.IsGenericType)
+                .Where(i => i.GetGenericTypeDefinition() == typeof(IDataView<>));
+
+            //create Views for the data object
+            foreach (var observerType in observerTypes)
+            {
+                var dataObjectType = observerType.GetGenericArguments().FirstOrDefault();
+
+                var mi = viewObject.GetType().GetMethods()
+                    .FirstOrDefault(m =>
+                        m.Name == "OnNext" && m.GetParameters().FirstOrDefault().ParameterType ==
+                        dataObjectType);
+
+                if (dataObject.GetType() != dataObjectType)
+                {
+                    var cachedObj =
+                        GetObjectFromCache(dataObjectType) ?? GetDefaultInstance(typeToResolve)
+                            .ResolveObject(dataObjectType, LifeCycle.Transient);
+
+                    dataObject = cachedObj;
+                }
+
+                mi.Invoke(viewObject, new[] {dataObject});
+
+                if (!DataBindings.ContainsKey(dataObject))
+                {
+                    DataBindings[dataObject] = new HashSet<object>();
+                }
+
+                DataBindings[dataObject].Add(viewObject);
+            }
+
+            return viewObject;
         }
 
         /// <summary>
@@ -1937,7 +2056,30 @@ namespace UnityIoC
         public static T Resolve<T>(
             params object[] parameters)
         {
-            return (T) Resolve(typeof(T), LifeCycle.Transient, null, parameters);
+            var resolveObject = (T) Resolve(typeof(T), LifeCycle.Transient, null, parameters);
+//
+//            if (resolveObject != null)
+//            {
+//                //check if the resolved object implements the IDataBinding interface
+//                var dataBindingTypes = resolveObject.GetType().GetInterfaces()
+//                    .Where(i => i.IsGenericType)
+//                    .Where(i => i.GetGenericTypeDefinition() == typeof(IDataBinding<>));
+//
+//                foreach (var dataBindingType in dataBindingTypes)
+//                {
+//                    //resolve the type that is the type argument of IDataBinding<> 
+//                    var viewObjectType = dataBindingType.GetGenericArguments().FirstOrDefault();
+//                    if (!viewObjectType.IsSubclassOf(typeof(MonoBehaviour)))
+//                    {
+//                        var viewObject = context
+//                            .ResolveObject(viewObjectType, LifeCycle.Transient, resolveFrom, null);
+//
+//                        BindDataWithView(typeToResolve, viewObject, resolveObject, resolveFrom);
+//                    }
+//                }
+//            }
+
+            return resolveObject;
         }
 
         /// <summary>
@@ -2165,9 +2307,17 @@ namespace UnityIoC
                             if (obj == null)
                             {
                                 //remove view if data is null
-                                if (viewLayer.GetType().IsSubclassOf(typeof(MonoBehaviour)))
+                                var viewAsBehaviour = viewLayer as MonoBehaviour;
+                                if (viewAsBehaviour != null)
                                 {
-                                    Object.Destroy((viewLayer as MonoBehaviour).gameObject);
+                                    if (CreateViewFromPool)
+                                    {
+                                        viewAsBehaviour.gameObject.SetActive(false);
+                                    }
+                                    else
+                                    {
+                                        Object.Destroy(viewAsBehaviour.gameObject);
+                                    }
                                 }
 
                                 DataBindings.Remove(objs[index]);
@@ -2376,7 +2526,7 @@ namespace UnityIoC
         }
 
         /// <summary>
-        /// Get a component from a mono behaviour at a given path
+        /// Get a component from a mono behaviour by a given path
         /// </summary>
         /// <param name="type"></param>
         /// <param name="component"></param>
@@ -2394,7 +2544,7 @@ namespace UnityIoC
         }
 
         /// <summary>
-        /// Get a component from a gameObject at a given path
+        /// Get a component from a gameObject by a given path
         /// </summary>
         /// <param name="type"></param>
         /// <param name="gameObject"></param>
@@ -2420,7 +2570,7 @@ namespace UnityIoC
         }
 
         /// <summary>
-        /// Get a component from a gameObject at a given path
+        /// Get a component from a gameObject by a given path
         /// </summary>
         /// <param name="gameObject"></param>
         /// <param name="path"></param>
@@ -2447,7 +2597,7 @@ namespace UnityIoC
         }
 
         /// <summary>
-        /// Get a component from a mono behaviour at a given path
+        /// Get a component from a mono behaviour by a given path
         /// </summary>
         /// <param name="component"></param>
         /// <param name="path"></param>
@@ -2463,7 +2613,7 @@ namespace UnityIoC
         }
 
         /// <summary>
-        /// Get an C# object from a mono behaviour at a given type
+        /// Get an C# object from a mono behaviour by a given type
         /// </summary>
         /// <param name="obj"></param>
         /// <param name="type"></param>
@@ -2477,7 +2627,7 @@ namespace UnityIoC
         }
 
         /// <summary>
-        /// Get an C# object from a mono behaviour at a given type
+        /// Get an C# object from a mono behaviour by a given type
         /// </summary>
         /// <param name="obj"></param>
         /// <typeparam name="T"></typeparam>
