@@ -2,9 +2,10 @@
 
 Introduction video
 https://www.youtube.com/watch?v=y0pQth1mnzo
+Basic usages on a simple UI
+https://www.youtube.com/watch?v=tcjIa0zuKw4
 
-Connect with me on Unity3d community
-https://connect.unity.com/u/vinh-swk2
+Connect with me on Unity3d community: https://connect.unity.com/u/vinh-swk2-1-1
 
 You can download this asset from unity3d assetstore, 
 https://assetstore.unity.com/packages/tools/integration/universal-resolver-138872
