@@ -1018,7 +1018,7 @@ namespace UnityIoC
         {
             if (!ResolvedObjects.ContainsKey(type))
             {
-                ResolvedObjects[type] = new HashSet<object>();
+                return null;
             }
 
             var hashSet = ResolvedObjects[type];
@@ -1986,13 +1986,8 @@ namespace UnityIoC
                         if (CreateViewFromPool)
                         {
                             viewObject = ViewPools.GetObject(viewObjectType,
-                                () =>
-                                {
-                                    var component = context.ResolveObject(viewObjectType, LifeCycle.Transient, resolveFrom,
-                                        null) as Component;
-                                    component.transform.SetAsLastSibling();
-                                    return component;
-                                });
+                                () => context.ResolveObject(viewObjectType, LifeCycle.Transient, resolveFrom,
+                                    null) as Component);
                         }
                         else
                         {
@@ -2057,28 +2052,25 @@ namespace UnityIoC
             params object[] parameters)
         {
             var resolveObject = (T) Resolve(typeof(T), LifeCycle.Transient, null, parameters);
-//
-//            if (resolveObject != null)
-//            {
-//                //check if the resolved object implements the IDataBinding interface
-//                var dataBindingTypes = resolveObject.GetType().GetInterfaces()
-//                    .Where(i => i.IsGenericType)
-//                    .Where(i => i.GetGenericTypeDefinition() == typeof(IDataBinding<>));
-//
-//                foreach (var dataBindingType in dataBindingTypes)
-//                {
-//                    //resolve the type that is the type argument of IDataBinding<> 
-//                    var viewObjectType = dataBindingType.GetGenericArguments().FirstOrDefault();
-//                    if (!viewObjectType.IsSubclassOf(typeof(MonoBehaviour)))
-//                    {
-//                        var viewObject = context
-//                            .ResolveObject(viewObjectType, LifeCycle.Transient, resolveFrom, null);
-//
-//                        BindDataWithView(typeToResolve, viewObject, resolveObject, resolveFrom);
-//                    }
-//                }
-//            }
+            return resolveObject;
+        }
+        /// <summary>
+        /// Create a new brand C# only objects with hashtable data
+        /// </summary>
+        /// <param name="parameters"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static T Resolve<T>(
+            Hashtable data,
+            object resolveFrom = null)
+        {
+            var resolveObject = (T) Resolve(typeof(T), LifeCycle.Transient, resolveFrom);
 
+            foreach (var key in data)
+            {
+                SetPropertyValue(resolveObject, key.ToString(), data[key]);
+            }
+            
             return resolveObject;
         }
 
@@ -2222,9 +2214,17 @@ namespace UnityIoC
                     if (obj == null)
                     {
                         //remove view if data is null
-                        if (viewLayer.GetType().IsSubclassOf(typeof(MonoBehaviour)))
+                        var viewAsBehaviour = viewLayer as MonoBehaviour;
+                        if (viewAsBehaviour != null)
                         {
-                            Object.Destroy((viewLayer as MonoBehaviour).gameObject);
+                            if (CreateViewFromPool)
+                            {
+                                viewAsBehaviour.gameObject.SetActive(false);
+                            }
+                            else
+                            {
+                                Object.Destroy(viewAsBehaviour.gameObject);
+                            }
                         }
 
                         DataBindings.Remove(obj);
