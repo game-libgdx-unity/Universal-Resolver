@@ -1,4 +1,5 @@
 using System;
+using UTJ;
 
 namespace UnityIoC
 {
@@ -8,13 +9,5 @@ namespace UnityIoC
     /// <typeparam name="T"></typeparam>
     public interface IDataBinding<T>
     {
-    }
-    /// <summary>
-    /// Use to Bind a View layer with a Data Layer
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    public interface IDataView<T>
-    {
-        void OnNext(T t);
     }
 }

@@ -733,7 +733,7 @@ namespace UnityIoC
                 }
 
 
-                debug.Log("IComponentResolvable attribute fails to resolve {0}", type);
+                debug.Log("IComponentResolvable fails to resolve {0} of field {1}", type, field.Name);
 
                 //resolve object as [Singleton], [Transient] or [AsComponent] if component attribute fails to resolve
                 field.SetValue(mono,
@@ -744,6 +744,9 @@ namespace UnityIoC
             }
         }
 
+        /// <summary>
+        /// Convert Component[] to a CustomType[]
+        /// </summary>
         private Array ConvertComponentArrayTo(Type typeOfArray, Component[] components)
         {
             var array = Array.CreateInstance(typeOfArray, components.Length);
@@ -1487,13 +1490,12 @@ namespace UnityIoC
                             if (obj != null)
                             {
                                 Type type = obj.GetType();
-                                if (!ResolvedObjects.ContainsKey(type))
+                                if (ResolvedObjects.ContainsKey(type))
                                 {
-                                    ResolvedObjects[type] = new HashSet<object>();
+                                    ResolvedObjects[type].Remove(obj);
+                                    DataBindings.Remove(obj);
                                 }
 
-                                ResolvedObjects[type].Remove(obj);
-                                DataBindings.Remove(obj);
                             }
                         }
                     );
@@ -1810,7 +1812,7 @@ namespace UnityIoC
         /// <summary>
         /// Get all instances of a pools by a given type T
         /// </summary>
-        public static List<T> GetFromPool<T>() where T : Component
+        public static List<T> GetPool<T>() where T : Component
         {
             T t;
             return Pool<T>.List;

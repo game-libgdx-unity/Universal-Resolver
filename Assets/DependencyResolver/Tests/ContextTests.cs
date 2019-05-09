@@ -34,6 +34,8 @@ namespace UnityIoC.Editor
             var obj = Context.Resolve<TestInterface>();
             Assert.IsNotNull(obj);
             Assert.IsInstanceOf<TestClass>(obj);
+            
+            obj.DoSomething();        
         }
 
 
@@ -188,7 +190,7 @@ namespace UnityIoC.Editor
         }
 
         [Test]
-        public void t13_resolve_with_inject_into()
+        public void t13_resolve_with_object_context()
         {
             var t1 = Context.Resolve<TestComponent>();
 
@@ -247,14 +249,15 @@ namespace UnityIoC.Editor
         public void t17_get_interfaces_as_components()
         {
             var obj = Context.Resolve<IComponentAbstract>();
+            Assert.IsNotNull(obj);
             Assert.IsInstanceOf<TestComponent>(obj);
         }
 
         [Test]
         public void t18_get_from_pools()
         {
-            var testComponentPool = Context.GetFromPool<TestComponent>();
-            var testComponent2Pool = Context.GetFromPool<TestComponent2>();
+            var testComponentPool = Context.GetPool<TestComponent>();
+            var testComponent2Pool = Context.GetPool<TestComponent2>();
 
             var obj = testComponentPool.GetInstanceFromPool();
             var obj5 = testComponent2Pool.GetInstanceFromPool();
