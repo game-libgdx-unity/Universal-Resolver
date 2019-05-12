@@ -1,48 +1,34 @@
-﻿﻿using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
+using UniRx;
 using UnityEngine;
 using UnityIoC;
 using UTJ;
 
-public class BasicEnemy : IUpdatableBehaviour
+public class BasicEnemy : IUpdatableItem
 {
-    public Transform transform { get; }
-    public Renderer renderer { get; }
+    public RigidbodyTransform rigidbody;
 
-    public BasicEnemy(GameObject GO)
+    public void Init()
     {
-        if (!GO)
-        {
-            Debug.Log("No game objects in constructor");
-            GO = Object.Instantiate(Resources.Load<GameObject>("zako"));
-        }
+        targeted_pos = new Vector3(0, 0, 0);
 
-        this.transform = GO.GetComponent<Transform>();
-        this.renderer = GO.GetComponent<Renderer>();
-        this.routine = GetRoutine();
-
+        routine = GetRoutine();
+    }
+    public BasicEnemy()
+    {
         //setup physics materials 
         rigidbody.setDamper(2f);
         rigidbody.setRotateDamper(4f);
 
-        //setup inital position
-        rigidbody.transform.position = new Vector3(0, -10, -10);
-        rigidbody.transform.rotation = Quaternion.Euler(-90, 0, 0);
-        targeted_pos = new Vector3(0,0,0);
-
-        Enable = true;
     }
 
-    private RigidbodyTransform rigidbody;
 
     private float game_time;
-
-
     private Vector3 targeted_pos;
 
 
     private IEnumerator routine;
-
     private IEnumerator GetRoutine()
     {
         for (var i = new Utility.WaitForSeconds(1f, game_time); !i.end(game_time);)
@@ -76,8 +62,17 @@ public class BasicEnemy : IUpdatableBehaviour
         routine.MoveNext();
 
         rigidbody.update(delta_time);
+    }
 
-        transform.localPosition = rigidbody.transform.position;
-        transform.localRotation = rigidbody.transform.rotation;
+    public Matrix4x4 Transform
+    {
+        get
+        {
+            return rigidbody.transform.getTRS();
+        }
+    }
+
+    public void Dispose()
+    {
     }
 }

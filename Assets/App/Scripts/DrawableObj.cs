@@ -8,8 +8,8 @@ public class DrawableObj : IUpdatable
     Material material;
     Mesh mesh;
     private Vector3 position;
-    
-    public DrawableObj(Vector3 position)
+  
+    public DrawableObj()
     {
         this.position = position;
         Enable = true;
@@ -23,5 +23,14 @@ public class DrawableObj : IUpdatable
     public void Update(float delta_time, float game_time)
     {
         Graphics.DrawMesh(mesh, position, Quaternion.identity, material, 0);
+    }
+
+    public bool Alive { get; set; }
+    public void Init()
+    {
+    }
+
+    public void Dispose()
+    {
     }
 }

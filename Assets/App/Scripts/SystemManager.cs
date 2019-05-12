@@ -1,51 +1,52 @@
-﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityIoC;
 
-public class SystemManager : MonoBehaviour
+public class SystemManager : SingletonBehaviour<SystemManager>
 {
-    [SerializeField] private GameObject prefab;
-
-    private const int targeted_FPS = 60;
-    private const float delta_time = 1f / targeted_FPS;
-
-    private float game_time;
-
-    private List<IUpdatable> updatables = new List<IUpdatable>();
-
-    // Start is called before the first frame update
-    void Start()
+    List<IUpdatable> updatables = new List<IUpdatable>(); 
+    protected override void Awake()
     {
-        var enemy = Context.Resolve<BasicEnemy>(prefab);
-        Add(enemy);
+        base.Awake();
+        
+//        Context.OnDisposed.Subscribe(this, obj =>
+//        {
+//            var item = iup
+//            if(obj)
+//        })
 
-        for (int i = 0; i < 10; i++)
+        Application.targetFrameRate = target_fps;
+
+    }
+
+    
+    private float game_time;
+    private const float delta_time = 1f / target_fps;
+    private const int target_fps = 60;
+
+    private void OnDestroy()
+    {
+        foreach (var updatable in updatables)
         {
-            var obj = Context.Resolve<DrawableObj>(new Vector3(
-                Random.Range(-1f, 1f),
-                Random.Range(-1f, 1f),
-                Random.Range(-1f, 1f)));
-            Add(obj);
+            updatable.Dispose();
         }
     }
 
-    private void Add(IUpdatable obj)
-    {
-        updatables.Add(obj);
-    }
-
-    // Update is called once per frame
-    void Update()
+    private void LateUpdate()
     {
         game_time += delta_time;
 
-        foreach (var obj in updatables)
+        foreach (var updatable in updatables)
         {
-            if (obj.Enable)
+            if (updatable.Alive && updatable.Enable)
             {
-                obj.Update(delta_time, game_time);
+                updatable.Update(delta_time, game_time);
             }
         }
+    }
+    
+    public void Add(IUpdatable updatable)
+    {
+        updatables.Add(updatable);
     }
 }

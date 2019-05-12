@@ -1,8 +1,10 @@
+using System;
+
 namespace UnityIoC
 {
-    public interface IPoolable
+    public interface IPoolable : IDisposable
     {
         bool Alive { get; set; }
-        void OnRecycle();
+        void Init();
     }
 }

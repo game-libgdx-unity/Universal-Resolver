@@ -707,7 +707,7 @@ namespace UnityIoC
 
                 foreach (var parameter in constructorInfo.GetParameters())
                 {
-                    yield return ResolveObject(parameter.ParameterType, LifeCycle.Default, null, null);
+                    yield return ResolveObject(parameter.ParameterType, LifeCycle.Default, type, null);
                 }
             }
         }

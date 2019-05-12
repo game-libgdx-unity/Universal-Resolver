@@ -335,7 +335,7 @@ namespace UnityIoC
         /// </summary>
         /// <param name="className"></param>
         /// <returns></returns>
-        private Type GetTypeFromCurrentAssembly(string className)
+        public Type GetTypeFromCurrentAssembly(string className)
         {
             foreach (var type in CurrentAssembly.GetTypes())
             {
@@ -1495,7 +1495,6 @@ namespace UnityIoC
                                     ResolvedObjects[type].Remove(obj);
                                     DataBindings.Remove(obj);
                                 }
-
                             }
                         }
                     );
@@ -1897,6 +1896,11 @@ namespace UnityIoC
         /// </summary>
         public static void DisposeDefaultInstance()
         {
+            if (!Initialized)
+            {
+                return;
+            }
+            
             //remove delegate
             if (AutoDisposeWhenSceneChanged)
             {
@@ -2001,7 +2005,6 @@ namespace UnityIoC
                 }
             }
 
-
             return resolveObject;
         }
 
@@ -2056,6 +2059,7 @@ namespace UnityIoC
             var resolveObject = (T) Resolve(typeof(T), LifeCycle.Transient, null, parameters);
             return resolveObject;
         }
+
         /// <summary>
         /// Create a new brand C# only objects with hashtable data
         /// </summary>
@@ -2072,7 +2076,7 @@ namespace UnityIoC
             {
                 SetPropertyValue(resolveObject, key.ToString(), data[key]);
             }
-            
+
             return resolveObject;
         }
 

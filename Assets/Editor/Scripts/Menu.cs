@@ -32,7 +32,7 @@ public class NewBehaviourScript : MonoBehaviour
         [MenuItem("Tools/Run Scene Test %R")]
         static void RunSceneTest()
         {
-            TestSceneRunner.AddScenesToBuildAndRunTest();
+//            TestSceneRunner.AddScenesToBuildAndRunTest();
         }
 
 //        [MenuItem("Tools/Force recompile %#R")]

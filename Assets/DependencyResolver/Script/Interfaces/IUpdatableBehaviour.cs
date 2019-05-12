@@ -8,6 +8,5 @@ namespace UnityIoC
     public interface IUpdatableBehaviour : IUpdatable
     {
         Transform transform { get; }
-        Renderer renderer { get; }
     }
 }

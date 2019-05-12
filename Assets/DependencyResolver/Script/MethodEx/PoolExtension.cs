@@ -79,7 +79,6 @@ public static class PoolExtension
                 {
                     var obj = objects[i];
                     obj.Alive = true;
-                    obj.OnRecycle();
                     
                     return obj;
                 }
@@ -89,7 +88,6 @@ public static class PoolExtension
         //not found in pool, create a new one
         T g =  Context.GetDefaultInstance(typeof(T)).ResolveObject<T>(LifeCycle.Transient, resolveFrom, parameters);
         g.Alive = true;
-        g.OnRecycle();
         objects.Add(g);
         
         return g;
