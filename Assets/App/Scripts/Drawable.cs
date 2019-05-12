@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityIoC;
+using UTJ;
 
 public class DrawableObj : IUpdatable
 {
@@ -20,17 +21,19 @@ public class DrawableObj : IUpdatable
 
     public bool Enable { get; set; }
 
-    public void Update(float delta_time, float game_time)
+    public void Update(float delta_time, double game_time)
     {
         Graphics.DrawMesh(mesh, position, Quaternion.identity, material, 0);
     }
+
+    public MyTransform Transform { get; }
 
     public bool Alive { get; set; }
     public void Init()
     {
     }
 
-    public void Dispose()
+    public void Destroy()
     {
     }
 }

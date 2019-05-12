@@ -2,49 +2,53 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityIoC;
 
+/// <summary>
+/// Manage updatable objects are created in Game
+/// </summary>
 public class SystemManager : SingletonBehaviour<SystemManager>
 {
-    List<IUpdatable> updatables = new List<IUpdatable>(); 
-    protected override void Awake()
-    {
-        base.Awake();
-        
-//        Context.OnDisposed.Subscribe(this, obj =>
-//        {
-//            var item = iup
-//            if(obj)
-//        })
-
-        Application.targetFrameRate = target_fps;
-
-    }
-
-    
-    private float game_time;
+    private static double game_time;
     private const float delta_time = 1f / target_fps;
     private const int target_fps = 60;
 
-    private void OnDestroy()
+    HashSet<IUpdatable> updatables = new HashSet<IUpdatable>();
+
+    protected override void Awake()
     {
-        foreach (var updatable in updatables)
+        base.Awake();
+
+        Context.OnDisposed.Subscribe(this, obj =>
         {
-            updatable.Dispose();
-        }
+            var updatable = obj as IUpdatable;
+            if (updatable != null)
+            {
+                updatable.Enable = false;
+                updatables.Remove(updatable);
+            }
+
+            var poolable = obj as IPoolable;
+            if (poolable != null)
+            {
+                poolable.Alive = false;
+            }
+        });
+
+        Application.targetFrameRate = target_fps;
     }
 
-    private void LateUpdate()
+    private void Update()
     {
         game_time += delta_time;
 
         foreach (var updatable in updatables)
         {
-            if (updatable.Alive && updatable.Enable)
+            if (updatable.Enable)
             {
                 updatable.Update(delta_time, game_time);
             }
         }
     }
-    
+
     public void Add(IUpdatable updatable)
     {
         updatables.Add(updatable);

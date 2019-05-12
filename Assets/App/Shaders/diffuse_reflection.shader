@@ -12,7 +12,6 @@ Shader "Custom/diffuse_reflection"
         [NoScaleOffset] _MainTex ("Base (RGB) Alpha (A)", 2D) = "white" {}
 		[NoScaleOffset] _CubeTex ("Cubemap", Cube) = "grey" {}
 		_Specular ("Specular", Range (0, 1)) = 1
-		_OutlineWidth ("Outline", Range (1, 5)) = 3
     }
     SubShader 
     {
@@ -92,10 +91,9 @@ Shader "Custom/diffuse_reflection"
 				// i.I.y += cos(i.model.y*67)*0.5; // distortion
 				fixed4 reflcol0 = texCUBE(_CubeTex, i.I);
 				i.I.y = -i.I.y;
-				
 				fixed4 reflcol1 = texCUBE(_CubeTex, i.I);
 				fixed4 reflcol = fixed4(lerp(reflcol0.rgb, reflcol1.rgb, _SwitchSkybox), 0);
-				c.rgb += reflcol.rgb * reflcol.rgb * _Specular;
+				c.rgb += reflcol.rgb *reflcol.rgb * _Specular;
                 return c;
             }
             ENDCG

@@ -2,7 +2,7 @@ using System;
 
 namespace UnityIoC
 {
-    public interface IPoolable : IDisposable
+    public interface IPoolable
     {
         bool Alive { get; set; }
         void Init();

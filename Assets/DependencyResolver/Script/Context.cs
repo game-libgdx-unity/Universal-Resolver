@@ -1900,7 +1900,7 @@ namespace UnityIoC
             {
                 return;
             }
-            
+
             //remove delegate
             if (AutoDisposeWhenSceneChanged)
             {
@@ -1983,24 +1983,28 @@ namespace UnityIoC
                         .Where(i => i.IsGenericType)
                         .Where(i => i.GetGenericTypeDefinition() == typeof(IDataBinding<>));
 
-                    foreach (var dataBindingType in dataBindingTypes)
+                    if (dataBindingTypes.Length > 0)
                     {
-                        //resolve the type that is in the type argument of IDataBinding<> 
-                        var viewObjectType = dataBindingType.GetGenericArguments().FirstOrDefault();
-                        object viewObject;
-
-                        if (CreateViewFromPool)
+                        foreach (var dataBindingType in dataBindingTypes)
                         {
-                            viewObject = ViewPools.GetObject(viewObjectType,
-                                () => context.ResolveObject(viewObjectType, LifeCycle.Transient, resolveFrom,
-                                    null) as Component);
-                        }
-                        else
-                        {
-                            viewObject = context.ResolveObject(viewObjectType, LifeCycle.Transient, resolveFrom, null);
-                        }
+                            //resolve the type that is in the type argument of IDataBinding<> 
+                            var viewObjectType = dataBindingType.GetGenericArguments().FirstOrDefault();
+                            object viewObject;
 
-                        BindDataWithView(typeToResolve, viewObject, resolveObject, resolveFrom);
+                            if (CreateViewFromPool)
+                            {
+                                viewObject = ViewPools.GetObject(viewObjectType,
+                                    () => context.ResolveObject(viewObjectType, LifeCycle.Transient, resolveFrom,
+                                        null) as Component);
+                            }
+                            else
+                            {
+                                viewObject = context.ResolveObject(viewObjectType, LifeCycle.Transient, resolveFrom,
+                                    null);
+                            }
+
+                            BindDataWithView(typeToResolve, viewObject, resolveObject, resolveFrom);
+                        }
                     }
                 }
             }

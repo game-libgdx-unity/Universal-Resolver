@@ -11,6 +11,7 @@ public class Utility {
 	{
 		private float period_;
 		private double start_;
+
 		public WaitForSeconds(float period, double update_time)
 		{
 			period_ = period;
@@ -19,6 +20,10 @@ public class Utility {
 		public bool end(double update_time)
 		{
 			return update_time - start_ > period_;
+		}
+		public void reset(double update_time)
+		{
+			start_ = update_time;
 		}
 	}
 
