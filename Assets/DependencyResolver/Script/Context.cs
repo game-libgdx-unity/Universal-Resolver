@@ -23,11 +23,6 @@ namespace UnityIoC
         #region Variables & Constants
 
         /// <summary>
-        /// This is the default name of the default assembly that unity generated to compile your code
-        /// </summary>
-        private const string DefaultAssemblyName = "Assembly-CSharp";
-
-        /// <summary>
         /// Custom logger
         /// </summary>
         private readonly Logger debug = new Logger(typeof(Context));
@@ -66,7 +61,7 @@ namespace UnityIoC
         /// <summary>
         /// Name of an assembly that will be loaded when initializing the context in case TargetType is null
         /// </summary>
-        private string assemblyName = DefaultAssemblyName;
+        private string assemblyName = Setting.DefaultAssemblyName;
 
         #endregion
 
@@ -515,7 +510,6 @@ namespace UnityIoC
                 var setMethod = property.GetSetMethod(true);
 
                 //pass container to injectAttribute
-                // ReSharper disable once PossibleNullReferenceException
                 inject.container = DefaultContainer;
 
                 //resolve as [Component] attributes
@@ -540,12 +534,12 @@ namespace UnityIoC
                     //link view object to data object
                     if (mono is Component && component != null)
                     {
-                        if (!DataBindings.ContainsKey(component))
+                        if (!DataViewBindings.ContainsKey(component))
                         {
-                            DataBindings[component] = new HashSet<object>();
+                            DataViewBindings[component] = new HashSet<object>();
                         }
 
-                        DataBindings[component].Add(mono);
+                        DataViewBindings[component].Add(mono);
                     }
 
                     //try to use IObjectResolvable to resolve objects
@@ -565,7 +559,7 @@ namespace UnityIoC
                         if (inject.LifeCycle == LifeCycle.Singleton ||
                             (inject.LifeCycle & LifeCycle.Singleton) == LifeCycle.Singleton)
                         {
-                            container.Bind(property.PropertyType, component);
+                            container.BindInstance(property.PropertyType, component);
                         }
 
                         property.SetValue(mono, component, null);
@@ -624,41 +618,40 @@ namespace UnityIoC
 
                 //only process a field if the field's value is not set yet
 
-//                var value = field.GetValue(mono);
-//                bool defaultValue = false;
-//
-//                if (field.FieldType.IsArray)
-//                {
-//                    if (value != null)
-//                    {
-//                        defaultValue = value != value.DefaultValue();
-//
-//                        var array = value as Array;
-//                        if (array.Length == 0)
-//                        {
-//                            defaultValue = true;
-//                        }
-//                    }
-//                }
-//                else
-//                {
-//                    defaultValue = value != value.DefaultValue();
-//                }
-//
-//                if (defaultValue)
-//                {
-//                    debug.Log(string.Format("Don't set value for field {0} due to non-default value", field.Name));
-//
-//                    //check to bind this instance
-//                    if (inject.LifeCycle == LifeCycle.Singleton ||
-//                        (inject.LifeCycle & LifeCycle.Singleton) == LifeCycle.Singleton)
-//                    {
-//                        debug.Log(string.Format("Bind instance for field {0}", field.Name));
-//                        container.Bind(field.FieldType, value);
-//                    }
-//
-//                    continue;
-//                }
+                var value = field.GetValue(mono);
+                bool defaultValue = false;
+
+                if (field.FieldType.IsArray)
+                {
+                    if (value != null)
+                    {
+                        defaultValue = value != value.DefaultValue();
+                        var array = value as Array;
+                        if (array.Length == 0)
+                        {
+                            defaultValue = true;
+                        }
+                    }
+                }
+                else
+                {
+                    defaultValue = value != value.DefaultValue();
+                }
+
+                if (defaultValue)
+                {
+                    debug.Log(string.Format("Don't set value for field {0} due to non-default value", field.Name));
+
+                    //check to bind this instance
+                    if (inject.LifeCycle == LifeCycle.Singleton ||
+                        (inject.LifeCycle & LifeCycle.Singleton) == LifeCycle.Singleton)
+                    {
+                        debug.Log(string.Format("Bind instance for field {0}", field.Name));
+                        container.BindInstance(field.FieldType, value);
+                    }
+
+                    continue;
+                }
 
                 injectAttributes.Add(inject);
 
@@ -697,12 +690,12 @@ namespace UnityIoC
                     //link view object to data object
                     if (mono is Component && component != null)
                     {
-                        if (!DataBindings.ContainsKey(component))
+                        if (!DataViewBindings.ContainsKey(component))
                         {
-                            DataBindings[component] = new HashSet<object>();
+                            DataViewBindings[component] = new HashSet<object>();
                         }
 
-                        DataBindings[component].Add(mono);
+                        DataViewBindings[component].Add(mono);
                     }
 
                     //try to use IObjectResolvable to resolve objects
@@ -723,7 +716,7 @@ namespace UnityIoC
                         if (inject.LifeCycle == LifeCycle.Singleton ||
                             (inject.LifeCycle & LifeCycle.Singleton) == LifeCycle.Singleton)
                         {
-                            container.Bind(type, component);
+                            container.BindInstance(type, component);
                         }
 
                         field.SetValue(mono, component);
@@ -965,7 +958,7 @@ namespace UnityIoC
                         try
                         {
                             if (string.IsNullOrEmpty(assemblyName))
-                                _currentAssembly = Assembly.Load(DefaultAssemblyName);
+                                _currentAssembly = Assembly.Load(Setting.DefaultAssemblyName);
                             else
                                 _currentAssembly = Assembly.Load(assemblyName);
                         }
@@ -1336,7 +1329,7 @@ namespace UnityIoC
 
         public void Bind(Type typeToResolve, object instance)
         {
-            container.Bind(typeToResolve, instance);
+            container.BindInstance(typeToResolve, instance);
         }
 
         public void Bind(Type typeToResolve, Type concreteType, LifeCycle lifeCycle = LifeCycle.Default)
@@ -1371,16 +1364,6 @@ namespace UnityIoC
         #region Static members
 
         /// <summary>
-        /// Get views from pools rather than a new object.
-        /// </summary>
-        public static bool CreateViewFromPool { get; set; }
-
-        /// <summary>
-        /// if true, when a new scene is unloaded, call the Dispose method.
-        /// </summary>
-        public static bool AutoDisposeWhenSceneChanged { get; set; }
-
-        /// <summary>
         /// If the Context static API is ready to use
         /// </summary>
         public static bool Initialized
@@ -1406,7 +1389,7 @@ namespace UnityIoC
         /// <summary>
         /// Cache of data binding of data layer & view layer
         /// </summary>
-        public static Dictionary<object, HashSet<object>> DataBindings = new Dictionary<object, HashSet<object>>();
+        public static Dictionary<object, HashSet<object>> DataViewBindings = new Dictionary<object, HashSet<object>>();
 
         /// <summary>
         /// General pools for mono-behaviour-based Views
@@ -1493,7 +1476,7 @@ namespace UnityIoC
                                 if (ResolvedObjects.ContainsKey(type))
                                 {
                                     ResolvedObjects[type].Remove(obj);
-                                    DataBindings.Remove(obj);
+                                    DataViewBindings.Remove(obj);
                                 }
                             }
                         }
@@ -1866,10 +1849,12 @@ namespace UnityIoC
         /// <summary>
         /// Get default-static general purposes context
         /// </summary>
-        public static Context GetDefaultInstance(object context, bool automaticBind = true,
-            bool recreate = false)
+        public static Context GetDefaultInstance(
+            object context,
+            bool recreate = false
+        )
         {
-            return GetDefaultInstance(context.GetType(), automaticBind, recreate);
+            return GetDefaultInstance(context.GetType(), Setting.AutoProcessBehavioursInScene, recreate);
         }
 
         /// <summary>
@@ -1880,7 +1865,7 @@ namespace UnityIoC
         {
             if (defaultInstance == null || recreate)
             {
-                if (AutoDisposeWhenSceneChanged)
+                if (Setting.AutoDisposeWhenSceneChanged)
                 {
                     SceneManager.sceneUnloaded += SceneManagerOnSceneLoaded;
                 }
@@ -1902,14 +1887,14 @@ namespace UnityIoC
             }
 
             //remove delegate
-            if (AutoDisposeWhenSceneChanged)
+            if (Setting.AutoDisposeWhenSceneChanged)
             {
                 SceneManager.sceneUnloaded -= SceneManagerOnSceneLoaded;
             }
 
             //remove caches
             ResolvedObjects.Clear();
-            DataBindings.Clear();
+            DataViewBindings.Clear();
             ViewPools.Clear();
 
             //recycle the observable
@@ -1991,7 +1976,7 @@ namespace UnityIoC
                             var viewObjectType = dataBindingType.GetGenericArguments().FirstOrDefault();
                             object viewObject;
 
-                            if (CreateViewFromPool)
+                            if (Setting.CreateViewFromPool)
                             {
                                 viewObject = ViewPools.GetObject(viewObjectType,
                                     () => context.ResolveObject(viewObjectType, LifeCycle.Transient, resolveFrom,
@@ -2040,12 +2025,12 @@ namespace UnityIoC
 
                 mi.Invoke(viewObject, new[] {dataObject});
 
-                if (!DataBindings.ContainsKey(dataObject))
+                if (!DataViewBindings.ContainsKey(dataObject))
                 {
-                    DataBindings[dataObject] = new HashSet<object>();
+                    DataViewBindings[dataObject] = new HashSet<object>();
                 }
 
-                DataBindings[dataObject].Add(viewObject);
+                DataViewBindings[dataObject].Add(viewObject);
             }
 
             return viewObject;
@@ -2215,9 +2200,9 @@ namespace UnityIoC
             Type type = typeof(T);
             HashSet<object> viewLayers = null;
 //update the dataBindings
-            if (DataBindings.ContainsKey(obj))
+            if (DataViewBindings.ContainsKey(obj))
             {
-                viewLayers = DataBindings[obj];
+                viewLayers = DataViewBindings[obj];
 
                 foreach (var viewLayer in viewLayers)
                 {
@@ -2227,7 +2212,7 @@ namespace UnityIoC
                         var viewAsBehaviour = viewLayer as MonoBehaviour;
                         if (viewAsBehaviour != null)
                         {
-                            if (CreateViewFromPool)
+                            if (Setting.CreateViewFromPool)
                             {
                                 viewAsBehaviour.gameObject.SetActive(false);
                             }
@@ -2237,7 +2222,7 @@ namespace UnityIoC
                             }
                         }
 
-                        DataBindings.Remove(obj);
+                        DataViewBindings.Remove(obj);
                     }
                     else
                     {
@@ -2308,9 +2293,9 @@ namespace UnityIoC
                     updateAction(ref obj);
 
                     //update the dataBindings
-                    if (DataBindings.ContainsKey(objs[index]))
+                    if (DataViewBindings.ContainsKey(objs[index]))
                     {
-                        var viewLayers = DataBindings[objs[index]];
+                        var viewLayers = DataViewBindings[objs[index]];
 
                         foreach (var viewLayer in viewLayers)
                         {
@@ -2320,7 +2305,7 @@ namespace UnityIoC
                                 var viewAsBehaviour = viewLayer as MonoBehaviour;
                                 if (viewAsBehaviour != null)
                                 {
-                                    if (CreateViewFromPool)
+                                    if (Setting.CreateViewFromPool)
                                     {
                                         viewAsBehaviour.gameObject.SetActive(false);
                                     }
@@ -2330,7 +2315,7 @@ namespace UnityIoC
                                     }
                                 }
 
-                                DataBindings.Remove(objs[index]);
+                                DataViewBindings.Remove(objs[index]);
                             }
                             else
                             {
@@ -2368,9 +2353,9 @@ namespace UnityIoC
                     updateAction(obj);
 
                     //update the dataBindings
-                    if (DataBindings.ContainsKey(objs[index]))
+                    if (DataViewBindings.ContainsKey(objs[index]))
                     {
-                        var viewLayers = DataBindings[objs[index]];
+                        var viewLayers = DataViewBindings[objs[index]];
                         foreach (var viewLayer in viewLayers)
                         {
                             var mi = viewLayer.GetType().GetMethod("OnNext");
@@ -2429,7 +2414,7 @@ namespace UnityIoC
                     ResolvedObjects[type] = new HashSet<object>();
                 }
 
-                DataBindings.Remove(obj);
+                DataViewBindings.Remove(obj);
                 OnDisposed.Value = obj;
 
                 var disposable = obj as IDisposable;
@@ -2648,6 +2633,33 @@ namespace UnityIoC
         {
             Type type = typeof(T);
             return GetDefaultInstance(type).GetObjectFromGameObject(obj, type);
+        }
+
+        #endregion
+
+        #region Settings
+
+        public class Setting
+        {
+            /// <summary>
+            /// This is the default name of the default assembly that unity generated to compile your code
+            /// </summary>
+            public const string DefaultAssemblyName = "Assembly-CSharp";
+
+            /// <summary>
+            /// Get views from pools rather than a new object. Default is false.
+            /// </summary>
+            public static bool CreateViewFromPool;
+
+            /// <summary>
+            /// if true, when a new scene is unloaded, call the Dispose method. Default is false.
+            /// </summary>
+            public static bool AutoDisposeWhenSceneChanged;
+
+            /// <summary>
+            /// if true, when the default instance get initialized, it will process all mono-behaviours in current active scenes. Default is true.
+            /// </summary>
+            public static bool AutoProcessBehavioursInScene = true;
         }
 
         #endregion

@@ -285,12 +285,12 @@ namespace UnityIoC
                 return registeredObjects.Where(r => r.AbstractType == typeToResolve);
             }
 
-            public void Bind(Type typeToResolve, object instance)
+            public void BindInstance(Type typeToResolve, object instance)
             {
-                Bind(typeToResolve, instance.GetType(), instance);
+                BindInstance(typeToResolve, instance.GetType(), instance);
             }
 
-            public void Bind(
+            public void BindInstance(
                 Type typeToResolve,
                 Type typeConcrete,
                 object instance)
@@ -333,7 +333,7 @@ namespace UnityIoC
             public void Bind<TTypeToResolve>(
                 object instance)
             {
-                Bind(typeof(TTypeToResolve), instance.GetType(), instance);
+                BindInstance(typeof(TTypeToResolve), instance.GetType(), instance);
             }
 
             public void Bind<TTypeToResolve>(

@@ -35,6 +35,7 @@ public class MapGenerator : MonoBehaviour
     private void Awake()
     {
         MyDebug.EnableLogging = false;
+        Context.Setting.CreateViewFromPool = true;
         Context.GetDefaultInstance(this);
     }
 
