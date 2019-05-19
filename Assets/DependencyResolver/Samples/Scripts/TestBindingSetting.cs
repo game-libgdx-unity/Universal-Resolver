@@ -42,7 +42,7 @@ namespace SceneTest
 
 //            GameObject.Find("MonoBehaviourTest: TestRunner").GetComponent<ITestScene>().OpenNextTestScene();
 
-            Context.DisposeDefaultInstance();
+            Context.Reset();
             Context.Resolve<ITestSceneRunner>(LifeCycle.Singleton).OpenNextTestScene();
         }
     }

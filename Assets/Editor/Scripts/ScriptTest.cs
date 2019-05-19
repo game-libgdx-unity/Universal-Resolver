@@ -19,7 +19,7 @@ public class ScriptTest : MonoBehaviour, IRunScriptOnEditor
         var obj = GameObject.Find("GameObject");
         
         var t = obj.GetComponent<TestComponent>();
-        t.@abstract = new Impl(); 
+        t.@abstract = new ImplClass(); 
         
         var o2 = Object.Instantiate(obj);
         var t2 = Object.Instantiate(t);

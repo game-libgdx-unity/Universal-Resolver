@@ -18,7 +18,7 @@ namespace UnityIoC.Editor
         public void Setup()
         {
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene);
-            Context.DisposeDefaultInstance();
+            Context.Reset();
         }
 
         [Test]
@@ -167,9 +167,9 @@ namespace UnityIoC.Editor
         [Test]
         public void t11_resolve_with_parameters()
         {
-            var obj = Context.Resolve<Impl>(1);
+            var obj = Context.Resolve<ImplClass>(1);
             Assert.AreEqual(obj.a, 1);
-            obj = Context.Resolve<Impl>();
+            obj = Context.Resolve<ImplClass>();
             Assert.AreEqual(obj.a, 0);
         }
 
@@ -184,7 +184,7 @@ namespace UnityIoC.Editor
             var i2 = Context.Resolve<IAbstract>(resolveFrom: t2);
             var i3 = Context.Resolve<IAbstract>(resolveFrom: t3);
 
-            Assert.IsInstanceOf<Impl>(i1);
+            Assert.IsInstanceOf<ImplClass>(i1);
             Assert.IsInstanceOf<ImplClass2>(i2);
             Assert.IsInstanceOf<ImplClass2>(i3);
         }
@@ -198,7 +198,7 @@ namespace UnityIoC.Editor
 
             var i1 = objectContext.Resolve<IAbstract>();
 
-            Assert.IsInstanceOf<Impl>(i1);
+            Assert.IsInstanceOf<ImplClass>(i1);
         }
 
 
@@ -221,7 +221,7 @@ namespace UnityIoC.Editor
             var i2 = Context.FromObject<TestComponent2>().Resolve<IAbstract>();
             var i3 = Context.FromObject<TestComponent3>().Resolve<IAbstract>();
 
-            Assert.IsInstanceOf<Impl>(i1);
+            Assert.IsInstanceOf<ImplClass>(i1);
             Assert.IsInstanceOf<ImplClass2>(i2);
             Assert.IsInstanceOf<ImplClass2>(i3);
         }
@@ -445,7 +445,7 @@ namespace UnityIoC.Editor
         [Test]
         public void t29_test_IDataBinding()
         {
-            Context.DisposeDefaultInstance();
+            Context.Reset();
             Context.Resolve<UserData>();
             var userDataView = Object.FindObjectOfType<UserDataView>();
             Assert.IsNotNull(userDataView);
@@ -481,7 +481,7 @@ namespace UnityIoC.Editor
             //update by filter
             Context.Update<PlayerData>(
                 p => p.name == "John",
-                data => data.name = "Vinh" //update John to Vinh from cache
+                data => data.name = "Vinh" //change value of John to Vinh from cache
             );
 
             var vinh = Context.GetObject<PlayerData>(p => p.name == "Vinh");
@@ -534,7 +534,7 @@ namespace UnityIoC.Editor
         }
 
         [Test]
-        public void t33_context_object_from_cache()
+        public void t33_get_object_from_cache()
         {
             Context.Resolve<PlayerData>("Vinh");
             Context.Resolve<PlayerData>("John");
@@ -554,16 +554,63 @@ namespace UnityIoC.Editor
             Assert.AreEqual(1, Context.GetObjects<TestScriptableObject>().Length);
             Assert.AreEqual(obj, Context.GetObjectFromCache(typeof(TestScriptableObject)));
         }
-
+        
         [Test]
-        public void t35_context_resolve_ScriptableObject()
+        public void t35_data_linked_multiple_views()
         {
-            var obj = Context.Resolve<TestScriptableObject>("ATestScriptableObject");
-           Assert.AreEqual(100, obj.Amount);
+            var obj = Context.Resolve<UserData>();
+            var view1 = Object.FindObjectOfType<UserDataView>();
+            var view2 = Object.FindObjectOfType<UserDataView2>();
 
-            Assert.AreEqual(1, Context.GetObjects<TestScriptableObject>().Length);
-            Assert.AreEqual(obj, Context.GetObjectFromCache(typeof(TestScriptableObject)));
+            Assert.IsNotNull(view1);
+            Assert.IsNotNull(view2);
         }
+//
+//
+        [Test]
+        public void t36_resolve_by_className_generic()
+        {
+            var imp = Context.ResolveFromClassName<IAbstract>("ImplClass");
+            var imp2 = Context.ResolveFromClassName<IAbstract>("ImplClass2");
+            var imp3 = Context.ResolveFromClassName<IAbstract>("ImplClass3");
+            
+            Assert.IsNotNull(imp);
+            Assert.IsNotNull(imp2);
+            Assert.IsNotNull(imp3);
+
+            Assert.IsInstanceOf<ImplClass>(imp);
+            Assert.IsInstanceOf<ImplClass2>(imp2);
+            Assert.IsInstanceOf<ImplClass3>(imp3);
+        }
+        
+        [Test]
+        public void t37_resolve_by_className_general()
+        {
+            Context.GetDefaultInstance(typeof(IAbstract));
+            
+            var imp = Context.ResolveFromClassName("ImplClass");
+            var imp2 = Context.ResolveFromClassName("ImplClass2");
+            var imp3 = Context.ResolveFromClassName("ImplClass3");
+            
+            Assert.IsNotNull(imp);
+            Assert.IsNotNull(imp2);
+            Assert.IsNotNull(imp3);
+            
+            Assert.IsInstanceOf<ImplClass>(imp);
+            Assert.IsInstanceOf<ImplClass2>(imp2);
+            Assert.IsInstanceOf<ImplClass3>(imp3);
+        }
+//
+//
+//        [Test]
+//        public void t37_context_resolve_ScriptableObject()
+//        {
+//            var obj = Context.Resolve<TestScriptableObject>("ATestScriptableObject");
+//           Assert.AreEqual(100, obj.Amount);
+//
+//            Assert.AreEqual(1, Context.GetObjects<TestScriptableObject>().Length);
+//            Assert.AreEqual(obj, Context.GetObjectFromCache(typeof(TestScriptableObject)));
+//        }
 
 
         IEnumerable<string> GetFriendNames()
@@ -585,7 +632,7 @@ namespace UnityIoC.Editor
 
             Assert.IsTrue(Context.Initialized);
 //dispose
-            Context.DisposeDefaultInstance();
+            Context.Reset();
 //assert
             Assert.IsFalse(Context.Initialized);
         }

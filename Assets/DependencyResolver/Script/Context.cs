@@ -1010,6 +1010,11 @@ namespace UnityIoC
             return func(arg1, arg2);
         }
 
+        /// <summary>
+        /// Get an object which is resolved by Context, following the rule of LIFO 
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
         public static object GetObjectFromCache(Type type)
         {
             if (!ResolvedObjects.ContainsKey(type))
@@ -1081,7 +1086,9 @@ namespace UnityIoC
                 }
             }
 
-            //process for IRunBeforeUpdate interface
+            //Obsoleted: now you should write code in Start() after all dependencies got resolved.
+            //IRunBeforeUpdate is no more necessary.
+            //process for IRunBeforeUpdate interface 
 //            var runBeforeUpdateComp = allBehaviours.Where(m => m is IRunBeforeUpdate).ToArray();
 //            foreach (var mono in runBeforeUpdateComp)
 //            {
@@ -1101,32 +1108,32 @@ namespace UnityIoC
         /// <summary>
         /// Clone an object with all [inject] attributes resolved inside
         /// </summary>
-        /// <param name="obj"></param>
+        /// <param name="sample"></param>
         /// <param name="parent"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public T CreateInstance<T>(T obj, Transform parent = null) where T : Object
+        public T CreateInstance<T>(T sample, Transform parent = null) where T : Object
         {
             T clone = null;
             Component clonedComp = null;
             GameObject clonedGameObj = null;
-            GameObject gameObject = obj as GameObject;
+            GameObject gameObject = sample as GameObject;
             if (gameObject)
             {
-                clone = Object.Instantiate(obj);
+                clone = Object.Instantiate(sample);
                 clonedGameObj = clone as GameObject;
                 clonedGameObj.transform.SetParent(parent != null ? parent : gameObject.transform.parent);
             }
             else
             {
-                var comp = obj as Component;
+                var comp = sample as Component;
                 if (comp)
                 {
                     clone = Object.Instantiate(comp.gameObject).GetComponent(typeof(T)) as T;
                 }
                 else
                 {
-                    clone = Object.Instantiate(obj, parent);
+                    clone = Object.Instantiate(sample, parent);
                 }
 
                 clonedComp = clone as Component;
@@ -1847,7 +1854,7 @@ namespace UnityIoC
         }
 
         /// <summary>
-        /// Get default-static general purposes context
+        /// Get default-static general purposes context from an object
         /// </summary>
         public static Context GetDefaultInstance(
             object context,
@@ -1858,7 +1865,7 @@ namespace UnityIoC
         }
 
         /// <summary>
-        /// Get default-static general purposes context
+        /// Get default-static general purposes context from a type
         /// </summary>
         public static Context GetDefaultInstance(Type type = null, bool automaticBind = true,
             bool recreate = false)
@@ -1875,11 +1882,31 @@ namespace UnityIoC
 
             return defaultInstance;
         }
+        
+        /// <summary>
+        /// Get default-static general purposes context from assemblyName (not done yet)
+        /// </summary>
+//        public static Context GetDefaultInstance(string assemblyName = null, bool automaticBind = true,
+//            bool recreate = false)
+//        {
+//            if (defaultInstance == null || recreate)
+//            {
+//                if (Setting.AutoDisposeWhenSceneChanged)
+//                {
+//                    SceneManager.sceneUnloaded += SceneManagerOnSceneLoaded;
+//                }
+//
+//                var assem = ...
+//                defaultInstance = new Context( , automaticBind);
+//            }
+//
+//            return defaultInstance;
+//        }
 
         /// <summary>
         /// Reset static members to default, should be called if you have changed scene
         /// </summary>
-        public static void DisposeDefaultInstance()
+        public static void Reset()
         {
             if (!Initialized)
             {
@@ -1935,7 +1962,7 @@ namespace UnityIoC
 
         private static void SceneManagerOnSceneLoaded(Scene arg0)
         {
-            DisposeDefaultInstance();
+            Reset();
         }
 
         /// <summary>
@@ -1966,29 +1993,38 @@ namespace UnityIoC
                     //check if the resolved object implements the IDataBinding interface
                     var dataBindingTypes = resolveObject.GetType().GetInterfaces()
                         .Where(i => i.IsGenericType)
-                        .Where(i => i.GetGenericTypeDefinition() == typeof(IDataBinding<>));
+                        .Where(i => i.GetGenericTypeDefinition() == typeof(IViewBinding<>) || 
+                                    i.GetGenericTypeDefinition() == typeof(IViewBinding<,>) || 
+                                    i.GetGenericTypeDefinition() == typeof(IViewBinding<,,>) || 
+                                    i.GetGenericTypeDefinition() == typeof(IViewBinding<,,,>) || 
+                                    i.GetGenericTypeDefinition() == typeof(IViewBinding<,,,,>)
+                                    );
 
                     if (dataBindingTypes.Length > 0)
                     {
                         foreach (var dataBindingType in dataBindingTypes)
                         {
                             //resolve the type that is in the type argument of IDataBinding<> 
-                            var viewObjectType = dataBindingType.GetGenericArguments().FirstOrDefault();
-                            object viewObject;
+                            var viewTypes = dataBindingType.GetGenericArguments();
 
-                            if (Setting.CreateViewFromPool)
+                            foreach (var viewType in viewTypes)
                             {
-                                viewObject = ViewPools.GetObject(viewObjectType,
-                                    () => context.ResolveObject(viewObjectType, LifeCycle.Transient, resolveFrom,
-                                        null) as Component);
-                            }
-                            else
-                            {
-                                viewObject = context.ResolveObject(viewObjectType, LifeCycle.Transient, resolveFrom,
-                                    null);
-                            }
+                                object viewObject;
 
-                            BindDataWithView(typeToResolve, viewObject, resolveObject, resolveFrom);
+                                if (Setting.CreateViewFromPool)
+                                {
+                                    viewObject = ViewPools.GetObject(viewType,
+                                        () => context.ResolveObject(viewType, LifeCycle.Transient, resolveFrom,
+                                            null) as Component);
+                                }
+                                else
+                                {
+                                    viewObject = context.ResolveObject(viewType, LifeCycle.Transient, resolveFrom,
+                                        null);
+                                }
+
+                                BindDataWithView(typeToResolve, viewObject, resolveObject, resolveFrom);
+                            }
                         }
                     }
                 }
@@ -2002,7 +2038,7 @@ namespace UnityIoC
         {
             var observerTypes = viewObject.GetType().GetInterfaces()
                 .Where(i => i.IsGenericType)
-                .Where(i => i.GetGenericTypeDefinition() == typeof(IDataView<>));
+                .Where(i => i.GetGenericTypeDefinition() == typeof(IDataBinding<>));
 
             //create Views for the data object
             foreach (var observerType in observerTypes)
@@ -2050,7 +2086,7 @@ namespace UnityIoC
         }
 
         /// <summary>
-        /// Create a new brand C# only objects with hashtable data
+        /// Create a new brand C# only objects from a hashtable object
         /// </summary>
         /// <param name="parameters"></param>
         /// <typeparam name="T"></typeparam>
@@ -2064,8 +2100,32 @@ namespace UnityIoC
             foreach (var key in data)
             {
                 SetPropertyValue(resolveObject, key.ToString(), data[key]);
+                SetFieldValue(resolveObject, key.ToString(), data[key]);
             }
 
+            return resolveObject;
+        }
+
+        /// <summary>
+        /// Genericly create a brand new C# / Unity objects by a className inside the current assembly
+        /// </summary>
+        public static TAbstract ResolveFromClassName<TAbstract>(
+            string className,
+            LifeCycle lifeCycle = LifeCycle.Transient)
+        {
+            var type = GetDefaultInstance(typeof(TAbstract)).GetTypeFromCurrentAssembly(className);
+            var resolveObject = Resolve(type, lifeCycle);
+            return (TAbstract) resolveObject;
+        }
+
+        /// <summary>
+        /// Generally Create a brand new C# / Unity objects by a className inside the current assembly
+        /// </summary>
+        public static object ResolveFromClassName(
+            string className, LifeCycle lifeCycle = LifeCycle.Transient)
+        {
+            var type = GetDefaultInstance().GetTypeFromCurrentAssembly(className);
+            var resolveObject = Resolve(type, lifeCycle);
             return resolveObject;
         }
 
@@ -2199,6 +2259,7 @@ namespace UnityIoC
         {
             Type type = typeof(T);
             HashSet<object> viewLayers = null;
+
 //update the dataBindings
             if (DataViewBindings.ContainsKey(obj))
             {
@@ -2226,7 +2287,7 @@ namespace UnityIoC
                     }
                     else
                     {
-                        var mi = viewLayer.GetType().GetMethod("OnNext");
+                        var mi = viewLayer.GetType().GetMethod("OnNext", new[] {obj.GetType()});
                         mi.Invoke(viewLayer, new object[] {obj});
                     }
                 }
@@ -2358,7 +2419,7 @@ namespace UnityIoC
                         var viewLayers = DataViewBindings[objs[index]];
                         foreach (var viewLayer in viewLayers)
                         {
-                            var mi = viewLayer.GetType().GetMethod("OnNext");
+                            var mi = viewLayer.GetType().GetMethod("OnNext", new[] {typeof(T)});
                             mi.Invoke(viewLayer, new object[] {obj});
                         }
                     }
@@ -2430,20 +2491,40 @@ namespace UnityIoC
         /// <summary>
         /// Set value for a property by its name
         /// </summary>
-        /// <param name="inputObject"></param>
-        /// <param name="propertyName"></param>
-        /// <param name="propertyVal"></param>
-        public static void SetPropertyValue(object inputObject, string propertyName, object propertyVal)
+        private static void SetPropertyValue(object inputObject, string propertyName, object value)
         {
             Type type = inputObject.GetType();
             PropertyInfo propertyInfo = type.GetProperty(propertyName);
+
+            if (propertyInfo == null)
+            {
+                return;
+            }
 
             var targetType = IsNullableType(propertyInfo.PropertyType)
                 ? Nullable.GetUnderlyingType(propertyInfo.PropertyType)
                 : propertyInfo.PropertyType;
 
-            propertyVal = Convert.ChangeType(propertyVal, targetType);
-            propertyInfo.SetValue(inputObject, propertyVal, null);
+            value = Convert.ChangeType(value, targetType);
+            propertyInfo.SetValue(inputObject, value, null);
+        }
+
+        /// <summary>
+        /// Set value for a field by its name
+        /// </summary>
+        private static void SetFieldValue(object inputObject, string fieldName, object value)
+        {
+            Type type = inputObject.GetType();
+            var fieldInfo = type.GetField(fieldName);
+
+            if (fieldInfo == null) return;
+
+            var targetType = IsNullableType(fieldInfo.FieldType)
+                ? Nullable.GetUnderlyingType(fieldInfo.FieldType)
+                : fieldInfo.FieldType;
+
+            value = Convert.ChangeType(value, targetType);
+            fieldInfo.SetValue(inputObject, value);
         }
 
         public static bool IsNullableType(Type type)

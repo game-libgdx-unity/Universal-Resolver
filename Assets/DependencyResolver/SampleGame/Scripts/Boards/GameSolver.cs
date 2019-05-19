@@ -62,7 +62,6 @@ namespace App.Scripts.Boards
                 Debug.Log("Solver Success");
             }
             
-            
             yield return new WaitForSeconds(waitForNextStep);
             Status.Value = GameStatus.Completed;
         }

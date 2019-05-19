@@ -40,7 +40,7 @@ namespace SceneTest
 
         private void Reset()
         {
-            Context.DisposeDefaultInstance();
+            Context.Reset();
             Debug.Log("Reset.......................");
             SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         }

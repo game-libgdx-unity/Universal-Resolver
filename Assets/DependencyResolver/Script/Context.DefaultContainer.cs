@@ -670,7 +670,7 @@ namespace UnityIoC
                     );
 
                     debug.Log("Successfully resolved " + registeredObject.AbstractType + " as " +
-                              registeredObject.ImplementedType + " by " + objectLifeCycle + " from new object");
+                              registeredObject.ImplementedType + " by " + objectLifeCycle);
                     return obj;
                 }
 

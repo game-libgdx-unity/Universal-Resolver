@@ -50,8 +50,9 @@ public class MapGenerator : MonoBehaviour
                     print("Finished");
                     btnRestart.gameObject.SetActive(true);
                     
-                    //try to delete all cells
-                    Context.DeleteAll<CellData>();
+                    //if u enable the code, It will delete all cells which are resolved by the Context
+                    //This also will delete all associated Views with the data cell objects.
+//                    Context.DeleteAll<CellData>();
                 }
             })
             .AddTo(gameObject);
@@ -68,7 +69,17 @@ public class MapGenerator : MonoBehaviour
         gridLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
         gridLayout.constraintCount = gameSetting.Width;
 
-        Context.OnResolved.Subscribe(this, obj =>
+//        Context.OnResolved.Subscribe(this, obj =>
+//        {
+//            if (obj.GetType() == typeof(CellData))
+//            {
+////                var cell = Context.Resolve<Cell>(container);
+//                var cell = Context.ResolveFromPool<Cell>(container);
+//            }
+//        });
+        
+        //OnResolvedAs return an observable pattern.
+        Context.OnResolvedAs<CellData>().Subscribe(obj=>
         {
             if (obj.GetType() == typeof(CellData))
             {
@@ -90,7 +101,7 @@ public class MapGenerator : MonoBehaviour
     {
         Benchmark.Start();
 
-        Context.DisposeDefaultInstance();
+        Context.Reset();
 
         SceneManager.LoadScene(SceneManager.GetActiveScene().name); //restart the game
 

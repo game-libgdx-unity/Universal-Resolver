@@ -97,7 +97,7 @@ public class ContextBehaviour : SingletonBehaviour<ContextBehaviour>
 
     private void OnDestroy()
     {
-        Context.DisposeDefaultInstance();
+        Context.Reset();
     }
 }
 

@@ -60,7 +60,7 @@ namespace UnityIoC.Editor
         {
             var assemblyContext = new Context(typeof(IAbstract));
             var component = assemblyContext.ResolveObject<TestComponent>();
-            Assert.IsInstanceOf(typeof(Impl), component.@abstract);
+            Assert.IsInstanceOf(typeof(ImplClass), component.@abstract);
         }
 #endif
         //this test can't be done due to "Can't add script behaviour ComponentTest because it is an editor script."

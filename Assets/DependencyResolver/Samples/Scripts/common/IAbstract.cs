@@ -28,16 +28,11 @@ namespace SceneTest
     }
 
     [Serializable]
-    public class UserData : IDataBinding<UserDataView>
+    public class UserData : IViewBinding<UserDataView, UserDataView2>
     {
         public int userId;
         public int id;
         public string title;
         public bool completed;
-    }
-
-    public class UserDataView : MonoBehaviour
-    {
-        [Inject] UserData Data { get; set; }
     }
 }

@@ -15,6 +15,6 @@ public class UIManager : MonoBehaviour
     void Start()
     {
         btnShowList.onClick.AddListener(() => playerListUI.gameObject.SetActive(!playerListUI.gameObject.activeSelf));
-        btnCreateItem.onClick.AddListener(() => Context.Resolve<PlayerData>(Random.Range(100,1000).ToString()));
+        btnCreateItem.onClick.AddListener(() => Context.Resolve<PlayerView>(Random.Range(100,1000).ToString()));
     }
 }

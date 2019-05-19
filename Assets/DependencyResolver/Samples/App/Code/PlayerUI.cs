@@ -7,14 +7,14 @@ using UnityEngine.UI;
 using UnityIoC;
 using Object = UnityEngine.Object;
 
-public class PlayerUI : MonoBehaviour, IDataView<PlayerData>
+public class PlayerUI : MonoBehaviour, IDataBinding<PlayerView>
 {
     [SerializeField, Inject] Text txtName;
     [SerializeField, Inject] Button btnDelete;
 
-    public void OnNext(PlayerData playerData)
+    public void OnNext(PlayerView playerView)
     {
-        txtName.text = playerData.meta.DisplayName;
-        btnDelete.onClick.AddListener(() => { Context.Delete(playerData); });
+        txtName.text = playerView.meta.DisplayName;
+        btnDelete.onClick.AddListener(() => { Context.Delete(playerView); });
     }
 }

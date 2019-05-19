@@ -13,7 +13,7 @@ public class PlayerListUI : MonoBehaviour
         
         foreach (var friendName in GetFriendNames())
         {
-            Context.Resolve<PlayerData>(friendName);
+            Context.Resolve<PlayerView>(friendName);
         }
 
         Invoke("ChangeName", 1);
@@ -25,7 +25,7 @@ public class PlayerListUI : MonoBehaviour
     void ChangeName()
     {
         // check number of cached object
-        var objCount = Context.ResolvedObjects[typeof(PlayerData)].Count;
+        var objCount = Context.ResolvedObjects[typeof(PlayerView)].Count;
         Debug.Log(objCount);
         Debug.Assert(GetFriendNames().Count() == objCount);
     }
