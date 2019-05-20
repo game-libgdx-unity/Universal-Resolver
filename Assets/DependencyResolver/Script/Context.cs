@@ -1045,7 +1045,7 @@ namespace UnityIoC
                 return;
             }
 
-            var ignoredUnityEngineScripts = Behaviours.Where(m =>
+            var ignoredUnityEngineScripts = AllBehaviours.Where(m =>
                 {
                     var type = m.GetType();
                     var ns = type.Namespace;
@@ -1390,7 +1390,6 @@ namespace UnityIoC
         ///<summary>
         /// cache of resolved objects
         /// </summary>
-        /// 
         public static Dictionary<Type, HashSet<object>> ResolvedObjects = new Dictionary<Type, HashSet<object>>();
 
         /// <summary>
@@ -1408,17 +1407,16 @@ namespace UnityIoC
         /// </summary>
         private static MonoBehaviour[] _allBehaviours;
 
-
         /// <summary>
-        /// cached all monobehaviours
+        /// Get all monobehaviours from behaviour cache 
         /// </summary>
-        public static MonoBehaviour[] Behaviours
+        public static MonoBehaviour[] AllBehaviours
         {
             get
             {
                 if (_allBehaviours == null)
                 {
-                    _allBehaviours = Resources.FindObjectsOfTypeAll<MonoBehaviour>().Where(m => m).ToArray();
+                    _allBehaviours = Resources.FindObjectsOfTypeAll<MonoBehaviour>();
                 }
 
                 return _allBehaviours;
@@ -1433,7 +1431,7 @@ namespace UnityIoC
         /// <summary>
         /// subject to resolving object
         /// </summary>
-        public static Observable<object> OnResolved
+        internal static Observable<object> onResolved
         {
             get
             {
@@ -1497,16 +1495,16 @@ namespace UnityIoC
         /// <summary>
         /// cached all root gameObjects
         /// </summary>
-        private static GameObject[] _gameObjects;
+        private static GameObject[] _rootgameObjects;
 
         /// <summary>
-        /// cached all root gameObjects
+        /// Get all root gameObjects from cache
         /// </summary>
-        public static GameObject[] GameObjects
+        public static GameObject[] AllRootRootgameObjects
         {
             get
             {
-                if (_gameObjects == null)
+                if (_rootgameObjects == null || _rootgameObjects.Length == 0)
                 {
                     var gameObjectList = new List<GameObject>();
                     for (int i = 0; i < SceneManager.sceneCount; i++)
@@ -1514,25 +1512,17 @@ namespace UnityIoC
                         gameObjectList.AddRange(SceneManager.GetSceneAt(i).GetRootGameObjects());
                     }
 
-                    _gameObjects = gameObjectList.ToArray();
+                    _rootgameObjects = gameObjectList.ToArray();
                 }
 
-                return _gameObjects;
+                return _rootgameObjects;
             }
         }
 
-        /// <summary>
-        /// Get all gameObjects
-        /// </summary>
-        public static GameObject[] AllGameObjects
-        {
-            get { return Object.FindObjectsOfType<GameObject>().Where(m => m).ToArray(); }
-        }
-
-        public static Observable<T> OnResolvedAs<T>()
+        public static Observable<T> OnResolved<T>()
         {
             var output = new Observable<T>();
-            OnResolved.Subscribe(o =>
+            onResolved.Subscribe(o =>
             {
                 if (o.GetType() == typeof(T))
                 {
@@ -1683,7 +1673,7 @@ namespace UnityIoC
             var obj = JsonUtility.FromJson<T>(json);
             if (obj != null)
             {
-                OnResolved.Value = obj;
+                onResolved.Value = obj;
                 return obj;
             }
 
@@ -1702,7 +1692,7 @@ namespace UnityIoC
             var obj = MyResources.Load(path) as T;
             if (obj != null)
             {
-                OnResolved.Value = obj;
+                onResolved.Value = obj;
                 return obj;
             }
 
@@ -1757,7 +1747,7 @@ namespace UnityIoC
 
             if (instanceFromPool != null)
             {
-                OnResolved.Value = instanceFromPool;
+                onResolved.Value = instanceFromPool;
             }
 
             return instanceFromPool;
@@ -1874,7 +1864,7 @@ namespace UnityIoC
             {
                 if (Setting.AutoDisposeWhenSceneChanged)
                 {
-                    SceneManager.sceneUnloaded += SceneManagerOnSceneLoaded;
+                    SceneManager.sceneLoaded += SceneManagerOnSceneLoaded;
                 }
 
                 defaultInstance = new Context(type, automaticBind);
@@ -1882,7 +1872,7 @@ namespace UnityIoC
 
             return defaultInstance;
         }
-        
+
         /// <summary>
         /// Get default-static general purposes context from assemblyName (not done yet)
         /// </summary>
@@ -1903,10 +1893,12 @@ namespace UnityIoC
 //            return defaultInstance;
 //        }
 
+        public static string LastSceneName;
+
         /// <summary>
         /// Reset static members to default, should be called if you have changed scene
         /// </summary>
-        public static void Reset()
+        public static void Reset(bool changeScene = false)
         {
             if (!Initialized)
             {
@@ -1916,51 +1908,55 @@ namespace UnityIoC
             //remove delegate
             if (Setting.AutoDisposeWhenSceneChanged)
             {
-                SceneManager.sceneUnloaded -= SceneManagerOnSceneLoaded;
+                SceneManager.sceneLoaded -= SceneManagerOnSceneLoaded;
             }
 
             //remove caches
             ResolvedObjects.Clear();
-            DataViewBindings.Clear();
-            ViewPools.Clear();
 
-            //recycle the observable
-            if (!OnResolved.IsDisposed)
+            if (changeScene)
             {
-                OnResolved.Dispose();
-                _onResolved = null;
-            }
+                DataViewBindings.Clear();
+                ViewPools.Clear();
+                
+                //recycle the observable
+                if (!onResolved.IsDisposed)
+                {
+                    onResolved.Dispose();
+                    _onResolved = null;
+                }
 
-            //recycle the observable
-            if (!OnDisposed.IsDisposed)
-            {
-                OnDisposed.Dispose();
-                _onDisposed = null;
-            }
+                //recycle the observable
+                if (!OnDisposed.IsDisposed)
+                {
+                    OnDisposed.Dispose();
+                    _onDisposed = null;
+                }
+                
+                //recycle the defaultInstance
+                if (defaultInstance != null)
+                {
+                    defaultInstance.Dispose();
+                    defaultInstance = null;
+                }
 
-            //recycle the defaultInstance
-            if (defaultInstance != null)
-            {
-                defaultInstance.Dispose();
-                defaultInstance = null;
-            }
+                //remove cache of behaviours
+                if (AllBehaviours != null)
+                {
+                    Array.Clear(AllBehaviours, 0, AllBehaviours.Length);
+                    _allBehaviours = null;
+                }
 
-            //remove cache of behaviours
-            if (Behaviours != null)
-            {
-                Array.Clear(Behaviours, 0, Behaviours.Length);
-                _allBehaviours = null;
-            }
-
-            //remove cache of root game objects
-            if (_gameObjects != null)
-            {
-                Array.Clear(_gameObjects, 0, _gameObjects.Length);
-                _gameObjects = null;
+                //remove cache of root game objects
+                if (_rootgameObjects != null)
+                {
+                    Array.Clear(_rootgameObjects, 0, _rootgameObjects.Length);
+                    _rootgameObjects = null;
+                }
             }
         }
 
-        private static void SceneManagerOnSceneLoaded(Scene arg0)
+        private static void SceneManagerOnSceneLoaded(Scene arg0, LoadSceneMode loadSceneMode)
         {
             Reset();
         }
@@ -1988,7 +1984,7 @@ namespace UnityIoC
                 if (resolveObject != null)
                 {
                     //trigger the subject
-                    OnResolved.Value = resolveObject;
+                    onResolved.Value = resolveObject;
 
                     //check if the resolved object implements the IDataBinding interface
                     var dataBindingTypes = resolveObject.GetType().GetInterfaces()
@@ -2040,7 +2036,7 @@ namespace UnityIoC
                 .Where(i => i.IsGenericType)
                 .Where(i => i.GetGenericTypeDefinition() == typeof(IDataBinding<>));
 
-            //create Views for the data object
+            //Bind View for the data object
             foreach (var observerType in observerTypes)
             {
                 var dataObjectType = observerType.GetGenericArguments().FirstOrDefault();
@@ -2200,7 +2196,7 @@ namespace UnityIoC
                     }
 
                     ResolvedObjects[type].Add(resolve);
-                    OnResolved.Value = resolve;
+                    onResolved.Value = resolve;
                 }
 
                 return resolve;

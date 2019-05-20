@@ -193,11 +193,11 @@ namespace UnityIoC
                         //try to find component from current scene then
                         if (Instance == null)
                         {
-                            if (concreteType.IsSubclassOf(typeof(MonoBehaviour)) && Context.Behaviours != null &&
-                                Context.Behaviours.Length > 0)
+                            if (concreteType.IsSubclassOf(typeof(MonoBehaviour)) && Context.AllBehaviours != null &&
+                                Context.AllBehaviours.Length > 0)
                             {
                                 instance =
-                                    Context.Behaviours.FirstOrDefault(
+                                    Context.AllBehaviours.FirstOrDefault(
                                         b => concreteType.IsAssignableFrom(b.GetType()));
                             }
 

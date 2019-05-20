@@ -37,7 +37,7 @@ public static class PoolExtension
                         }
 
                         //trigger the subject
-                        Context.OnResolved.Value = obj;
+                        Context.onResolved.Value = obj;
                     }
 
 
@@ -72,7 +72,7 @@ public static class PoolExtension
             {
                 if (objects[i] == null)
                 {
-                    continue;
+                    objects[i] = Context.GetDefaultInstance(typeof(T)).ResolveObject<T>(LifeCycle.Transient, resolveFrom, parameters);
                 }
 
                 if (!objects[i].Alive)

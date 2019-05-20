@@ -18,7 +18,7 @@ namespace UnityIoC.Editor
         public void Setup()
         {
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene);
-            Context.Reset();
+            Context.Reset(true);
         }
 
         [Test]
@@ -445,7 +445,6 @@ namespace UnityIoC.Editor
         [Test]
         public void t29_test_IDataBinding()
         {
-            Context.Reset();
             Context.Resolve<UserData>();
             var userDataView = Object.FindObjectOfType<UserDataView>();
             Assert.IsNotNull(userDataView);
@@ -632,7 +631,7 @@ namespace UnityIoC.Editor
 
             Assert.IsTrue(Context.Initialized);
 //dispose
-            Context.Reset();
+            Context.Reset(true);
 //assert
             Assert.IsFalse(Context.Initialized);
         }

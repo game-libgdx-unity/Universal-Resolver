@@ -1,4 +1,6 @@
-﻿public class CellData
+﻿using UnityIoC;
+
+public class CellData : IViewBinding<Cell>
 {
     public int ID { get; set; }
     public int X { get; set; }
@@ -9,11 +11,6 @@
     public BoolReactiveProperty IsRevealed = new BoolReactiveProperty();
     public BoolReactiveProperty IsMine = new BoolReactiveProperty();
     public BoolReactiveProperty IsFlagged = new BoolReactiveProperty();
-
-
-    public CellData()
-    {
-    }
 
     public CellData(int id, int x, int y)
     {

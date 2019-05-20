@@ -66,12 +66,11 @@ public class ViewPool
 
         if (objects.Count > 0)
         {
-            objects.RemoveAll(o => o == null);
             for (int i = 0; i < objects.Count; i++)
             {
                 if (!objects[i])
                 {
-                    continue;
+                    objects[i] = CreateObject();
                 }
 
                 if (!objects[i].gameObject.activeSelf)
@@ -79,13 +78,6 @@ public class ViewPool
                     var obj = objects[i];
                     obj.gameObject.SetActive(true);
                     obj.transform.SetAsLastSibling();
-                    if (obj != null)
-                    {
-                        //trigger the subject
-                        Context.OnResolved.Value = obj;
-                    }
-
-
                     return obj;
                 }
             }

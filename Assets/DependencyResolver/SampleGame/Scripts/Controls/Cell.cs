@@ -17,7 +17,7 @@ using UnityIoC;
 /// UI implementation for cells
 /// </summary>
 [SelectionBase]
-public class Cell : MonoBehaviour
+public class Cell : MonoBehaviour, IDataBinding<CellData>
 {
     
     //presentation layer
@@ -25,19 +25,8 @@ public class Cell : MonoBehaviour
     [Inject] Image background;
     [Inject] Outline outline;
     [Inject] CellData cellData;
-    
-    private void Start()
-    {
-        if (Context.ResolvedObjects.Count == 0)
-        {
-            return;
-        }
-        
-        Debug.Assert(cellData != null);
-        SetCellData(cellData);
-    }
 
-    public void SetCellData(CellData data)
+    public void OnNext(CellData data)
     {
         var cellData = data;
         Debug.Assert(cellData != null);

@@ -23,7 +23,9 @@ public class MapGenerator : MonoBehaviour
 {
     [SerializeField, Inject] private GridLayoutGroup gridLayout;
     [SerializeField, Inject] private Button btnRestart;
-    [SerializeField, Inject("MapGenerator")] private RectTransform container;
+
+    [SerializeField, Inject("MapGenerator")]
+    private RectTransform container;
 
 //    [Prefab] private Cell cell;
     [Singleton] private IGameSolver gameSolver;
@@ -49,7 +51,7 @@ public class MapGenerator : MonoBehaviour
                 {
                     print("Finished");
                     btnRestart.gameObject.SetActive(true);
-                    
+
                     //if u enable the code, It will delete all cells which are resolved by the Context
                     //This also will delete all associated Views with the data cell objects.
 //                    Context.DeleteAll<CellData>();
@@ -60,34 +62,21 @@ public class MapGenerator : MonoBehaviour
         //setup button restart
         if (btnRestart)
         {
-            btnRestart.gameObject.SetActive(false);
-            btnRestart.onClick.RemoveAllListeners();
             btnRestart.onClick.AddListener(() => { StartCoroutine(RestartRoutine()); });
         }
 
         //setup the layout
         gridLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
         gridLayout.constraintCount = gameSetting.Width;
-
-//        Context.OnResolved.Subscribe(this, obj =>
-//        {
-//            if (obj.GetType() == typeof(CellData))
-//            {
-////                var cell = Context.Resolve<Cell>(container);
-//                var cell = Context.ResolveFromPool<Cell>(container);
-//            }
-//        });
         
-        //OnResolvedAs return an observable pattern.
-        Context.OnResolvedAs<CellData>().Subscribe(obj=>
-        {
-            if (obj.GetType() == typeof(CellData))
-            {
-//                var cell = Context.Resolve<Cell>(container);
-                var cell = Context.ResolveFromPool<Cell>(container);
-            }
-        });
+        //setup a new game
+        Setup();
+    }
 
+    private void Setup()
+    {
+        btnRestart.gameObject.SetActive(false);
+        
         //build the board
         gameBoard.Build(gameSetting.Width, gameSetting.Height, gameSetting.MineCount);
 
@@ -99,17 +88,17 @@ public class MapGenerator : MonoBehaviour
 
     private IEnumerator RestartRoutine()
     {
-        Benchmark.Start();
+        Setup();
+        
+        Context.DeleteAll<CellData>();
 
-        Context.Reset();
-
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name); //restart the game
-
-        yield return null;
+        gameStatus.Value = GameStatus.InProgress;
+        
+        //build the board
+        gameBoard.Build(gameSetting.Width, gameSetting.Height, gameSetting.MineCount);
+        
         yield return null;
         //now scene loading is complete
-
-        Benchmark.Stop();
     }
 
     IEnumerator SolveRoutine()

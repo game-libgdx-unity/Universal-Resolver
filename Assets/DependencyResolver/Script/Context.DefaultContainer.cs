@@ -12,6 +12,7 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.Assertions;
 using Object = UnityEngine.Object;
+using Unity.Linq;
 
 namespace UnityIoC
 {
@@ -125,11 +126,18 @@ namespace UnityIoC
                                                       System.Reflection.BindingFlags.NonPublic |
                                                       System.Reflection.BindingFlags.Public;
 
+            internal HashSet<Type> registeredTypes = new HashSet<Type>();
+
+            /// <summary>
+            /// cache of processings to find out the appropriate RegisteredObject  
+            /// </summary>
             private Dictionary<ResolveInput, RegisteredObject> CachedResolveResults =
                 new Dictionary<ResolveInput, RegisteredObject>(new CacheEqualityComparer());
 
-            internal HashSet<Type> registeredTypes = new HashSet<Type>();
 
+            /// <summary>
+            /// cache of bindings which are registered inside context.
+            /// </summary>
             internal List<RegisteredObject> registeredObjects = new List<RegisteredObject>();
 
             private readonly Logger debug = new Logger(typeof(Container));
@@ -378,20 +386,25 @@ namespace UnityIoC
             )
             {
                 ResolveInput resolveInput = new ResolveInput();
-                
-                //quick return for some particular types //
-                
-                if(abstractType.IsValueType)
+
+                //quick return for some particular types & cases.
+                if (abstractType.IsValueType)
                 {
+                    if (parameters != null && parameters.Length == 1 && parameters[0].GetType() == abstractType)
+                        return parameters[0];
+                    
                     return Activator.CreateInstance(abstractType);
                 }
 
                 if (abstractType == typeof(string))
                 {
+                    if (parameters != null && parameters.Length == 1 && parameters[0] is string)
+                        return parameters[0];
+
                     return string.Empty;
                 }
 
-                if (abstractType.IsSubclassOf(typeof(ScriptableObject)) && parameters.Cast<string>().Count() == 1)
+                if (abstractType.IsSubclassOf(typeof(ScriptableObject)) && parameters != null && parameters.Cast<string>().Count() == 1)
                 {
                     return MyResources.Load(parameters[0] as string);
                 }
@@ -423,7 +436,6 @@ namespace UnityIoC
                 }
 
                 Func<RegisteredObject, bool> filter = null;
-
                 RegisteredObject registeredObject = null;
 
                 if (resolveFrom == null)
@@ -435,7 +447,6 @@ namespace UnityIoC
                         return instance;
                     }
 
-//                    filter = o => abstractType.IsAssignableFrom(o.AbstractType) && o.InjectInto == null;
                     filter = o => abstractType.IsAssignableFrom(o.AbstractType) && o.InjectInto == null;
 
                     registeredObject = registeredObjects.FirstOrDefault(filter);
@@ -444,29 +455,37 @@ namespace UnityIoC
                         debug.Log(
                             "The type {0} has not been registered", abstractType.Name);
 
-                        //if the typeToResolve is abstract, then we cannot resolve it, throw exceptions
                         if (abstractType.IsAbstract)
                         {
-                            
-                            //search the abstractType from all gameObjects
-                            foreach (var gameObject in Context.AllGameObjects)
+                            //search the abstractType from all root gameObjects and its descendants
+                            foreach (var gameObject in Context.AllRootRootgameObjects)
                             {
-                                var component = gameObject.GetComponent(abstractType);
-                                if (component != null)
+                                var children = gameObject.DescendantsAndSelf();
+
+                                foreach (var child in children)
                                 {
-                                    registeredObject = new RegisteredObject(
-                                        abstractType,
-                                        abstractType,
-                                        context,
-                                        preferredLifeCycle);
-                                    
-                                    registeredObject.GameObject = component.gameObject;
-                                    registeredObjects.Add(registeredObject);
-                                    
-                                    return component;
+                                    var component = child.GetComponent(abstractType);
+
+                                    if (component != null)
+                                    {
+                                        registeredObject = new RegisteredObject(
+                                            abstractType,
+                                            abstractType,
+                                            context,
+                                            preferredLifeCycle);
+
+                                        registeredObject.GameObject = component.gameObject;
+                                        registeredObjects.Add(registeredObject);
+
+                                        registeredTypes.Add(abstractType);
+
+                                        return component;
+                                    }
                                 }
                             }
-                            
+
+                            //if the typeToResolve is abstract and can't find from scene,
+                            //then we cannot resolve it, throw exceptions
                             throw new InvalidOperationException(
                                 "Cannot resolve the abstract type " + abstractType.Name +
                                 " with no respective registeredObject!");
@@ -486,11 +505,11 @@ namespace UnityIoC
                         {
                             Component findObjOnScene = null;
 
-                            if (abstractType.IsSubclassOf(typeof(MonoBehaviour)) && Behaviours != null &&
-                                Behaviours.Length > 0)
+                            if (abstractType.IsSubclassOf(typeof(MonoBehaviour)) && AllBehaviours != null &&
+                                AllBehaviours.Length > 0)
                             {
                                 findObjOnScene =
-                                    Behaviours.FirstOrDefault(b => abstractType.IsAssignableFrom(b.GetType()));
+                                    AllBehaviours.FirstOrDefault(b => abstractType.IsAssignableFrom(b.GetType()));
                             }
 
                             if (findObjOnScene == null)
@@ -655,7 +674,8 @@ namespace UnityIoC
                     else if (parameters.GetType().GetElementType() == typeof(Type))
                     {
                         var elementTypes = parameters.Select(p => p as Type).ToArray();
-                        paramArray = ResolveConstructorParameters(registeredObject.ImplementedType, elementTypes).ToArray();
+                        paramArray = ResolveConstructorParameters(registeredObject.ImplementedType, elementTypes)
+                            .ToArray();
                     }
                     else
                     {
