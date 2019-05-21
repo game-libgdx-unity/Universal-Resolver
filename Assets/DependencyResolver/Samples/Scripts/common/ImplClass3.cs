@@ -8,7 +8,7 @@ namespace SceneTest
 
         public void DoSomething()
         {
-            MyDebug.Log("This is ImplClass3");
+            UniversalResolverDebug.Log("This is ImplClass3");
         }
     }
 }

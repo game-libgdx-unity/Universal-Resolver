@@ -10,7 +10,7 @@ namespace UnityIoC.Editor
 
 		public void DoSomething()
 		{
-			MyDebug.Log("Hello 2"); 
+			UniversalResolverDebug.Log("Hello 2"); 
 		}
 	}
 

@@ -20,12 +20,12 @@ namespace SceneTest
 
         public void ShowValue()
         {
-            MyDebug.Log("A: " + a);
+            UniversalResolverDebug.Log("A: " + a);
         }
 
         public void DoSomething()
         {
-            MyDebug.Log("This is ImplClass");
+            UniversalResolverDebug.Log("This is ImplClass");
         }
     }
 }

@@ -137,7 +137,7 @@ public class InjectBaseAttribute : Attribute, IComponentResolvable, IComponentAr
         //set the gameObject if the search failed
         if (gameObject == null)
         {
-            MyDebug.Log("Can't find gameObject by path {0}, will use current gameObject", path);
+            UniversalResolverDebug.Log("Can't find gameObject by path {0}, will use current gameObject", path);
 
             gameObject = behaviour.gameObject;
         }

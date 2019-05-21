@@ -11,7 +11,7 @@ namespace UnityIoC
     /// <summary>
     /// Custom debug with Conditional attributes and enable logging designed for UnityIoC
     /// </summary>
-    public static class MyDebug
+    public static class UniversalResolverDebug
     {
         public static bool EnableLogging = true;
 

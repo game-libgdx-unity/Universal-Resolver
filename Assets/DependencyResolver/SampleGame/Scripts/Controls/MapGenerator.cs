@@ -19,7 +19,7 @@ using Debug = UnityEngine.Debug;
 
 
 [ProcessingOrder(1)]
-public class MapGenerator : MonoBehaviour
+public class     MapGenerator : MonoBehaviour
 {
     [SerializeField, Inject] private GridLayoutGroup gridLayout;
     [SerializeField, Inject] private Button btnRestart;
@@ -36,7 +36,7 @@ public class MapGenerator : MonoBehaviour
 
     private void Awake()
     {
-        MyDebug.EnableLogging = false;
+        UniversalResolverDebug.EnableLogging = false;
         Context.Setting.CreateViewFromPool = true;
         Context.GetDefaultInstance(this);
     }
@@ -51,10 +51,6 @@ public class MapGenerator : MonoBehaviour
                 {
                     print("Finished");
                     btnRestart.gameObject.SetActive(true);
-
-                    //if u enable the code, It will delete all cells which are resolved by the Context
-                    //This also will delete all associated Views with the data cell objects.
-//                    Context.DeleteAll<CellData>();
                 }
             })
             .AddTo(gameObject);
@@ -75,32 +71,25 @@ public class MapGenerator : MonoBehaviour
 
     private void Setup()
     {
+        //hide UI elements/objects as default when game's starting
         btnRestart.gameObject.SetActive(false);
-        
+        gameStatus.Value = GameStatus.InProgress;
+
         //build the board
         gameBoard.Build(gameSetting.Width, gameSetting.Height, gameSetting.MineCount);
 
-        print("Map setup");
-
         //solve the game
-        StartCoroutine(SolveRoutine());
+        StartCoroutine(gameSolver.Solve(1f));
     }
 
     private IEnumerator RestartRoutine()
     {
         yield return null;
 
+        //delete all cells which are resolved by the Context
+        //This also will delete all associated Views with the data cell objects.
         Context.DeleteAll<CellData>();
-
-        gameStatus.Value = GameStatus.InProgress;
         
         Setup();
-        
-        //now scene loading is complete
-    }
-
-    IEnumerator SolveRoutine()
-    {
-        yield return gameSolver.Solve(1f);
     }
 }

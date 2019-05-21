@@ -61,7 +61,7 @@ namespace UnityIoC
         /// <summary>
         /// Name of an assembly that will be loaded when initializing the context in case TargetType is null
         /// </summary>
-        private string assemblyName = Setting.DefaultAssemblyName;
+        private string assemblyName = "";
 
         #endregion
 
@@ -615,7 +615,7 @@ namespace UnityIoC
                 {
                     continue;
                 }
-                
+
                 bool defaultValue = false;
 
                 var overrideAttribute =
@@ -623,7 +623,7 @@ namespace UnityIoC
 
                 //only process a field if the field's value is not set yet
                 var value = field.GetValue(mono);
-                
+
                 if (overrideAttribute == null)
                 {
                     if (field.FieldType.IsArray)
@@ -964,12 +964,17 @@ namespace UnityIoC
                         try
                         {
                             if (string.IsNullOrEmpty(assemblyName))
-                                _currentAssembly = Assembly.Load(Setting.DefaultAssemblyName);
+                            {
+                                _currentAssembly = Assembly.Load(Setting.AssemblyName);
+                            }
                             else
+                            {
                                 _currentAssembly = Assembly.Load(assemblyName);
+                            }
                         }
                         catch (Exception ex)
                         {
+                            //if all the AssemblyNames are incorrect
                             _currentAssembly = Assembly.GetExecutingAssembly();
                         }
                     }
@@ -1404,7 +1409,7 @@ namespace UnityIoC
         public static Dictionary<object, HashSet<object>> DataViewBindings = new Dictionary<object, HashSet<object>>();
 
         /// <summary>
-        /// General pools for mono-behaviour-based Views
+        /// General pools for mono-behaviour-based Views for view recyclable purposes. 
         /// </summary>
         public static ViewPool ViewPools = new ViewPool();
 
@@ -1898,7 +1903,6 @@ namespace UnityIoC
 //
 //            return defaultInstance;
 //        }
-
         public static string LastSceneName;
 
         /// <summary>
@@ -1924,7 +1928,7 @@ namespace UnityIoC
             {
                 DataViewBindings.Clear();
                 ViewPools.Clear();
-                
+
                 //recycle the observable
                 if (!onResolved.IsDisposed)
                 {
@@ -1938,7 +1942,7 @@ namespace UnityIoC
                     OnDisposed.Dispose();
                     _onDisposed = null;
                 }
-                
+
                 //recycle the defaultInstance
                 if (defaultInstance != null)
                 {
@@ -1995,12 +1999,12 @@ namespace UnityIoC
                     //check if the resolved object implements the IDataBinding interface
                     var dataBindingTypes = resolveObject.GetType().GetInterfaces()
                         .Where(i => i.IsGenericType)
-                        .Where(i => i.GetGenericTypeDefinition() == typeof(IViewBinding<>) || 
-                                    i.GetGenericTypeDefinition() == typeof(IViewBinding<,>) || 
-                                    i.GetGenericTypeDefinition() == typeof(IViewBinding<,,>) || 
-                                    i.GetGenericTypeDefinition() == typeof(IViewBinding<,,,>) || 
+                        .Where(i => i.GetGenericTypeDefinition() == typeof(IViewBinding<>) ||
+                                    i.GetGenericTypeDefinition() == typeof(IViewBinding<,>) ||
+                                    i.GetGenericTypeDefinition() == typeof(IViewBinding<,,>) ||
+                                    i.GetGenericTypeDefinition() == typeof(IViewBinding<,,,>) ||
                                     i.GetGenericTypeDefinition() == typeof(IViewBinding<,,,,>)
-                                    );
+                        );
 
                     if (dataBindingTypes.Length > 0)
                     {
@@ -2728,6 +2732,11 @@ namespace UnityIoC
             /// This is the default name of the default assembly that unity generated to compile your code
             /// </summary>
             public const string DefaultAssemblyName = "Assembly-CSharp";
+
+            /// <summary>
+            /// This is the  name of the default assembly that Context will looking for
+            /// </summary>
+            public static string AssemblyName = DefaultAssemblyName;
 
             /// <summary>
             /// Get views from pools rather than a new object. Default is false.

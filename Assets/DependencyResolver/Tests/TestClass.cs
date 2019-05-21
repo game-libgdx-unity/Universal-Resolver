@@ -12,8 +12,8 @@ namespace UnityIoC.Editor
 		
 		public void DoSomething()
 		{
-			MyDebug.Log(testStruct.aField.ToString());
-			MyDebug.Log("TestClass"); 
+			UniversalResolverDebug.Log(testStruct.aField.ToString());
+			UniversalResolverDebug.Log("TestClass"); 
 		}
 	}
 
