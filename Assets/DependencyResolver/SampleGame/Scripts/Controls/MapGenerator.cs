@@ -30,7 +30,7 @@ public class MapGenerator : MonoBehaviour
 //    [Prefab] private Cell cell;
     [Singleton] private IGameSolver gameSolver;
     [Singleton] private IGameBoard gameBoard;
-    [Singleton] private Observable<GameStatus> gameStatus;
+    [Singleton, Override] private Observable<GameStatus> gameStatus;
 
     private GameSetting gameSetting = new GameSetting();
 
@@ -88,16 +88,14 @@ public class MapGenerator : MonoBehaviour
 
     private IEnumerator RestartRoutine()
     {
-        Setup();
-        
+        yield return null;
+
         Context.DeleteAll<CellData>();
 
         gameStatus.Value = GameStatus.InProgress;
         
-        //build the board
-        gameBoard.Build(gameSetting.Width, gameSetting.Height, gameSetting.MineCount);
+        Setup();
         
-        yield return null;
         //now scene loading is complete
     }
 

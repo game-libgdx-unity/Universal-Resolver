@@ -26,6 +26,15 @@ public class IgnoreProcessingAttribute : Attribute
     {
     }
 }
+
+[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
+public class OverrideAttribute : Attribute
+{
+    public OverrideAttribute()
+    {
+    }
+}
+
 public class MonobehaviourComparer : IComparer<MonoBehaviour>
 {
     public static MonobehaviourComparer Default = new MonobehaviourComparer();

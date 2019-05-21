@@ -615,27 +615,33 @@ namespace UnityIoC
                 {
                     continue;
                 }
-
-                //only process a field if the field's value is not set yet
-
-                var value = field.GetValue(mono);
+                
                 bool defaultValue = false;
 
-                if (field.FieldType.IsArray)
+                var overrideAttribute =
+                    field.GetCustomAttributes(typeof(OverrideAttribute), true).FirstOrDefault();
+
+                //only process a field if the field's value is not set yet
+                var value = field.GetValue(mono);
+                
+                if (overrideAttribute == null)
                 {
-                    if (value != null)
+                    if (field.FieldType.IsArray)
                     {
-                        defaultValue = value != value.DefaultValue();
-                        var array = value as Array;
-                        if (array.Length == 0)
+                        if (value != null)
                         {
-                            defaultValue = true;
+                            defaultValue = value != value.DefaultValue();
+                            var array = value as Array;
+                            if (array.Length == 0)
+                            {
+                                defaultValue = true;
+                            }
                         }
                     }
-                }
-                else
-                {
-                    defaultValue = value != value.DefaultValue();
+                    else
+                    {
+                        defaultValue = value != value.DefaultValue();
+                    }
                 }
 
                 if (defaultValue)
@@ -1045,7 +1051,7 @@ namespace UnityIoC
                 return;
             }
 
-            var ignoredUnityEngineScripts = AllBehaviours.Where(m =>
+            var processableUnityEngineScripts = AllBehaviours.Where(m =>
                 {
                     var type = m.GetType();
                     var ns = type.Namespace;
@@ -1054,10 +1060,10 @@ namespace UnityIoC
                 })
                 .ToArray();
 
-            var sortableBehaviours = Array.FindAll(ignoredUnityEngineScripts,
+            var sortableBehaviours = Array.FindAll(processableUnityEngineScripts,
                 b => b.GetType().GetCustomAttributes(typeof(ProcessingOrderAttribute), true).Any());
 
-            var nonSortableBehaviours = ignoredUnityEngineScripts.Except(sortableBehaviours);
+            var nonSortableBehaviours = processableUnityEngineScripts.Except(sortableBehaviours);
 
             if (sortableBehaviours.Any())
             {
