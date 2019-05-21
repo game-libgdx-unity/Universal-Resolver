@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using UnityEngine;
 using UnityIoC;
 
@@ -10,32 +12,64 @@ using UnityIoC;
 /// <typeparam name="T">Unity Component or GameObject</typeparam>
 public class Pool<T>
 {
-    private static List<T> list;
+    private static HashSet<T> list;
 
-    public static List<T> List
+    public static HashSet<T> List
     {
         get
         {
             if (list == null)
             {
-                poolTypes.Add(typeof(T));
-                list = new List<T>();
+                list = new HashSet<T>();
             }
-
+            Pool.Types.Add(typeof(T));
             return list;
         }
     }
 
-    static HashSet<Type> poolTypes = new HashSet<Type>();
+    public static void AddItem(T item)
+    {
+        List.Add(item);
+    }
+    public static void RemoveItem(T item)
+    {
+        List.Remove(item);
+    }
 
     public static void Clear()
     {
-        foreach (var type in poolTypes)
+        if (list != null)
         {
-            //todo: try to get Pool<type>.List then clear it.
+            list.Clear();
         }
+    }
+}
 
-        poolTypes.Clear();
+public class Pool
+{
+    public static HashSet<Type> Types = new HashSet<Type>();
+
+    public static void Add(object item)
+    {
+        Type generic = typeof(Pool<>);
+        Type[] typeArgs = {item.GetType()};
+        Type constructed = generic.MakeGenericType(typeArgs);
+        var addMethod = constructed.GetMethod("AddItem", BindingFlags.Static | BindingFlags.Public);
+        addMethod.Invoke(null, new[] {item});
+    }
+
+    public static void Clear()
+    {
+        foreach (var type in Types)
+        {
+            Type generic = typeof(Pool<>);
+            Type[] typeArgs = {type};
+            Type constructed = generic.MakeGenericType(typeArgs);
+            var clearMethod = constructed.GetMethod("Clear", BindingFlags.Static | BindingFlags.Public);
+            clearMethod.Invoke(null, null);
+        }
+        
+        Types.Clear();
     }
 }
 

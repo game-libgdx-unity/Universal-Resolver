@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using UnityEngine;
+using UnityIoC;
 using Random = System.Random;
 
 namespace App.Scripts.Boards
@@ -12,11 +13,11 @@ namespace App.Scripts.Boards
     {
         [Singleton] private Observable<GameStatus> Status { get; set; }
 
-        [Singleton] private List<CellData> CellData { get; set; }
-
         [Singleton] private GameBoard Board { get; set; }
 
         [Singleton] private Random Random { get; set; }
+        
+        private HashSet<CellData> CellData = Pool<CellData>.List;
 
         public IEnumerator Solve(float waitForNextStep)
         {

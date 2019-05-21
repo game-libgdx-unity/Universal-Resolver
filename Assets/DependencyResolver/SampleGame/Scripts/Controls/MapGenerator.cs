@@ -19,7 +19,7 @@ using Debug = UnityEngine.Debug;
 
 
 [ProcessingOrder(1)]
-public class     MapGenerator : MonoBehaviour
+public class MapGenerator : MonoBehaviour
 {
     [SerializeField, Inject] private GridLayoutGroup gridLayout;
     [SerializeField, Inject] private Button btnRestart;
@@ -30,7 +30,7 @@ public class     MapGenerator : MonoBehaviour
 //    [Prefab] private Cell cell;
     [Singleton] private IGameSolver gameSolver;
     [Singleton] private IGameBoard gameBoard;
-    [Singleton, Override] private Observable<GameStatus> gameStatus;
+    [Singleton] private Observable<GameStatus> gameStatus;
 
     private GameSetting gameSetting = new GameSetting();
 
@@ -64,7 +64,7 @@ public class     MapGenerator : MonoBehaviour
         //setup the layout
         gridLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
         gridLayout.constraintCount = gameSetting.Width;
-        
+
         //setup a new game
         Setup();
     }
@@ -89,7 +89,7 @@ public class     MapGenerator : MonoBehaviour
         //delete all cells which are resolved by the Context
         //This also will delete all associated Views with the data cell objects.
         Context.DeleteAll<CellData>();
-        
+
         Setup();
     }
 }

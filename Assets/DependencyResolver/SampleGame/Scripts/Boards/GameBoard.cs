@@ -12,7 +12,7 @@ namespace App.Scripts.Boards
 {
     public class GameBoard : IGameBoard
     {
-        [Singleton] private List<CellData> Cells { get; set; }
+        private HashSet<CellData> Cells = Pool<CellData>.List;
         [Singleton] private Observable<GameStatus> Status { get; set; }
         [Singleton] private GameSetting GameSettings { get; set; }
 

@@ -1685,9 +1685,12 @@ namespace UnityIoC
             if (obj != null)
             {
                 onResolved.Value = obj;
+            //add to a shared pool
+            Pool<T>.AddItem(obj);
                 return obj;
             }
 
+            
             return default(T);
         }
 
@@ -1704,8 +1707,11 @@ namespace UnityIoC
             if (obj != null)
             {
                 onResolved.Value = obj;
+                //add to a shared pool
+                Pool<T>.AddItem(obj);
                 return obj;
             }
+            
 
             return obj;
         }
@@ -1736,33 +1742,33 @@ namespace UnityIoC
         }
 
 
-        /// <summary>
-        /// Get or Create instances from Object Pools
-        /// </summary>
-        public static T ResolveFromPool<T>(
-            int preload = 0,
-            object resolveFrom = null,
-            params object[] parameters) where T : IPoolable
-        {
-            if (!Initialized)
-            {
-                GetDefaultInstance(typeof(T));
-            }
-
-            if (preload > 0 && preload > Pool<T>.List.Count)
-            {
-                PreloadFromPool<T>(preload, resolveFrom, parameters);
-            }
-
-            var instanceFromPool = Pool<T>.List.GetObjectFromPool(resolveFrom, parameters);
-
-            if (instanceFromPool != null)
-            {
-                onResolved.Value = instanceFromPool;
-            }
-
-            return instanceFromPool;
-        }
+//        /// <summary>
+//        /// Get or Create instances from Object Pools
+//        /// </summary>
+//        public static T ResolveFromPool<T>(
+//            int preload = 0,
+//            object resolveFrom = null,
+//            params object[] parameters) where T : IPoolable
+//        {
+//            if (!Initialized)
+//            {
+//                GetDefaultInstance(typeof(T));
+//            }
+//
+//            if (preload > 0 && preload > Pool<T>.List.Count)
+//            {
+//                PreloadFromPool<T>(preload, resolveFrom, parameters);
+//            }
+//
+//            var instanceFromPool = Pool<T>.List.GetObjectFromPool(resolveFrom, parameters);
+//
+//            if (instanceFromPool != null)
+//            {
+//                onResolved.Value = instanceFromPool;
+//            }
+//
+//            return instanceFromPool;
+//        }
 
         /// <summary>
         /// initialize pools by creating instances in advance
@@ -1783,26 +1789,9 @@ namespace UnityIoC
         }
 
         /// <summary>
-        /// initialize pools by creating instances in advance
-        /// </summary>
-        public static void PreloadFromPool<T>(
-            int preload,
-            object resolveFrom = null,
-            params object[] parameters)
-            where T : IPoolable
-        {
-            if (!Initialized)
-            {
-                GetDefaultInstance(typeof(T));
-            }
-
-            Pool<T>.List.Preload(preload, resolveFrom, parameters);
-        }
-
-        /// <summary>
         /// Get all instances of a pools by a given type T
         /// </summary>
-        public static List<T> GetPool<T>() where T : Component
+        public static HashSet<T> GetPool<T>() where T : Component
         {
             T t;
             return Pool<T>.List;
@@ -1924,6 +1913,7 @@ namespace UnityIoC
             //remove caches
             ResolvedObjects.Clear();
             DataViewBindings.Clear();
+            Pool.Clear();
             ViewPools.Clear();
 
             //recycle the observable
@@ -2084,6 +2074,10 @@ namespace UnityIoC
             params object[] parameters)
         {
             var resolveObject = (T) Resolve(typeof(T), LifeCycle.Transient, null, parameters);
+            
+            //add to a shared pool
+            Pool<T>.AddItem(resolveObject);
+            
             return resolveObject;
         }
 
@@ -2104,6 +2098,9 @@ namespace UnityIoC
                 SetPropertyValue(resolveObject, key.ToString(), data[key]);
                 SetFieldValue(resolveObject, key.ToString(), data[key]);
             }
+            
+            //add to a shared pool
+            Pool<T>.AddItem(resolveObject);
 
             return resolveObject;
         }
@@ -2117,7 +2114,11 @@ namespace UnityIoC
         {
             var type = GetDefaultInstance(typeof(TAbstract)).GetTypeFromCurrentAssembly(className);
             var resolveObject = Resolve(type, lifeCycle);
-            return (TAbstract) resolveObject;
+            
+            //add to a shared pool
+            var resolveFromClassName = (TAbstract) resolveObject;
+            Pool<TAbstract>.AddItem(resolveFromClassName);
+            return resolveFromClassName;
         }
 
         /// <summary>
@@ -2203,6 +2204,7 @@ namespace UnityIoC
 
                     ResolvedObjects[type].Add(resolve);
                     onResolved.Value = resolve;
+                    Pool<T>.AddItem(resolve);
                 }
 
                 return resolve;
@@ -2299,6 +2301,9 @@ namespace UnityIoC
             {
                 //remove object if data is null
                 OnDisposed.Value = obj;
+                
+                //remove from a shared pool
+                Pool<T>.RemoveItem(obj);
             }
 
             return viewLayers;
@@ -2379,6 +2384,7 @@ namespace UnityIoC
                                 }
 
                                 DataViewBindings.Remove(objs[index]);
+
                             }
                             else
                             {
@@ -2392,6 +2398,9 @@ namespace UnityIoC
                     {
                         //remove the old object if data is null
                         OnDisposed.Value = objs[index];
+                        
+                        //remove from a shared pool
+                        Pool<T>.RemoveItem((T) objs[index]);
                     }
                 }
             }

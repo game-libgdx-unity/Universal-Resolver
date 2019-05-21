@@ -19,6 +19,7 @@ namespace UnityIoC.Editor
         {
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene);
             Context.Reset();
+            Pool.Clear();
         }
 
         [Test]
@@ -34,8 +35,8 @@ namespace UnityIoC.Editor
             var obj = Context.Resolve<TestInterface>();
             Assert.IsNotNull(obj);
             Assert.IsInstanceOf<TestClass>(obj);
-            
-            obj.DoSomething();        
+
+            obj.DoSomething();
         }
 
 
@@ -504,7 +505,10 @@ namespace UnityIoC.Editor
             //now check number of cached object
             objCount = Context.ResolvedObjects[typeof(PlayerData)].Count;
             Assert.IsTrue(objCount == 3);
-
+            
+            //get a shared pool
+            Assert.AreEqual(3, Pool<PlayerData>.List.Count);
+            
             //continue trying to create another player
             var jimmy = Context.Resolve<PlayerData>("Jimmy");
 
@@ -513,7 +517,13 @@ namespace UnityIoC.Editor
 
             //try to delete david
             Context.Delete<PlayerData>(p => p.name == "David");
-
+            
+            //now check number of cached object
+            objCount = Context.ResolvedObjects[typeof(PlayerData)].Count;
+            Assert.IsTrue(objCount == 3);
+            //get a shared pool
+            Assert.IsTrue(Pool<PlayerData>.List.Count == Context.ResolvedObjects[typeof(PlayerData)].Count);
+            
             Assert.IsTrue(jimmy.name == "Dung");
             Assert.IsTrue(jane.name == "Nguyen");
             Assert.IsTrue(Context.GetObject<PlayerData>(p => p.name == "David") == null);
@@ -522,6 +532,8 @@ namespace UnityIoC.Editor
             //now check number of cached object
             objCount = Context.ResolvedObjects[typeof(PlayerData)].Count;
             Assert.IsTrue(objCount == 0);
+            //get a shared pool
+            Assert.IsTrue(Pool<PlayerData>.List.Count == Context.ResolvedObjects[typeof(PlayerData)].Count);
         }
 
         [Test]
@@ -537,7 +549,7 @@ namespace UnityIoC.Editor
         {
             Context.Resolve<PlayerData>("Vinh");
             Context.Resolve<PlayerData>("John");
-            Context.Resolve<PlayerData>().name="Dan";
+            Context.Resolve<PlayerData>().name = "Dan";
             Context.Resolve<PlayerData>("Jim");
 
             Assert.AreEqual(4, Context.GetObjects<PlayerData>().Length);
@@ -548,12 +560,12 @@ namespace UnityIoC.Editor
         public void t34_context_resolve_ScriptableObject()
         {
             var obj = Context.ResolveFromAssets<TestScriptableObject>("ATestScriptableObject");
-           Assert.AreEqual(100, obj.Amount);
+            Assert.AreEqual(100, obj.Amount);
 
             Assert.AreEqual(1, Context.GetObjects<TestScriptableObject>().Length);
             Assert.AreEqual(obj, Context.GetObjectFromCache(typeof(TestScriptableObject)));
         }
-        
+
         [Test]
         public void t35_data_linked_multiple_views()
         {
@@ -564,6 +576,7 @@ namespace UnityIoC.Editor
             Assert.IsNotNull(view1);
             Assert.IsNotNull(view2);
         }
+
 //
 //
         [Test]
@@ -572,7 +585,7 @@ namespace UnityIoC.Editor
             var imp = Context.ResolveFromClassName<IAbstract>("ImplClass");
             var imp2 = Context.ResolveFromClassName<IAbstract>("ImplClass2");
             var imp3 = Context.ResolveFromClassName<IAbstract>("ImplClass3");
-            
+
             Assert.IsNotNull(imp);
             Assert.IsNotNull(imp2);
             Assert.IsNotNull(imp3);
@@ -581,35 +594,52 @@ namespace UnityIoC.Editor
             Assert.IsInstanceOf<ImplClass2>(imp2);
             Assert.IsInstanceOf<ImplClass3>(imp3);
         }
-        
+
         [Test]
         public void t37_resolve_by_className_general()
         {
             Context.GetDefaultInstance(typeof(IAbstract));
-            
+
             var imp = Context.ResolveFromClassName("ImplClass");
             var imp2 = Context.ResolveFromClassName("ImplClass2");
             var imp3 = Context.ResolveFromClassName("ImplClass3");
-            
+
             Assert.IsNotNull(imp);
             Assert.IsNotNull(imp2);
             Assert.IsNotNull(imp3);
-            
+
             Assert.IsInstanceOf<ImplClass>(imp);
             Assert.IsInstanceOf<ImplClass2>(imp2);
             Assert.IsInstanceOf<ImplClass3>(imp3);
         }
+
 //
 //
-//        [Test]
-//        public void t37_context_resolve_ScriptableObject()
-//        {
-//            var obj = Context.Resolve<TestScriptableObject>("ATestScriptableObject");
-//           Assert.AreEqual(100, obj.Amount);
-//
-//            Assert.AreEqual(1, Context.GetObjects<TestScriptableObject>().Length);
-//            Assert.AreEqual(obj, Context.GetObjectFromCache(typeof(TestScriptableObject)));
-//        }
+        [Test]
+        public void t38_Pool_General_Add()
+        {
+            Pool.Add(new PlayerData("John"));
+
+            Assert.IsNotNull(Pool<PlayerData>.List);
+            Assert.IsNotEmpty(Pool<PlayerData>.List);
+            Assert.AreEqual(1, Pool<PlayerData>.List.Count);
+            
+            Pool.Clear();
+        }
+
+        [Test]
+        public void t39_Pool_General_clear()
+        {
+            Assert.AreEqual(0, Pool.Types.Count);
+            
+            Pool.Add(new PlayerData("John"));
+            Assert.AreEqual(1, Pool<PlayerData>.List.Count);
+
+            Assert.AreEqual(1, Pool.Types.Count);
+
+            Pool.Clear();
+            Assert.AreEqual(0, Pool<PlayerData>.List.Count);
+        }
 
 
         IEnumerable<string> GetFriendNames()
