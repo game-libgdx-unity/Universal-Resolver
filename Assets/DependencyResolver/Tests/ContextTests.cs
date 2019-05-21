@@ -18,7 +18,7 @@ namespace UnityIoC.Editor
         public void Setup()
         {
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene);
-            Context.Reset(true);
+            Context.Reset();
         }
 
         [Test]
@@ -631,7 +631,7 @@ namespace UnityIoC.Editor
 
             Assert.IsTrue(Context.Initialized);
 //dispose
-            Context.Reset(true);
+            Context.Reset();
 //assert
             Assert.IsFalse(Context.Initialized);
         }

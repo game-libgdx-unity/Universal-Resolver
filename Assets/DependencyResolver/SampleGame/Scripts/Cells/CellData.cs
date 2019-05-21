@@ -8,7 +8,7 @@ public class CellData : IViewBinding<Cell>
 
     public Observable<CellType> CellType = new Observable<CellType>();
     public IntReactiveProperty AdjacentMines = new IntReactiveProperty();
-    public BoolReactiveProperty IsRevealed = new BoolReactiveProperty();
+    public BoolReactiveProperty IsOpened = new BoolReactiveProperty();
     public BoolReactiveProperty IsMine = new BoolReactiveProperty();
     public BoolReactiveProperty IsFlagged = new BoolReactiveProperty();
 

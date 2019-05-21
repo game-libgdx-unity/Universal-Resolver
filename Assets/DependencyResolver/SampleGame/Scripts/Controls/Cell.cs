@@ -6,12 +6,9 @@
  **/
 
 
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityIoC;
-
 
 /// <summary>
 /// UI implementation for cells
@@ -41,19 +38,20 @@ public class Cell : MonoBehaviour, IDataBinding<CellData>
         //when a cell is flagged
         cellData.IsFlagged.Subscribe(this, isFlagged =>
         {
-            if (isFlagged) cellData.CellType.Value = global::CellType.FLAGGED;
+            if (isFlagged) cellData.CellType.Value = CellType.FLAGGED;
         });
 
         //when a cell is revealed
-        cellData.IsRevealed.Subscribe(this, isRevealed =>
+        cellData.IsOpened.Subscribe(this, isRevealed =>
         {
             textUI.enabled = isRevealed;
             background.color = isRevealed ? Color.white : Color.gray;
             if (isRevealed)
             {
+                //when the opened cell is determined that it's a mines
                 cellData.IsMine.Subscribe(this, isMined =>
                 {
-                    if (isMined) cellData.CellType.Value = global::CellType.MINE;
+                    if (isMined) cellData.CellType.Value = CellType.MINE;
                 });
             }
         });
@@ -61,7 +59,7 @@ public class Cell : MonoBehaviour, IDataBinding<CellData>
         //change UI when CellType change
         cellData.CellType.Subscribe(this, type =>
         {
-            if (type == global::CellType.UNOPENED)
+            if (type == CellType.UNOPENED)
             {
                 return;
             }
@@ -69,52 +67,52 @@ public class Cell : MonoBehaviour, IDataBinding<CellData>
             textUI.color = Color.black;
             switch (type)
             {
-                case global::CellType.EMPTY:
+                case CellType.EMPTY:
                     textUI.text = "";
                     break;
-                case global::CellType.M1:
+                case CellType.M1:
                     textUI.text = "1";
                     textUI.color = Color.blue;
 
                     break;
-                case global::CellType.M2:
+                case CellType.M2:
                     textUI.text = "2";
                     textUI.color = Color.cyan;
 
                     break;
-                case global::CellType.M3:
+                case CellType.M3:
                     textUI.text = "3";
                     textUI.color = Color.magenta;
 
                     break;
-                case global::CellType.M4:
+                case CellType.M4:
                     textUI.text = "4";
                     textUI.color = Color.blue;
 
                     break;
-                case global::CellType.M5:
+                case CellType.M5:
                     textUI.text = "5";
 
                     break;
-                case global::CellType.M6:
+                case CellType.M6:
                     textUI.text = "6";
 
                     break;
-                case global::CellType.M7:
+                case CellType.M7:
                     textUI.text = "7";
 
                     break;
-                case global::CellType.M8:
+                case CellType.M8:
                     textUI.text = "8";
 
                     break;
-                case global::CellType.MINE:
+                case CellType.MINE:
                     textUI.text = "M";
                     textUI.color = Color.red;
                     textUI.enabled = true;
 
                     break;
-                case global::CellType.FLAGGED:
+                case CellType.FLAGGED:
                     textUI.text = "F";
                     textUI.color = Color.blue;
                     textUI.enabled = true;
@@ -122,10 +120,5 @@ public class Cell : MonoBehaviour, IDataBinding<CellData>
                     break;
             }
         });
-    }
-
-    public void SetParent(Transform parent)
-    {
-        this.transform.SetParent(parent);
     }
 }

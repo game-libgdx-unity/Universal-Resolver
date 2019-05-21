@@ -78,7 +78,7 @@ namespace App.Scripts.Boards
         {
             //Get the CellData
             var selectedCell = Cells.First(cell => cell.X == x && cell.Y == y);
-            selectedCell.IsRevealed.Value = true;
+            selectedCell.IsOpened.Value = true;
 
             //If open a mine, game over!
             if (selectedCell.IsMine.Value)
@@ -106,14 +106,16 @@ namespace App.Scripts.Boards
         /// <param name="y"></param>
         private void OpenEmptyCell(int x, int y)
         {
-            var neighborCells = GetNeighbors(x, y).Where(panel => !panel.IsRevealed.Value);
+            var neighborCells = GetNeighbors(x, y).Where(panel => !panel.IsOpened.Value);
             foreach (var neighbor in neighborCells)
             {
-                neighbor.IsRevealed.Value = true;
+                neighbor.IsOpened.Value = true;
                 if (neighbor.AdjacentMines.Value == 0)
                 {
                     OpenEmptyCell(neighbor.X, neighbor.Y);
                 }
+//                var cellData = neighbor;
+//                Context.UpdateView(ref cellData);
             }
         }
 
@@ -160,7 +162,7 @@ namespace App.Scripts.Boards
 
         private void CheckForCompletion()
         {
-            var hiddenCells = Cells.Where(x => !x.IsRevealed.Value).Select(x => x.ID);
+            var hiddenCells = Cells.Where(x => !x.IsOpened.Value).Select(x => x.ID);
             var mineCells = Cells.Where(x => x.IsMine.Value).Select(x => x.ID);
             if (!hiddenCells.Except(mineCells).Any())
             {
@@ -176,7 +178,7 @@ namespace App.Scripts.Boards
         public void Flag(int x, int y)
         {
             var cell = Cells.FirstOrDefault(z => z.X == x && z.Y == y);
-            if (cell != null && !cell.IsRevealed.Value)
+            if (cell != null && !cell.IsOpened.Value)
             {
                 cell.IsFlagged.Value = true;
             }

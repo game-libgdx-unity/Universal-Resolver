@@ -1908,7 +1908,7 @@ namespace UnityIoC
         /// <summary>
         /// Reset static members to default, should be called if you have changed scene
         /// </summary>
-        public static void Reset(bool changeScene = false)
+        public static void Reset()
         {
             if (!Initialized)
             {
@@ -1923,46 +1923,42 @@ namespace UnityIoC
 
             //remove caches
             ResolvedObjects.Clear();
+            DataViewBindings.Clear();
+            ViewPools.Clear();
 
-            if (changeScene)
+            //recycle the observable
+            if (!onResolved.IsDisposed)
             {
-                DataViewBindings.Clear();
-                ViewPools.Clear();
+                onResolved.Dispose();
+                _onResolved = null;
+            }
 
-                //recycle the observable
-                if (!onResolved.IsDisposed)
-                {
-                    onResolved.Dispose();
-                    _onResolved = null;
-                }
+            //recycle the observable
+            if (!OnDisposed.IsDisposed)
+            {
+                OnDisposed.Dispose();
+                _onDisposed = null;
+            }
 
-                //recycle the observable
-                if (!OnDisposed.IsDisposed)
-                {
-                    OnDisposed.Dispose();
-                    _onDisposed = null;
-                }
+            //recycle the defaultInstance
+            if (defaultInstance != null)
+            {
+                defaultInstance.Dispose();
+                defaultInstance = null;
+            }
 
-                //recycle the defaultInstance
-                if (defaultInstance != null)
-                {
-                    defaultInstance.Dispose();
-                    defaultInstance = null;
-                }
+            //remove cache of behaviours
+            if (AllBehaviours != null)
+            {
+                Array.Clear(AllBehaviours, 0, AllBehaviours.Length);
+                _allBehaviours = null;
+            }
 
-                //remove cache of behaviours
-                if (AllBehaviours != null)
-                {
-                    Array.Clear(AllBehaviours, 0, AllBehaviours.Length);
-                    _allBehaviours = null;
-                }
-
-                //remove cache of root game objects
-                if (_rootgameObjects != null)
-                {
-                    Array.Clear(_rootgameObjects, 0, _rootgameObjects.Length);
-                    _rootgameObjects = null;
-                }
+            //remove cache of root game objects
+            if (_rootgameObjects != null)
+            {
+                Array.Clear(_rootgameObjects, 0, _rootgameObjects.Length);
+                _rootgameObjects = null;
             }
         }
 
