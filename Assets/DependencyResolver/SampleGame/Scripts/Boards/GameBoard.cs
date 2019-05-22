@@ -1,10 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-
 using Random = System.Random;
 using System.Collections.Generic;
 using System.Linq;
-
 using UnityEngine;
 using UnityIoC;
 
@@ -12,7 +10,7 @@ namespace App.Scripts.Boards
 {
     public class GameBoard : IGameBoard
     {
-        private HashSet<CellData> Cells = Pool<CellData>.List;
+        private ICollection<CellData> Cells = Pool<CellData>.List;
         [Singleton] private Observable<GameStatus> Status { get; set; }
         [Singleton] private GameSetting GameSettings { get; set; }
 
@@ -51,15 +49,12 @@ namespace App.Scripts.Boards
         {
             Cells.Clear();
 
-            var id = 1;
+            var id = 0;
             for (var i = 1; i <= height; i++)
             {
                 for (var j = 1; j <= width; j++)
                 {
-                    
-                    var cell = Context.Resolve<CellData>(id, j, i);
-                    Cells.Add(cell);
-                    id++;
+                    Context.Resolve<CellData>(id++, j, i);
                 }
             }
         }
@@ -114,6 +109,7 @@ namespace App.Scripts.Boards
                 {
                     OpenEmptyCell(neighbor.X, neighbor.Y);
                 }
+
 //                var cellData = neighbor;
 //                Context.UpdateView(ref cellData);
             }
@@ -127,6 +123,8 @@ namespace App.Scripts.Boards
         /// <param name="rand"></param>
         public void FirstMove(int x, int y, Random rand)
         {
+            Debug.Log("First move, cell count: " + Cells.Count);
+
             var neighbors = GetNeighbors(x, y);
             neighbors.Add(GetCellAt(x, y)); //there is no mine around user's first move
 
@@ -151,7 +149,7 @@ namespace App.Scripts.Boards
         public List<CellData> GetNeighbors(int x, int y)
         {
             int depth = 1;
-                
+
             var nearbyCells = Cells.Where(cell => cell.X >= (x - depth) && cell.X <= (x + depth)
                                                                         && cell.Y >= (y - depth) &&
                                                                         cell.Y <= (y + depth));

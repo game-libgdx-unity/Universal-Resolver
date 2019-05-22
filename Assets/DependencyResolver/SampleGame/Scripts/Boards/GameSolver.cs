@@ -17,7 +17,7 @@ namespace App.Scripts.Boards
 
         [Singleton] private Random Random { get; set; }
         
-        private HashSet<CellData> CellData = Pool<CellData>.List;
+        private ICollection<CellData> CellData = Pool<CellData>.List;
 
         public IEnumerator Solve(float waitForNextStep)
         {

@@ -12,16 +12,24 @@ using UnityIoC;
 /// <typeparam name="T">Unity Component or GameObject</typeparam>
 public class Pool<T>
 {
-    private static HashSet<T> list;
+    private static ICollection<T> list;
 
-    public static HashSet<T> List
+    public static ICollection<T> List
     {
         get
         {
             if (list == null)
             {
-                list = new HashSet<T>();
+                if (Pool.UseSetInsteadOfList)
+                {
+                    list = new HashSet<T>();
+                }
+                else
+                {
+                    list = new List<T>();
+                }
             }
+
             Pool.Types.Add(typeof(T));
             return list;
         }
@@ -31,6 +39,7 @@ public class Pool<T>
     {
         List.Add(item);
     }
+
     public static void RemoveItem(T item)
     {
         List.Remove(item);
@@ -47,6 +56,8 @@ public class Pool<T>
 
 public class Pool
 {
+    public static bool UseSetInsteadOfList = false;
+
     public static HashSet<Type> Types = new HashSet<Type>();
 
     public static void Add(object item)
@@ -68,7 +79,7 @@ public class Pool
             var clearMethod = constructed.GetMethod("Clear", BindingFlags.Static | BindingFlags.Public);
             clearMethod.Invoke(null, null);
         }
-        
+
         Types.Clear();
     }
 }

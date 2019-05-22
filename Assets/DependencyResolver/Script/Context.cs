@@ -979,7 +979,9 @@ namespace UnityIoC
                         }
                     }
                     else
+                    {
                         _currentAssembly = targetType.Assembly;
+                    }
                 }
 
                 return _currentAssembly;
@@ -1685,12 +1687,12 @@ namespace UnityIoC
             if (obj != null)
             {
                 onResolved.Value = obj;
-            //add to a shared pool
-            Pool<T>.AddItem(obj);
+                //add to a shared pool
+                Pool<T>.AddItem(obj);
                 return obj;
             }
 
-            
+
             return default(T);
         }
 
@@ -1711,7 +1713,7 @@ namespace UnityIoC
                 Pool<T>.AddItem(obj);
                 return obj;
             }
-            
+
 
             return obj;
         }
@@ -1791,11 +1793,18 @@ namespace UnityIoC
         /// <summary>
         /// Get all instances of a pools by a given type T
         /// </summary>
-        public static HashSet<T> GetPool<T>() where T : Component
+        public static ICollection<T> GetPool<T>() where T : Component
         {
-            T t;
             return Pool<T>.List;
         }
+
+//        /// <summary>
+//        /// Get all instances of a pools by a given type T
+//        /// </summary>
+//        public static HashSet<T> GetPool<T>() where T : Component
+//        {
+//            return Pool<T>.List;
+//        }
 
         /// <summary>
         /// Create a objectContext from the defaultInstance of Context
@@ -2074,10 +2083,10 @@ namespace UnityIoC
             params object[] parameters)
         {
             var resolveObject = (T) Resolve(typeof(T), LifeCycle.Transient, null, parameters);
-            
+
             //add to a shared pool
             Pool<T>.AddItem(resolveObject);
-            
+
             return resolveObject;
         }
 
@@ -2098,7 +2107,7 @@ namespace UnityIoC
                 SetPropertyValue(resolveObject, key.ToString(), data[key]);
                 SetFieldValue(resolveObject, key.ToString(), data[key]);
             }
-            
+
             //add to a shared pool
             Pool<T>.AddItem(resolveObject);
 
@@ -2114,7 +2123,7 @@ namespace UnityIoC
         {
             var type = GetDefaultInstance(typeof(TAbstract)).GetTypeFromCurrentAssembly(className);
             var resolveObject = Resolve(type, lifeCycle);
-            
+
             //add to a shared pool
             var resolveFromClassName = (TAbstract) resolveObject;
             Pool<TAbstract>.AddItem(resolveFromClassName);
@@ -2301,7 +2310,7 @@ namespace UnityIoC
             {
                 //remove object if data is null
                 OnDisposed.Value = obj;
-                
+
                 //remove from a shared pool
                 Pool<T>.RemoveItem(obj);
             }
@@ -2384,7 +2393,6 @@ namespace UnityIoC
                                 }
 
                                 DataViewBindings.Remove(objs[index]);
-
                             }
                             else
                             {
@@ -2398,7 +2406,7 @@ namespace UnityIoC
                     {
                         //remove the old object if data is null
                         OnDisposed.Value = objs[index];
-                        
+
                         //remove from a shared pool
                         Pool<T>.RemoveItem((T) objs[index]);
                     }

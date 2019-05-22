@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityIoC;
 using Object = UnityEngine.Object;
@@ -8,42 +9,38 @@ using Object = UnityEngine.Object;
 public static class PoolExtension
 {
     public static T GetInstanceFromPool<T>(
-        this List<T> objects,
+        this ICollection<T> objects,
         Transform parentObject = null,
         object resolveFrom = null,
         params object[] parameters)
         where T : Component
     {
-        if (objects.Count > 0)
+        foreach (var comp in objects)
         {
-            objects.RemoveAll(o => o == null);
-            for (int i = 0; i < objects.Count; i++)
+            if (!comp)
             {
-                if (!objects[i])
-                {
-                    continue;
-                }
+                continue;
+            }
 
-                if (!objects[i].gameObject.activeSelf)
-                {
-                    var obj = objects[i];
-                    obj.gameObject.SetActive(true);
+            if (!comp.gameObject.activeSelf)
+            {
+                var obj = comp;
+                obj.gameObject.SetActive(true);
 
-                    if (obj != null)
+                if (obj != null)
+                {
+                    if (parentObject)
                     {
-                        if (parentObject)
-                        {
-                            obj.transform.SetParent(parentObject, false);
-                        }
-
-                        //trigger the subject
-                        Context.onResolved.Value = obj;
+                        obj.transform.SetParent(parentObject, false);
                     }
 
-
-                    return obj;
+                    //trigger the subject
+                    Context.onResolved.Value = obj;
                 }
-            }
+
+
+                return obj;
+            }   
         }
 
         T g = Context.Resolve<T>(parentObject, LifeCycle.Prefab, resolveFrom, parameters);
@@ -58,7 +55,7 @@ public static class PoolExtension
 
         return g;
     }
-    
+
     public static T GetInstanceFromPool<T>(
         this HashSet<T> objects,
         Transform parentObject = null,
@@ -125,49 +122,43 @@ public static class PoolExtension
             {
                 if (objects[i] == null)
                 {
-                    objects[i] = Context.GetDefaultInstance(typeof(T)).ResolveObject<T>(LifeCycle.Transient, resolveFrom, parameters);
+                    objects[i] = Context.GetDefaultInstance(typeof(T))
+                        .ResolveObject<T>(LifeCycle.Transient, resolveFrom, parameters);
                 }
 
                 if (!objects[i].Alive)
                 {
                     var obj = objects[i];
                     obj.Alive = true;
-                    
+
                     return obj;
                 }
             }
         }
 
         //not found in pool, create a new one
-        T g =  Context.GetDefaultInstance(typeof(T)).ResolveObject<T>(LifeCycle.Transient, resolveFrom, parameters);
+        T g = Context.GetDefaultInstance(typeof(T)).ResolveObject<T>(LifeCycle.Transient, resolveFrom, parameters);
         g.Alive = true;
         objects.Add(g);
-        
+
         return g;
     }
 
-    public static GameObject GetInstanceFromPool(this List<GameObject> objects, GameObject prefab,
+    public static GameObject GetInstanceFromPool(this ICollection<GameObject> objects, GameObject prefab,
         Transform parentObject = null)
     {
-        if (objects.Count > 0)
+        foreach (var gameObject in objects)
         {
-            for (int i = 0; i < objects.Count; i++)
+            if (!gameObject.activeSelf)
             {
-                if (!objects[i].activeSelf)
+                gameObject.SetActive(true);
+                if (parentObject)
                 {
-                    GameObject obj = objects[i];
-                    obj.SetActive(true);
-
-                    if (parentObject)
-                    {
-                        obj.transform.SetParent(parentObject, false);
-                    }
-
-                    return obj;
+                    gameObject.transform.SetParent(parentObject, false);
                 }
+                return gameObject;
             }
         }
-
         GameObject g = null;
         if (Context.Initialized)
         {
@@ -185,19 +176,13 @@ public static class PoolExtension
         return g;
     }
 
-    public static List<GameObject> Preload(this List<GameObject> input, int num, GameObject prefab,
+    public static ICollection<GameObject> Preload(this ICollection<GameObject> input, int num, GameObject prefab,
         Transform parentObject = null)
     {
         if (input == null)
         {
             throw new InvalidOperationException("Input list must not be null!");
         }
-        else
-        {
-            input.Capacity = num;
-        }
-
-        input.RemoveAll(o => !o);
 
         var i = 0;
         while (i++ < num)
@@ -221,41 +206,7 @@ public static class PoolExtension
 
         return input;
     }
-    
-    public static HashSet<GameObject> Preload(this HashSet<GameObject> input, int num, GameObject prefab,
-        Transform parentObject = null)
-    {
-        if (input == null)
-        {
-            throw new InvalidOperationException("Input list must not be null!");
-        }
-
-        input.RemoveWhere(o => !o);
-
-        var i = 0;
-        while (i++ < num)
-        {
-            GameObject g = null;
-            if (Context.Initialized)
-            {
-                g = Context.Instantiate(prefab, parentObject);
-            }
-            else
-            {
-                g = Object.Instantiate(prefab) as GameObject;
-            }
-
-            g.SetActive(false);
-            if (parentObject)
-                g.transform.SetParent(parentObject, false);
-
-            input.Add(g);
-        }
-
-        return input;
-    }
-
-    public static List<T> Preload<T>(this List<T> input, int num,
+    public static ICollection<T> Preload<T>(this ICollection<T> input, int num,
         Transform parentObject = null,
         object resolveFrom = null,
         params object[] parameters)
@@ -265,12 +216,6 @@ public static class PoolExtension
         {
             throw new InvalidOperationException("Input list must not be null!");
         }
-        else if (input.Count < num)
-        {
-            input.Capacity = num;
-        }
-
-        input.RemoveAll(o => !o);
 
         var i = 0;
         while (i++ < num)
@@ -282,6 +227,7 @@ public static class PoolExtension
 
         return input;
     }
+
     public static HashSet<T> Preload<T>(this HashSet<T> input, int num,
         Transform parentObject = null,
         object resolveFrom = null,
@@ -305,6 +251,7 @@ public static class PoolExtension
 
         return input;
     }
+
     public static List<T> Preload<T>(this List<T> input, int num, Func<T> CreateObject)
         where T : Component
     {

@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityIoC;
 using Object = UnityEngine.Object;
 
-public class ContextBehaviour : SingletonBehaviour<ContextBehaviour>
+public class ContextBehaviour : MonoBehaviour
 {
     public bool enableLogging = false;
     public InjectIntoBindingSetting customSetting;
@@ -18,9 +18,9 @@ public class ContextBehaviour : SingletonBehaviour<ContextBehaviour>
     public string AssemblyName = Context.Setting.DefaultAssemblyName;
 
     /// <summary>
-    /// Get views from pools rather than a new object. Default is false.
+    /// Get views from pools rather than creating a new one. Default is true.
     /// </summary>
-    public bool CreateViewsFromPools;
+    public bool CreateViewsFromPools = true;
 
     /// <summary>
     /// if true, when a new scene is unloaded, call the Dispose method. Default is false.
@@ -31,6 +31,12 @@ public class ContextBehaviour : SingletonBehaviour<ContextBehaviour>
     /// if true, when the default instance get initialized, it will process all mono-behaviours in current active scenes. Default is true.
     /// </summary>
     public bool AutoProcessBehaviours = true;
+
+    /// <summary>
+    /// If true, Pool will use HashSet as the collection instead of using List
+    /// </summary>
+    public bool UseSetInsteadOfList = false;
+
 
     public BindingInScene[] bindings;
 
@@ -43,24 +49,26 @@ public class ContextBehaviour : SingletonBehaviour<ContextBehaviour>
         Context.Setting.AutoProcessBehavioursInScene = AutoProcessBehaviours;
         Context.Setting.AutoDisposeWhenSceneChanged = AutoDisposeOnUnload;
 
+        Pool.UseSetInsteadOfList = UseSetInsteadOfList;
 
-        var context = Context.GetDefaultInstance();
 
-        if (customSetting != null)
+        if (customSetting != null || !string.IsNullOrEmpty(AssemblyName) || bindings.Length > 0)
         {
+            var context = Context.GetDefaultInstance();
             context.LoadBindingSetting(customSetting);
-        }
-
-        if (bindings.Length > 0)
-        {
-            foreach (var binding in bindings)
+            
+            if (bindings.Length > 0)
             {
-                Context.RegisteredObject registeredObject = new Context.RegisteredObject(typeof(GameObject),
-                    typeof(GameObject), binding.GameObject, LifeCycle.Prefab,
-                    context.GetTypeFromCurrentAssembly(binding.TypeObjHolder.name));
-
                 context.DefaultContainer.registeredTypes.Add(typeof(GameObject));
-                context.DefaultContainer.registeredObjects.Add(registeredObject);
+
+                foreach (var binding in bindings)
+                {
+                    Context.RegisteredObject registeredObject = new Context.RegisteredObject(typeof(GameObject),
+                        typeof(GameObject), binding.GameObject, LifeCycle.Prefab,
+                        context.GetTypeFromCurrentAssembly(binding.TypeObjHolder.name));
+
+                    context.DefaultContainer.registeredObjects.Add(registeredObject);
+                }
             }
         }
     }
