@@ -212,7 +212,7 @@ namespace UnityIoC.Editor
             var obj2 = gameObjects.GetInstanceFromPool();
             var obj3 = gameObjects.GetInstanceFromPool();
 
-            Assert.AreEqual(gameObjects.Count, 3);
+            Assert.AreEqual(3, gameObjects.Count);
         }
 
         [Test]
@@ -258,13 +258,23 @@ namespace UnityIoC.Editor
         public void t18_get_from_pools()
         {
             var testComponentPool = Context.GetPool<TestComponent>();
+            
+            Assert.AreEqual(testComponentPool.Count, 0);
+
             var testComponent2Pool = Context.GetPool<TestComponent2>();
+            
+            Assert.AreEqual(testComponent2Pool.Count, 0);
+
 
             var obj = testComponentPool.GetInstanceFromPool();
-            var obj5 = testComponent2Pool.GetInstanceFromPool();
+            
+            Assert.AreEqual(1, testComponentPool.Count);
+
             var obj2 = testComponentPool.GetInstanceFromPool();
-            var obj6 = testComponent2Pool.GetInstanceFromPool();
             var obj3 = testComponentPool.GetInstanceFromPool();
+            
+            var obj5 = testComponent2Pool.GetInstanceFromPool();
+            var obj6 = testComponent2Pool.GetInstanceFromPool();
             var obj7 = testComponent2Pool.GetInstanceFromPool();
 
             obj2.gameObject.SetActive(false);
@@ -639,6 +649,32 @@ namespace UnityIoC.Editor
 
             Pool.Clear();
             Assert.AreEqual(0, Pool<PlayerData>.List.Count);
+        }
+        [Test]
+        public void t40_Pool_General_getList()
+        {
+            Pool<PlayerData>.AddItem(new PlayerData("John"));
+
+            Pool.UseSetInsteadOfList = false;
+            
+            var list = Pool.GetList(typeof(PlayerData)) as List<PlayerData>;
+            
+            Assert.IsNotNull(list);
+            Assert.AreEqual(1, list.Count);
+        }
+        [Test]
+        public void t41_Pool_General_getList()
+        {
+            Pool.UseSetInsteadOfList = false;
+            
+            var list = Pool.GetList(typeof(PlayerData)) as List<PlayerData>;
+            
+            Pool<PlayerData>.AddItem(new PlayerData("John"));
+            Pool<PlayerData>.AddItem(new PlayerData("Jean"));
+            Pool<PlayerData>.AddItem(new PlayerData("Jan"));
+            
+            Assert.IsNotNull(list);
+            Assert.AreEqual(3, list.Count);
         }
 
 

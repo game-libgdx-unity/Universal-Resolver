@@ -1,23 +1,22 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-
 using UnityEngine;
 using UnityIoC;
 using Random = System.Random;
 
 namespace App.Scripts.Boards
 {
-
     public class GameSolver : IGameSolver
     {
         [Singleton] private Observable<GameStatus> Status { get; set; }
-
         [Singleton] private GameBoard Board { get; set; }
 
-        [Singleton] private Random Random { get; set; }
-        
-        private ICollection<CellData> CellData = Pool<CellData>.List;
+        [Inject] private Random Random { get; set; }
+
+      [Inject] List<CellData> CellData;
+//      ICollection<CellData> CellData = Pool<CellData>.List;
+//        [Singleton] private List<CellData> CellData;
 
         public IEnumerator Solve(float waitForNextStep)
         {
@@ -62,7 +61,7 @@ namespace App.Scripts.Boards
             {
                 Debug.Log("Solver Success");
             }
-            
+
             yield return new WaitForSeconds(waitForNextStep);
             Status.Value = GameStatus.Completed;
         }

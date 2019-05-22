@@ -686,49 +686,62 @@ namespace UnityIoC
                         continue;
                     }
                 }
-                else
+                else if (type.IsGenericType)
                 {
-                    object component = null;
-
-                    //try get from cache if conditions are met
-                    component = TryGetObjectFromCache(inject, type);
-
-                    //link view object to data object
-                    if (mono is Component && component != null)
+                    var genericTypeDefinition = type.GetGenericTypeDefinition();
+                    if (
+                        genericTypeDefinition == typeof(ICollection<>) ||
+                        genericTypeDefinition == typeof(List<>) ||
+                        genericTypeDefinition == typeof(HashSet<>))
                     {
-                        if (!DataViewBindings.ContainsKey(component))
-                        {
-                            DataViewBindings[component] = new HashSet<object>();
-                        }
-
-                        DataViewBindings[component].Add(mono);
-                    }
-
-                    //try to use IObjectResolvable to resolve objects
-                    if (component == null && !type.IsSubclassOf(typeof(Component)))
-                    {
-                        component = GetObjectFromGameObject(mono, type);
-                    }
-
-                    //try to use IComponentResolvable to resolve objects
-                    if (component == null)
-                    {
-                        component = ResolveFromGameObject(mono, type, inject);
-                    }
-
-                    if (component != null)
-                    {
-                        //if the life cycle is singleton, bind the instance of the Type with this component
-                        if (inject.LifeCycle == LifeCycle.Singleton ||
-                            (inject.LifeCycle & LifeCycle.Singleton) == LifeCycle.Singleton)
-                        {
-                            container.BindInstance(type, component);
-                        }
-
-                        field.SetValue(mono, component);
-
+                        var argurmentType = type.GetGenericArguments().FirstOrDefault();
+                        var collection = Pool.GetList(argurmentType);
+                        debug.Log("Resolved type {0} of field {1} from Pool<T>", type, field.Name);
+                        field.SetValue(mono, collection);
                         continue;
                     }
+                }
+
+                object component = null;
+
+                //try get from cache if conditions are met
+                component = TryGetObjectFromCache(inject, type);
+
+                //link view object to data object
+                if (mono is Component && component != null)
+                {
+                    if (!DataViewBindings.ContainsKey(component))
+                    {
+                        DataViewBindings[component] = new HashSet<object>();
+                    }
+
+                    DataViewBindings[component].Add(mono);
+                }
+
+                //try to use IObjectResolvable to resolve objects
+                if (component == null && !type.IsSubclassOf(typeof(Component)))
+                {
+                    component = GetObjectFromGameObject(mono, type);
+                }
+
+                //try to use IComponentResolvable to resolve objects
+                if (component == null)
+                {
+                    component = ResolveFromGameObject(mono, type, inject);
+                }
+
+                if (component != null)
+                {
+                    //if the life cycle is singleton, bind the instance of the Type with this component
+                    if (inject.LifeCycle == LifeCycle.Singleton ||
+                        (inject.LifeCycle & LifeCycle.Singleton) == LifeCycle.Singleton)
+                    {
+                        container.BindInstance(type, component);
+                    }
+
+                    field.SetValue(mono, component);
+
+                    continue;
                 }
 
 
@@ -1321,6 +1334,11 @@ namespace UnityIoC
 
         public void LoadBindingSetting(InjectIntoBindingSetting bindingSetting)
         {
+            if (bindingSetting == null)
+            {
+                return;
+            }
+
             debug.Log("From InjectIntoBindingSetting, {0} settings found: ", bindingSetting.defaultSettings.Count);
             //binding for default setting 
             if (bindingSetting.defaultSettings.Count > 0)
@@ -1882,25 +1900,6 @@ namespace UnityIoC
             return defaultInstance;
         }
 
-        /// <summary>
-        /// Get default-static general purposes context from assemblyName (not done yet)
-        /// </summary>
-//        public static Context GetDefaultInstance(string assemblyName = null, bool automaticBind = true,
-//            bool recreate = false)
-//        {
-//            if (defaultInstance == null || recreate)
-//            {
-//                if (Setting.AutoDisposeWhenSceneChanged)
-//                {
-//                    SceneManager.sceneUnloaded += SceneManagerOnSceneLoaded;
-//                }
-//
-//                var assem = ...
-//                defaultInstance = new Context( , automaticBind);
-//            }
-//
-//            return defaultInstance;
-//        }
         public static string LastSceneName;
 
         /// <summary>
@@ -2085,7 +2084,7 @@ namespace UnityIoC
             var resolveObject = (T) Resolve(typeof(T), LifeCycle.Transient, null, parameters);
 
             //add to a shared pool
-            Pool<T>.AddItem(resolveObject);
+            if (resolveObject != null) Pool<T>.AddItem(resolveObject);
 
             return resolveObject;
         }
@@ -2109,7 +2108,7 @@ namespace UnityIoC
             }
 
             //add to a shared pool
-            Pool<T>.AddItem(resolveObject);
+            if (resolveObject != null) Pool<T>.AddItem(resolveObject);
 
             return resolveObject;
         }
@@ -2126,7 +2125,7 @@ namespace UnityIoC
 
             //add to a shared pool
             var resolveFromClassName = (TAbstract) resolveObject;
-            Pool<TAbstract>.AddItem(resolveFromClassName);
+            if (resolveFromClassName != null) Pool<TAbstract>.AddItem(resolveFromClassName);
             return resolveFromClassName;
         }
 
@@ -2149,7 +2148,14 @@ namespace UnityIoC
             object resolveFrom = null,
             params object[] parameters)
         {
-            return (T) Resolve(typeof(T), lifeCycle, resolveFrom, parameters);
+            var obj = (T) Resolve(typeof(T), lifeCycle, resolveFrom, parameters);
+
+            if (obj != null)
+            {
+                Pool<T>.AddItem(obj);
+            }
+
+            return obj;
         }
 
         /// <summary>
@@ -2171,6 +2177,7 @@ namespace UnityIoC
             if (obj != null)
             {
                 obj.gameObject.SetActive(true);
+                Pool<T>.AddItem(obj);
             }
 
             return obj;

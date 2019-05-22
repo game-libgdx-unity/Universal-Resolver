@@ -19,34 +19,30 @@ public static class PoolExtension
         {
             if (!comp)
             {
+//                objects.Remove(comp);
                 continue;
             }
 
             if (!comp.gameObject.activeSelf)
             {
-                var obj = comp;
-                obj.gameObject.SetActive(true);
-
-                if (obj != null)
+                comp.gameObject.SetActive(true);
+                if (parentObject)
                 {
-                    if (parentObject)
-                    {
-                        obj.transform.SetParent(parentObject, false);
-                    }
-
-                    //trigger the subject
-                    Context.onResolved.Value = obj;
+                    comp.transform.SetParent(parentObject, false);
                 }
 
-
-                return obj;
-            }   
+                return comp;
+            }
         }
+
 
         T g = Context.Resolve<T>(parentObject, LifeCycle.Prefab, resolveFrom, parameters);
         g.gameObject.SetActive(true);
 
-        objects.Add(g);
+        if (!ReferenceEquals(objects, Pool<T>.List))
+        {
+            objects.Add(g);
+        }
 
         if (parentObject)
         {
@@ -156,9 +152,11 @@ public static class PoolExtension
                 {
                     gameObject.transform.SetParent(parentObject, false);
                 }
+
                 return gameObject;
             }
         }
+
         GameObject g = null;
         if (Context.Initialized)
         {
@@ -206,6 +204,7 @@ public static class PoolExtension
 
         return input;
     }
+
     public static ICollection<T> Preload<T>(this ICollection<T> input, int num,
         Transform parentObject = null,
         object resolveFrom = null,

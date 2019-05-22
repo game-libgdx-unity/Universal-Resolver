@@ -35,6 +35,12 @@ public class Pool<T>
         }
     }
 
+    public static ICollection<T> GetList()
+    {
+        return List;
+    }
+
+
     public static void AddItem(T item)
     {
         List.Add(item);
@@ -59,6 +65,20 @@ public class Pool
     public static bool UseSetInsteadOfList = false;
 
     public static HashSet<Type> Types = new HashSet<Type>();
+
+    public static object GetList(Type type)
+    {
+        if (type == null)
+        {
+            return null;
+        }
+        
+        Type generic = typeof(Pool<>);
+        Type constructed = generic.MakeGenericType(type);
+
+        var list = constructed.GetProperty("List", BindingFlags.Public | BindingFlags.Static).GetValue(null);
+        return list;
+    }
 
     public static void Add(object item)
     {

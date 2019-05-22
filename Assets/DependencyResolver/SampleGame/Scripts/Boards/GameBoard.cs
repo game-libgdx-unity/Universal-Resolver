@@ -10,7 +10,9 @@ namespace App.Scripts.Boards
 {
     public class GameBoard : IGameBoard
     {
-        private ICollection<CellData> Cells = Pool<CellData>.List;
+        [Inject] List<CellData> Cells;
+//        ICollection<CellData> Cells = Pool<CellData>.List;
+//        [Singleton] private List<CellData> Cells;
         [Singleton] private Observable<GameStatus> Status { get; set; }
         [Singleton] private GameSetting GameSettings { get; set; }
 
@@ -47,8 +49,6 @@ namespace App.Scripts.Boards
 
         public void Build(int width, int height, int mines)
         {
-            Cells.Clear();
-
             var id = 0;
             for (var i = 1; i <= height; i++)
             {
