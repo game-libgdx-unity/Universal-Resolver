@@ -24,15 +24,12 @@ public class MapGenerator : MonoBehaviour
     [SerializeField, Inject] private GridLayoutGroup gridLayout;
     [SerializeField, Inject] private Button btnRestart;
 
-    [SerializeField, Inject("MapGenerator")]
-    private RectTransform container;
+    [SerializeField, Inject("MapGenerator")] private RectTransform container;
 
-//    [Prefab] private Cell cell;
     [Singleton] private IGameSolver gameSolver;
     [Singleton] private IGameBoard gameBoard;
     [Singleton] private Observable<GameStatus> gameStatus;
-
-    private GameSetting gameSetting = new GameSetting();
+    [Singleton] private GameSetting gameSetting;
 
     private void Awake()
     {
@@ -84,6 +81,7 @@ public class MapGenerator : MonoBehaviour
 
     private IEnumerator RestartRoutine()
     {
+        //this is not really necessary
         yield return null;
 
         //delete all cells which are resolved by the Context

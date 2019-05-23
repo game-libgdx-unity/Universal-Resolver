@@ -15,7 +15,7 @@ public class ContextBehaviour : MonoBehaviour
     /// <summary>
     /// This is the default name of the default assembly that unity generated to compile your code
     /// </summary>
-    public string AssemblyName = Context.Setting.DefaultAssemblyName;
+    public string AssemblyName;
 
     /// <summary>
     /// Get views from pools rather than creating a new one. Default is true.
@@ -37,6 +37,11 @@ public class ContextBehaviour : MonoBehaviour
     /// </summary>
     public bool UseSetInsteadOfList = false;
 
+    /// <summary>
+    /// If true, Context will be created automatically by default assembly
+    /// </summary>
+    public bool AutoCreateContext = true;
+
 
     public BindingInScene[] bindings;
 
@@ -52,11 +57,12 @@ public class ContextBehaviour : MonoBehaviour
         Pool.UseSetInsteadOfList = UseSetInsteadOfList;
 
 
-        if (customSetting != null || !string.IsNullOrEmpty(AssemblyName) || bindings.Length > 0)
+        if (customSetting != null || !string.IsNullOrEmpty(AssemblyName) || bindings.Length > 0 || AutoCreateContext)
         {
+            Debug.Log("Context is created automatically!");
             var context = Context.GetDefaultInstance();
             context.LoadBindingSetting(customSetting);
-            
+
             if (bindings.Length > 0)
             {
                 context.DefaultContainer.registeredTypes.Add(typeof(GameObject));
@@ -70,6 +76,10 @@ public class ContextBehaviour : MonoBehaviour
                     context.DefaultContainer.registeredObjects.Add(registeredObject);
                 }
             }
+        }
+        else
+        {
+            Debug.Log("Context isn't created automatically due to no usages");
         }
     }
 

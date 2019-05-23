@@ -2,7 +2,7 @@ using System;
 using UnityIoC;
 
 [Serializable]
-public class PlayerView : IViewBinding<PlayerUI>
+public class PlayerData : IViewBinding<PlayerUI>
 {
     public MetaData meta;
 
@@ -30,7 +30,7 @@ public class PlayerView : IViewBinding<PlayerUI>
         public int MagicResistent;
     }
 
-    public PlayerView(string name)
+    public PlayerData(string name)
     {
         if (meta == null)
         {

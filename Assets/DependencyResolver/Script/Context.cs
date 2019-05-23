@@ -689,10 +689,12 @@ namespace UnityIoC
                 else if (type.IsGenericType)
                 {
                     var genericTypeDefinition = type.GetGenericTypeDefinition();
+                    var collectionType = typeof(ICollection<>);
                     if (
-                        genericTypeDefinition == typeof(ICollection<>) ||
-                        genericTypeDefinition == typeof(List<>) ||
-                        genericTypeDefinition == typeof(HashSet<>))
+                        genericTypeDefinition == collectionType ||
+                        Pool.UseSetInsteadOfList && genericTypeDefinition == typeof(ISet<>) ||
+                        !Pool.UseSetInsteadOfList && genericTypeDefinition == typeof(IList<>)
+                    )
                     {
                         var argurmentType = type.GetGenericArguments().FirstOrDefault();
                         var collection = Pool.GetList(argurmentType);
@@ -2236,7 +2238,7 @@ namespace UnityIoC
         /// <param name="filter"></param>
         /// <param name="updateAction"></param>
         /// <typeparam name="T"></typeparam>
-        public static T Update<T>(T obj, Action<T> updateAction) where T : class
+        public static T Update<T>(T obj, Action<T> updateAction)
         {
             var type = typeof(T);
             if (ResolvedObjects.ContainsKey(type))
@@ -2256,7 +2258,7 @@ namespace UnityIoC
         /// <param name="filter"></param>
         /// <param name="updateAction"></param>
         /// <typeparam name="T"></typeparam>
-        public static T Update<T>(ref T obj, RefAction<T> updateAction) where T : class
+        public static T Update<T>(ref T obj, RefAction<T> updateAction)
         {
             var type = typeof(T);
             if (ResolvedObjects.ContainsKey(type))
@@ -2275,7 +2277,7 @@ namespace UnityIoC
         /// </summary>
         /// <param name="obj">view object</param>
         /// <typeparam name="T"></typeparam>
-        public static HashSet<object> UpdateView<T>(ref T obj) where T : class
+        public static HashSet<object> UpdateView<T>(ref T obj)
         {
             Type type = typeof(T);
             HashSet<object> viewLayers = null;
@@ -2331,9 +2333,9 @@ namespace UnityIoC
         /// <param name="filter"></param>
         /// <param name="updateAction"></param>
         /// <typeparam name="T"></typeparam>
-        public static void Delete<T>(Func<T, bool> filter) where T : class
+        public static void Delete<T>(Func<T, bool> filter)
         {
-            Update(filter, (ref T obj) => obj = null);
+            Update(filter, (ref T obj) => obj = default(T));
         }
 
         /// <summary>
@@ -2342,9 +2344,9 @@ namespace UnityIoC
         /// <param name="filter"></param>
         /// <param name="updateAction"></param>
         /// <typeparam name="T"></typeparam>
-        public static void Delete<T>(T @object) where T : class
+        public static void Delete<T>(T @object) 
         {
-            Update(o => o == @object, (ref T obj) => obj = null);
+            Update(o => ReferenceEquals(o, @object), (ref T obj) => obj = default(T));
         }
 
         /// <summary>
@@ -2353,9 +2355,9 @@ namespace UnityIoC
         /// <param name="filter"></param>
         /// <param name="updateAction"></param>
         /// <typeparam name="T"></typeparam>
-        public static void DeleteAll<T>() where T : class
+        public static void DeleteAll<T>() 
         {
-            Update(o => true, (ref T obj) => obj = null);
+            Update(o => true, (ref T obj) => obj = default(T));
         }
 
         /// <summary>
@@ -2364,16 +2366,16 @@ namespace UnityIoC
         /// <param name="filter"></param>
         /// <param name="updateAction"></param>
         /// <typeparam name="T"></typeparam>
-        public static void Update<T>(Func<T, bool> filter, RefAction<T> updateAction) where T : class
+        public static void Update<T>(Func<T, bool> filter, RefAction<T> updateAction)
         {
             var type = typeof(T);
             if (ResolvedObjects.ContainsKey(type))
             {
-                var objs = ResolvedObjects[type].Where(o => filter(o as T)).ToArray();
+                var objs = ResolvedObjects[type].Where(o => filter((T) o)).ToArray();
                 for (var index = 0; index < objs.Length; index++)
                 {
                     //call the delegate
-                    var obj = objs[index] as T;
+                    var obj = (T) objs[index];
                     updateAction(ref obj);
 
                     //update the dataBindings

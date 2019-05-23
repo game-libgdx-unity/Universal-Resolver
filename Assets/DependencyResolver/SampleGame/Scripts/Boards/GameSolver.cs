@@ -10,13 +10,14 @@ namespace App.Scripts.Boards
     public class GameSolver : IGameSolver
     {
         [Singleton] private Observable<GameStatus> Status { get; set; }
-        [Singleton] private GameBoard Board { get; set; }
+        [Singleton] private IGameBoard Board { get; set; }
 
         [Inject] private Random Random { get; set; }
 
-      [Inject] List<CellData> CellData;
+//        [Inject] ICollection<CellData> CellData;
+        [Inject] IList<CellData> CellData;
 //      ICollection<CellData> CellData = Pool<CellData>.List;
-//        [Singleton] private List<CellData> CellData;
+//      [Singleton] private List<CellData> CellData;
 
         public IEnumerator Solve(float waitForNextStep)
         {

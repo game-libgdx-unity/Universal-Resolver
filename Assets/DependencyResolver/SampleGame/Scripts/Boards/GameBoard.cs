@@ -10,7 +10,7 @@ namespace App.Scripts.Boards
 {
     public class GameBoard : IGameBoard
     {
-        [Inject] List<CellData> Cells;
+        [Inject] IList<CellData> Cells;
 //        ICollection<CellData> Cells = Pool<CellData>.List;
 //        [Singleton] private List<CellData> Cells;
         [Singleton] private Observable<GameStatus> Status { get; set; }
