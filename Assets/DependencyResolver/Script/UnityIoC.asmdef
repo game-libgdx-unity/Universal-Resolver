@@ -1,6 +1,8 @@
 {
     "name": "UnityIoC",
-    "references": [],
+    "references": [
+        "GUID:b92ff8b696eb46a4b90382b319e963fe"
+    ],
     "optionalUnityReferences": [],
     "includePlatforms": [],
     "excludePlatforms": [],

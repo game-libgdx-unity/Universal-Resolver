@@ -20,9 +20,9 @@ public class Pool<T>
         {
             if (list == null)
             {
-                if (Pool.UseSetInsteadOfList)
+                if (Context.Setting.UseSetForCollection)
                 {
-                    list = new HashSet<T>();
+                    list = new SortedSet<T>();
                 }
                 else
                 {
@@ -62,8 +62,6 @@ public class Pool<T>
 
 public class Pool
 {
-    public static bool UseSetInsteadOfList = false;
-
     public static HashSet<Type> Types = new HashSet<Type>();
 
     public static object GetList(Type type)

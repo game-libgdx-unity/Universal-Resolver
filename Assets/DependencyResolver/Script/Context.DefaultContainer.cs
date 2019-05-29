@@ -85,7 +85,7 @@ namespace UnityIoC
             public object[] parameters { get; set; }
         }
 
-        /** not very useful right now... ObjectContext can do as this class does
+        /** not very useful right now... ObjectContext can do what this class does better
         public class ObjectContextContainer : Container
         {
             public object ResolveFrom { get; set; }

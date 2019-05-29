@@ -300,48 +300,28 @@ namespace UnityIoC
         /// <returns></returns>
         public T Get<T>(string path) where T : Object
         {
-            //load from default bundle
-            if (bundles.ContainsKey(ResourceBundleName))
-            {
-                var defaultBundle = bundles[ResourceBundleName];
-                if (defaultBundle.Contains(path))
-                {
-                    var asset = defaultBundle.LoadAsset(path);
-                    if (typeof(T) == asset.GetType())
-                    {
-                        return asset as T;
-                    }
-                }
-            }
-
             //try load by template: "bundle name/asset_key"
             if (path.Contains("/"))
             {
                 var bundleName = path.Substring(0, path.IndexOf('/'));
-                var asset = Get<T>(bundleName, path);
-                if (!asset)
+                var assetPath = path.Substring(path.IndexOf('/') + 1); //+1 for ignoring the '/'
+                var asset = Get<T>(bundleName, assetPath);
+                if (asset && asset.GetType().IsInstanceOfType(typeof(T)))
                 {
-                    return null;
+                    return asset as T;
                 }
             }
-
-            //load from every bundle
-            foreach (var pair in bundles)
+            
+            //load from default bundle
+            if (bundles.ContainsKey(Context.Setting.DefaultBundleName))
             {
-                if (ResourceBundleName.Equals(pair.Key))
+                var defaultBundle = bundles[Context.Setting.DefaultBundleName];
+                if (defaultBundle.Contains(path))
                 {
-                    continue;
-                }
-
-                if (pair.Value != null)
-                {
-                    if (pair.Value.Contains(name))
+                    var asset = defaultBundle.LoadAsset(path);
+                    if (asset && asset.GetType().IsInstanceOfType(typeof(T)))
                     {
-                        var asset = pair.Value.LoadAsset(name);
-                        if (typeof(T) == asset.GetType())
-                        {
-                            return asset as T;
-                        }
+                        return asset as T;
                     }
                 }
             }
@@ -353,14 +333,10 @@ namespace UnityIoC
         {
             if (bundles.ContainsKey(bundleName))
             {
-                var defaultBundle = bundles[ResourceBundleName];
-                if (defaultBundle.Contains(path))
+                var bundle = bundles[bundleName];
+                if (bundle.Contains(path))
                 {
-                    var asset = defaultBundle.LoadAsset(path);
-                    if (typeof(T) == asset.GetType())
-                    {
-                        return asset;
-                    }
+                    return bundle.LoadAsset(path);
                 }
             }
 
@@ -371,7 +347,5 @@ namespace UnityIoC
         {
             return Get<T>(SceneManager.GetActiveScene().name, path);
         }
-
-        public const string ResourceBundleName = "resources";
     }
 }

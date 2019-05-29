@@ -36,3 +36,8 @@ sysinfo.txt
 *.unitypackage
 Assets/StreamingAssets/google-services-desktop.json
 Assets/StreamingAssets/google-services-desktop.json.meta
+Assets/TestGraphics.meta
+Assets/App/PrintAwake.cs
+Assets/App/PrintAwake.cs.meta
+Assets/TestGraphics/Test.unity
+Assets/TestGraphics/Test.unity.meta

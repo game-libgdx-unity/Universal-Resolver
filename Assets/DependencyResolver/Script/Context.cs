@@ -551,7 +551,7 @@ namespace UnityIoC
                     //try to use IComponentResolvable to resolve objects
                     if (component == null)
                     {
-                        component = ResolveFromGameObject(mono, property.PropertyType, inject);
+                        component = ResolveFromHierarchy(mono, property.PropertyType, inject);
                     }
 
                     if (component != null)
@@ -692,8 +692,8 @@ namespace UnityIoC
                     var collectionType = typeof(ICollection<>);
                     if (
                         genericTypeDefinition == collectionType ||
-                        Pool.UseSetInsteadOfList && genericTypeDefinition == typeof(ISet<>) ||
-                        !Pool.UseSetInsteadOfList && genericTypeDefinition == typeof(IList<>)
+                        Setting.UseSetForCollection && genericTypeDefinition == typeof(ISet<>) ||
+                        !Setting.UseSetForCollection && genericTypeDefinition == typeof(IList<>)
                     )
                     {
                         var argurmentType = type.GetGenericArguments().FirstOrDefault();
@@ -729,7 +729,7 @@ namespace UnityIoC
                 //try to use IComponentResolvable to resolve objects
                 if (component == null)
                 {
-                    component = ResolveFromGameObject(mono, type, inject);
+                    component = ResolveFromHierarchy(mono, type, inject);
                 }
 
                 if (component != null)
@@ -837,7 +837,7 @@ namespace UnityIoC
         /// </summary>
         /// <param name="mono">object is expected as unity mono behaviour</param>
         /// <returns>the component</returns>
-        private object ResolveFromGameObject(object mono, Type type, InjectBaseAttribute injectAttribute)
+        private object ResolveFromHierarchy(object mono, Type type, InjectBaseAttribute injectAttribute)
         {
             var behaviour = mono as MonoBehaviour;
 
@@ -1195,6 +1195,26 @@ namespace UnityIoC
             return clone;
         }
 
+        /// <summary>
+        /// Read base binding setting type to decide which method will be used to process the data
+        /// </summary>
+        /// <param name="bindingSetting"></param>
+        public void LoadBindingSetting(BaseBindingSetting bindingSetting)
+        {
+            var injectIntoBindingSetting = bindingSetting as InjectIntoBindingSetting;
+            if (injectIntoBindingSetting)
+            {
+                LoadBindingSetting(injectIntoBindingSetting);
+                return;
+            }
+
+            var bs = bindingSetting as BindingSetting;
+            if (bs)
+            {
+                LoadBindingSetting(bs);
+                return;
+            }
+        }
 
         /// <summary>
         /// Read binding data to create registerObjects
@@ -2630,13 +2650,13 @@ namespace UnityIoC
         }
 
         /// <summary>
-        /// Get a component from a mono behaviour by a given path
+        /// Get a component from a mono behaviour by a given path on hierarchy
         /// </summary>
         /// <param name="type"></param>
         /// <param name="component"></param>
         /// <param name="path"></param>
         /// <returns></returns>
-        public static Component ResolveFromGameObject(
+        public static Component ResolveFromHierarchy(
             Type type,
             MonoBehaviour component,
             string path
@@ -2654,7 +2674,7 @@ namespace UnityIoC
         /// <param name="gameObject"></param>
         /// <param name="path"></param>
         /// <returns></returns>
-        public static Component ResolveFromGameObject(
+        public static Component ResolveFromHierarchy(
             Type type,
             GameObject gameObject,
             string path
@@ -2664,7 +2684,7 @@ namespace UnityIoC
             if (comp)
             {
                 //resolve with path
-                var component = ResolveFromGameObject(type, comp, path);
+                var component = ResolveFromHierarchy(type, comp, path);
                 if (component)
                     return component;
             }
@@ -2680,7 +2700,7 @@ namespace UnityIoC
         /// <param name="path"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static T ResolveFromGameObject<T>(
+        public static T ResolveFromHierarchy<T>(
             GameObject gameObject,
             string path
         )
@@ -2691,7 +2711,7 @@ namespace UnityIoC
             if (comp)
             {
                 //resolve with path
-                var component = ResolveFromGameObject(type, comp, path) as T;
+                var component = ResolveFromHierarchy(type, comp, path) as T;
                 if (component != null)
                     return component;
             }
@@ -2707,13 +2727,13 @@ namespace UnityIoC
         /// <param name="path"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static T ResolveFromGameObject<T>(
+        public static T ResolveFromHierarchy<T>(
             MonoBehaviour component,
             string path
         )
             where T : class
         {
-            return ResolveFromGameObject(typeof(T), component, path) as T;
+            return ResolveFromHierarchy(typeof(T), component, path) as T;
         }
 
         /// <summary>
@@ -2774,6 +2794,21 @@ namespace UnityIoC
             /// if true, when the default instance get initialized, it will process all mono-behaviours in current active scenes. Default is true.
             /// </summary>
             public static bool AutoProcessBehavioursInScene = true;
+
+            /// <summary>
+            /// Pool's collection will be constructed by Set, instead of List. Default is false.
+            /// </summary>
+            public static bool UseSetForCollection = false;
+
+            /// <summary>
+            /// Name of the default bundle that MyResource will load from if no bundleName is set
+            /// </summary>
+            public static string DefaultBundleName = "resources";
+
+            /// <summary>
+            /// While running in editor, always load from resources before searching in asset bundles
+            /// </summary>
+            public static bool EditorLoadFromResource = true;
         }
 
         #endregion

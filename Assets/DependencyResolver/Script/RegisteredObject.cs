@@ -1,4 +1,4 @@
-﻿﻿/**
+﻿/**
  * Author:    Vinh Vu Thanh
  * This class is a part of Universal Resolver project that can be downloaded free at 
  * https://github.com/game-libgdx-unity/UnityEngine.IoC
@@ -7,14 +7,21 @@
 
 using System;
 using System.Linq;
-using Unity.Linq;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
 
 namespace UnityIoC
 {
     public partial class Context
     {
+        public string[] assetPaths =
+        {
+            "{type}",
+            "Prefabs/{type}",
+            "Prefabs/{scene}/{type}",
+        };
+
         public class RegisteredObject : IDisposable
         {
             private static Logger Debug = new Logger(typeof(RegisteredObject));
@@ -110,7 +117,7 @@ namespace UnityIoC
                                (objectLifeCycle & LifeCycle.Prefab) == LifeCycle.Prefab;
 
                 object instance = null;
-                
+
                 if (Instance == null || !isSingleton)
                 {
                     if (ImplementedType.IsSubclassOf(typeof(Component)))
@@ -138,8 +145,8 @@ namespace UnityIoC
                     }
                     else
                     {
-                        
-                        var defaultConstructor = ImplementedType.GetConstructors().FirstOrDefault(c=>c.GetParameters().Length == 0);
+                        var defaultConstructor = ImplementedType.GetConstructors()
+                            .FirstOrDefault(c => c.GetParameters().Length == 0);
                         if (defaultConstructor == null && args.Length == 0)
                         {
                             // if args are empty, cannot resolve with non-default Constructors
@@ -147,7 +154,7 @@ namespace UnityIoC
                             // that doesn't have the default constructor
                             return null;
                         }
-                        
+
                         instance = Activator.CreateInstance(ImplementedType, args);
                         context.ProcessInjectAttribute(instance);
                     }
@@ -171,7 +178,7 @@ namespace UnityIoC
             }
 
             private Component TryGetComponent(Context context, Type concreteType,
-                 LifeCycle lifeCycle, object resolveFrom)
+                LifeCycle lifeCycle, object resolveFrom)
             {
                 string TypeName = concreteType.Name;
                 Component instance = null;
@@ -193,23 +200,21 @@ namespace UnityIoC
                         //try to find component from current scene then
                         if (Instance == null)
                         {
-                            if (concreteType.IsSubclassOf(typeof(MonoBehaviour)) && Context.AllBehaviours != null &&
-                                Context.AllBehaviours.Length > 0)
+                            if (concreteType.IsSubclassOf(typeof(MonoBehaviour)) && AllBehaviours != null &&
+                                AllBehaviours.Length > 0)
                             {
-                                instance =
-                                    Context.AllBehaviours.FirstOrDefault(
-                                        b => concreteType.IsAssignableFrom(b.GetType()));
+                                instance = AllBehaviours.FirstOrDefault(concreteType.IsInstanceOfType);
                             }
-
-                            if (instance == null)
-                                instance = Object.FindObjectOfType(concreteType) as MonoBehaviour;
                         }
                         else
                         {
                             instance = Instance as MonoBehaviour;
                         }
 
-                        context.monoScripts[concreteType] = instance as MonoBehaviour;
+                        if (instance)
+                        {
+                            context.monoScripts[concreteType] = instance as MonoBehaviour;
+                        }
                     }
 
                     if (instance)
@@ -224,7 +229,7 @@ namespace UnityIoC
                             d.LifeCycle = LifeCycle.Prefab;
                             context.container.Bind(d).GameObject = gameObject;
                         }
-                        
+
                         Debug.Log("Found {0} component on gameObject {1} as {2} from current scene",
                             TypeName,
                             instance.gameObject.name,
@@ -234,8 +239,8 @@ namespace UnityIoC
                     }
                 }
 
-                //search for prefabs of this component type from resources path folders
-                GameObject prefab;
+                //search for prefabs of this component type from asset paths
+                GameObject prefab = null;
 
                 if (lifeCycle == LifeCycle.Prefab && GameObject)
                 {
@@ -243,16 +248,26 @@ namespace UnityIoC
                 }
                 else
                 {
-                    prefab = MyResources.Load<GameObject>(TypeName);
-                    if (!prefab) MyResources.Load<GameObject>(string.Format("bundles/{0}", TypeName));
-                    if (!prefab) prefab = Resources.Load<GameObject>(string.Format("prefabs/scenes/{0}", TypeName));
-                    if (!prefab) prefab = Resources.Load<GameObject>(string.Format("scenes/{0}", TypeName));
-                    if (!prefab) prefab = Resources.Load<GameObject>(string.Format("prefabs/{0}", TypeName));
-                    if (!prefab) prefab = Resources.Load<GameObject>(TypeName);
+                    for (var i = 0; i < context.assetPaths.Length; i++)
+                    {
+                        context.assetPaths[i] = context.assetPaths[i].Replace("{scene}", 
+                            SceneManager.GetActiveScene().name);
+                        
+                        var path = context.assetPaths[i].Replace("{type}", TypeName);
+                        prefab = MyResources.Load<GameObject>(path);
+                        if (prefab)
+                        {
+                            break;
+                        }
+                    }
                 }
 
                 if (prefab)
                 {
+                    //cache prefab from bundles/resources 
+                    GameObject = prefab;
+                    
+                    //create an instance from this prefab
                     Debug.Log("Found prefab for {0} .......", TypeName);
                     GameObject prefabInstance = Object.Instantiate(prefab);
 

@@ -380,7 +380,7 @@ namespace UnityIoC.Editor
             gameObject.GetOrAddComponent<TestComponent>();
 
             //try to get its component
-            var comp = Context.ResolveFromGameObject(typeof(IComponentAbstract), gameObject, null);
+            var comp = Context.ResolveFromHierarchy(typeof(IComponentAbstract), gameObject, null);
             //resolve a component
 
             Assert.IsNotNull(comp);
@@ -396,7 +396,7 @@ namespace UnityIoC.Editor
             gameObject.GetOrAddComponent<TestComponent>();
 
             //try to get its component
-            var comp = Context.ResolveFromGameObject<IComponentAbstract>(gameObject, null);
+            var comp = Context.ResolveFromHierarchy<IComponentAbstract>(gameObject, null);
             //resolve a component
 
             Assert.IsNotNull(comp);
@@ -412,7 +412,7 @@ namespace UnityIoC.Editor
             gameObject.GetOrAddComponent<TestComponent>();
 
             //try to get its component
-            var comp = Context.ResolveFromGameObject<IComponentAbstract>(gameObject, null);
+            var comp = Context.ResolveFromHierarchy<IComponentAbstract>(gameObject, null);
             //resolve a component
 
             Assert.IsNotNull(comp);
@@ -655,7 +655,7 @@ namespace UnityIoC.Editor
         {
             Pool<PlayerData>.AddItem(new PlayerData("John"));
 
-            Pool.UseSetInsteadOfList = false;
+            Context.Setting.UseSetForCollection = false;
             
             var list = Pool.GetList(typeof(PlayerData)) as List<PlayerData>;
             
@@ -665,7 +665,7 @@ namespace UnityIoC.Editor
         [Test]
         public void t41_Pool_General_getList()
         {
-            Pool.UseSetInsteadOfList = false;
+            Context.Setting.UseSetForCollection = false;
             
             var list = Pool.GetList(typeof(PlayerData)) as List<PlayerData>;
             
@@ -675,6 +675,23 @@ namespace UnityIoC.Editor
             
             Assert.IsNotNull(list);
             Assert.AreEqual(3, list.Count);
+        }
+
+        [Test]
+        public void t42_Inject_resolve_From_PoolT()
+        {
+            Context.Setting.UseSetForCollection = false;
+
+            Context.Resolve<PlayerData>();
+            Context.Resolve<PlayerData>();
+            Context.Resolve<PlayerData>();
+            
+            var list = Pool<PlayerData>.List;
+            var list2 = Context.GetObjects<PlayerData>();
+            
+            Assert.IsNotNull(list);
+            Assert.IsNotNull(list2);
+            Assert.AreEqual(list.Count, list2.Length);
         }
 
 

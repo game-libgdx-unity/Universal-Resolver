@@ -10,7 +10,7 @@ using Object = UnityEngine.Object;
 public class ContextBehaviour : MonoBehaviour
 {
     public bool enableLogging = false;
-    public InjectIntoBindingSetting customSetting;
+    public BaseBindingSetting customSetting;
 
     /// <summary>
     /// This is the default name of the default assembly that unity generated to compile your code
@@ -18,7 +18,17 @@ public class ContextBehaviour : MonoBehaviour
     public string AssemblyName;
 
     /// <summary>
-    /// Get views from pools rather than creating a new one. Default is true.
+    /// This is the default name of the default assembly that unity generated to compile your code
+    /// </summary>
+    public string DefaultBundleName = "resources";
+
+    /// <summary>
+    /// While running in editor, always load from resources before searching in asset bundles
+    /// </summary>
+    public bool EditorLoadFromResource = true;
+
+    /// <summary>
+    /// Get views from pools rather than creating a brand new one. Default is true.
     /// </summary>
     public bool CreateViewsFromPools = true;
 
@@ -42,6 +52,16 @@ public class ContextBehaviour : MonoBehaviour
     /// </summary>
     public bool AutoCreateContext = true;
 
+    /// <summary>
+    /// Path to load a resource locally. Default is Prefabs/{type}
+    /// You can use {type}, {scene}, {id} to modify the path 
+    /// </summary>
+    public string[] assetPaths =
+    {
+        "{type}",
+        "Prefabs/{type}",
+        "Prefabs/{scene}/{type}",
+    };
 
     public BindingInScene[] bindings;
 
@@ -49,19 +69,38 @@ public class ContextBehaviour : MonoBehaviour
     {
         UniversalResolverDebug.EnableLogging = enableLogging;
 
-        if (!string.IsNullOrEmpty(AssemblyName)) Context.Setting.AssemblyName = AssemblyName;
+        if (!string.IsNullOrEmpty(AssemblyName))
+        {
+            Context.Setting.AssemblyName = AssemblyName;
+        }
+
+        if (!string.IsNullOrEmpty(DefaultBundleName))
+        {
+            Context.Setting.DefaultBundleName = DefaultBundleName;
+        }
+
         Context.Setting.CreateViewFromPool = CreateViewsFromPools;
         Context.Setting.AutoProcessBehavioursInScene = AutoProcessBehaviours;
         Context.Setting.AutoDisposeWhenSceneChanged = AutoDisposeOnUnload;
+        Context.Setting.UseSetForCollection = UseSetInsteadOfList;
+        Context.Setting.EditorLoadFromResource = EditorLoadFromResource;
 
-        Pool.UseSetInsteadOfList = UseSetInsteadOfList;
 
-
-        if (customSetting != null || !string.IsNullOrEmpty(AssemblyName) || bindings.Length > 0 || AutoCreateContext)
+        if (customSetting != null || !string.IsNullOrEmpty(AssemblyName) || bindings.Length > 0 ||
+            assetPaths.Length > 0 || AutoCreateContext)
         {
             Debug.Log("Context is created automatically!");
             var context = Context.GetDefaultInstance();
-            context.LoadBindingSetting(customSetting);
+
+            if (assetPaths.Length > 0)
+            {
+                context.assetPaths = assetPaths;
+            }
+
+            if (customSetting)
+            {
+                context.LoadBindingSetting(customSetting);
+            }
 
             if (bindings.Length > 0)
             {
