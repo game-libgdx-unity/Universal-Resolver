@@ -1503,7 +1503,7 @@ namespace UnityIoC
 
                                 //add this obj to internal cache
                                 ResolvedObjects[type].Add(obj);
-                                
+
                                 //Create view for this obj (in case it's necessary)
                                 CreateViewFromData(obj);
                             }
@@ -1731,6 +1731,7 @@ namespace UnityIoC
             var obj = JsonUtility.FromJson<T>(json);
             if (obj != null)
             {
+                Pool<T>.AddItem(obj);
                 onResolved.Value = obj;
             }
 
@@ -1748,30 +1749,36 @@ namespace UnityIoC
             object resolveFrom = null)
         {
             //find the className inside the json
-            var className = json as string;
+            var clsNameHolder = new ClassName();
+            JsonUtility.FromJsonOverwrite(json, clsNameHolder);
+
+            var className = clsNameHolder.className;
             var type = DefaultInstance.GetTypeFromCurrentAssembly(className);
             var obj = JsonUtility.FromJson(json, type);
             if (obj != null)
             {
                 onResolved.Value = obj;
             }
+
             return obj;
         }
+
         /// <summary>
         /// Genericly create a brand new C# / Unity objects by a className inside the current assembly
         /// </summary>
-        public static TAbstract ResolveFromClassName<TAbstract>(
+        public static TAbstractType ResolveFromClassName<TAbstractType>(
             string className,
             LifeCycle lifeCycle = LifeCycle.Transient)
         {
-            var type = GetDefaultInstance(typeof(TAbstract)).GetTypeFromCurrentAssembly(className);
+            var type = GetDefaultInstance(typeof(TAbstractType)).GetTypeFromCurrentAssembly(className);
             var resolveObject = Resolve(type, lifeCycle);
 
             //add to a shared pool
-            var resolveFromClassName = (TAbstract) resolveObject;
-            if (resolveFromClassName != null) Pool<TAbstract>.AddItem(resolveFromClassName);
+            var resolveFromClassName = (TAbstractType) resolveObject;
+            if (resolveFromClassName != null) Pool<TAbstractType>.AddItem(resolveFromClassName);
             return resolveFromClassName;
         }
+
         /// <summary>
         /// Generally Create a brand new C# / Unity objects by a className inside the current assembly
         /// </summary>
@@ -1782,6 +1789,7 @@ namespace UnityIoC
             var resolveObject = Resolve(type, lifeCycle);
             return resolveObject;
         }
+
         /// <summary>
         /// Create a new brand C# only objects from a hashtable object
         /// </summary>
@@ -1790,20 +1798,47 @@ namespace UnityIoC
         /// <returns></returns>
         public static T ResolveFromHashtable<T>(
             Hashtable data,
-            object resolveFrom = null)
+            object resolveFrom = null) where T : new()
         {
-            var resolveObject = (T) Resolve(typeof(T), LifeCycle.Transient, resolveFrom);
+            var obj = new T();
 
             foreach (var key in data)
             {
-                SetPropertyValue(resolveObject, key.ToString(), data[key]);
-                SetFieldValue(resolveObject, key.ToString(), data[key]);
+                SetPropertyValue(obj, key.ToString(), data[key]);
+                SetFieldValue(obj, key.ToString(), data[key]);
             }
 
-            //add to a shared pool
-            if (resolveObject != null) Pool<T>.AddItem(resolveObject);
+            if (obj != null)
+            {
+                Pool<T>.AddItem(obj);
+                onResolved.Value = obj;
+            }
 
-            return resolveObject;
+            return obj;
+        }
+
+        /// <summary>
+        /// Create a new brand C# only objects from a hashtable object with no key 'className' inside
+        /// </summary>
+        public static object ResolveFromHashtable(
+            Hashtable data,
+            object resolveFrom = null)
+        {
+            if (data.ContainsKey(ClassName.FIELD))
+            {
+                var type = DefaultInstance.GetTypeFromCurrentAssembly(data[ClassName.FIELD] as string);
+                var obj = Activator.CreateInstance(type);
+
+                foreach (var key in data)
+                {
+                    SetPropertyValue(obj, key.ToString(), data[key]);
+                    SetFieldValue(obj, key.ToString(), data[key]);
+                }
+
+                onResolved.Value = obj;
+                return obj;
+            }
+            return null;
         }
 
         /// <summary>
@@ -2064,7 +2099,7 @@ namespace UnityIoC
             {
                 return;
             }
-            
+
             if (lifeCycle != LifeCycle.Singleton && (lifeCycle & LifeCycle.Singleton) != LifeCycle.Singleton)
             {
                 if (resolveObject != null)
@@ -2815,6 +2850,7 @@ namespace UnityIoC
         #endregion
     }
 }
+
 
 //        /// <summary>
 //        /// Get or Create instances from Object Pools
