@@ -9,14 +9,16 @@ using Object = UnityEngine.Object;
 
 public class ContextBehaviour : MonoBehaviour
 {
-    public bool enableLogging = false;
+    /// <summary>
+    /// Context will be created and initilized with this setting
+    /// </summary>
     public BaseBindingSetting customSetting;
 
     /// <summary>
-    /// This is the default name of the default assembly that unity generated to compile your code
+    /// Allow Context to log its actions when it registers or resolves objects.
     /// </summary>
-    public string AssemblyName;
-
+    public bool enableLogging = false;
+    
     /// <summary>
     /// This is the default name of the default assembly that unity generated to compile your code
     /// </summary>
@@ -45,7 +47,7 @@ public class ContextBehaviour : MonoBehaviour
     /// <summary>
     /// If true, Pool will use HashSet as the collection instead of using List
     /// </summary>
-    public bool UseSetInsteadOfList = false;
+    public bool UseSetForPoolCollection = false;
 
     /// <summary>
     /// If true, Context will be created automatically by default assembly
@@ -59,6 +61,7 @@ public class ContextBehaviour : MonoBehaviour
     public string[] assetPaths =
     {
         "{type}",
+        "{scene}/{type}",
         "Prefabs/{type}",
         "Prefabs/{scene}/{type}",
     };
@@ -69,11 +72,6 @@ public class ContextBehaviour : MonoBehaviour
     {
         UniversalResolverDebug.EnableLogging = enableLogging;
 
-        if (!string.IsNullOrEmpty(AssemblyName))
-        {
-            Context.Setting.AssemblyName = AssemblyName;
-        }
-
         if (!string.IsNullOrEmpty(DefaultBundleName))
         {
             Context.Setting.DefaultBundleName = DefaultBundleName;
@@ -82,11 +80,11 @@ public class ContextBehaviour : MonoBehaviour
         Context.Setting.CreateViewFromPool = CreateViewsFromPools;
         Context.Setting.AutoProcessBehavioursInScene = AutoProcessBehaviours;
         Context.Setting.AutoDisposeWhenSceneChanged = AutoDisposeOnUnload;
-        Context.Setting.UseSetForCollection = UseSetInsteadOfList;
+        Context.Setting.UseSetForCollection = UseSetForPoolCollection;
         Context.Setting.EditorLoadFromResource = EditorLoadFromResource;
 
 
-        if (customSetting != null || !string.IsNullOrEmpty(AssemblyName) || bindings.Length > 0 ||
+        if (customSetting != null || bindings.Length > 0 ||
             assetPaths.Length > 0 || AutoCreateContext)
         {
             Debug.Log("Context is created automatically!");
@@ -94,7 +92,7 @@ public class ContextBehaviour : MonoBehaviour
 
             if (assetPaths.Length > 0)
             {
-                context.assetPaths = assetPaths;
+                assetPaths.CopyTo(context.assetPaths, 0);
             }
 
             if (customSetting)
@@ -115,11 +113,11 @@ public class ContextBehaviour : MonoBehaviour
                     context.DefaultContainer.registeredObjects.Add(registeredObject);
                 }
             }
+            
+            return;
         }
-        else
-        {
-            Debug.Log("Context isn't created automatically due to no usages");
-        }
+
+        Debug.Log("Context isn't created automatically due to no usages found");
     }
 
     private void OnDestroy()

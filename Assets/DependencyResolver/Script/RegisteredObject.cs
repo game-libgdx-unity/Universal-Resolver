@@ -18,6 +18,7 @@ namespace UnityIoC
         public string[] assetPaths =
         {
             "{type}",
+            "{scene}/{type}",
             "Prefabs/{type}",
             "Prefabs/{scene}/{type}",
         };

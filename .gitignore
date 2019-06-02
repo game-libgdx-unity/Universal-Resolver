@@ -3,6 +3,7 @@
 [Oo]bj/
 [Bb]uild/
 [Bb]uilds/
+TestGraphics/
 Assets/AssetStoreTools*
 
 # Visual Studio cache directory
@@ -37,7 +38,3 @@ sysinfo.txt
 Assets/StreamingAssets/google-services-desktop.json
 Assets/StreamingAssets/google-services-desktop.json.meta
 Assets/TestGraphics.meta
-Assets/App/PrintAwake.cs
-Assets/App/PrintAwake.cs.meta
-Assets/TestGraphics/Test.unity
-Assets/TestGraphics/Test.unity.meta

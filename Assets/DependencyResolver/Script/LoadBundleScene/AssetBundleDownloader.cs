@@ -37,10 +37,8 @@ namespace UnityIoC
                 {
                     return bundles[bundleName];
                 }
-                else
-                {
-                    return null;
-                }
+
+                return null;
             }
             set
             {
@@ -232,7 +230,7 @@ namespace UnityIoC
             var byteData = bundlePair.Value;
             try
             {
-                UIThreadInvoker.Instance.Invoke(() => StartCoroutine(CreateBundleInMemory(bundleName, byteData)));
+                UIThreadInvoker.Instance.Invoke(() => StartCoroutine(LoadBundleFromMemory(bundleName, byteData)));
             }
             catch (Exception ex)
             {
@@ -249,7 +247,7 @@ namespace UnityIoC
         /// <param name="bundleName"></param>
         /// <param name="rawData"></param>
         /// <returns></returns>
-        protected IEnumerator CreateBundleInMemory(string bundleName, byte[] rawData)
+        protected IEnumerator LoadBundleFromMemory(string bundleName, byte[] rawData)
         {
             AssetBundleCreateRequest assetBundleCreateRequest = AssetBundle.LoadFromMemoryAsync(rawData);
 

@@ -648,7 +648,7 @@ namespace UnityIoC
                 {
                     debug.Log(string.Format("Don't set value for field {0} due to non-default value", field.Name));
 
-                    //check to bind this instance
+                    //check to bind this instance as singleton
                     if (inject.LifeCycle == LifeCycle.Singleton ||
                         (inject.LifeCycle & LifeCycle.Singleton) == LifeCycle.Singleton)
                     {
@@ -1501,7 +1501,11 @@ namespace UnityIoC
                                     ResolvedObjects[type] = new HashSet<object>();
                                 }
 
+                                //add this obj to internal cache
                                 ResolvedObjects[type].Add(obj);
+                                
+                                //Create view for this obj (in case it's necessary)
+                                CreateViewFromData(obj);
                             }
                         }
                     );
@@ -1535,6 +1539,7 @@ namespace UnityIoC
                                 {
                                     ResolvedObjects[type].Remove(obj);
                                     DataViewBindings.Remove(obj);
+//                                    Pool.Remove(obj);
                                 }
                             }
                         }
@@ -1727,13 +1732,78 @@ namespace UnityIoC
             if (obj != null)
             {
                 onResolved.Value = obj;
-                //add to a shared pool
-                Pool<T>.AddItem(obj);
-                return obj;
             }
 
+            return obj;
+        }
 
-            return default(T);
+        /// <summary>
+        /// Get C# object from a given json as string by a field 'className' inside the json
+        /// </summary>
+        /// <param name="json"></param>
+        /// <param name="lifeCycle"></param>
+        /// <param name="resolveFrom"></param>
+        /// <returns></returns>
+        public static object ResolveFromJson(string json, LifeCycle lifeCycle = LifeCycle.Transient,
+            object resolveFrom = null)
+        {
+            //find the className inside the json
+            var className = json as string;
+            var type = DefaultInstance.GetTypeFromCurrentAssembly(className);
+            var obj = JsonUtility.FromJson(json, type);
+            if (obj != null)
+            {
+                onResolved.Value = obj;
+            }
+            return obj;
+        }
+        /// <summary>
+        /// Genericly create a brand new C# / Unity objects by a className inside the current assembly
+        /// </summary>
+        public static TAbstract ResolveFromClassName<TAbstract>(
+            string className,
+            LifeCycle lifeCycle = LifeCycle.Transient)
+        {
+            var type = GetDefaultInstance(typeof(TAbstract)).GetTypeFromCurrentAssembly(className);
+            var resolveObject = Resolve(type, lifeCycle);
+
+            //add to a shared pool
+            var resolveFromClassName = (TAbstract) resolveObject;
+            if (resolveFromClassName != null) Pool<TAbstract>.AddItem(resolveFromClassName);
+            return resolveFromClassName;
+        }
+        /// <summary>
+        /// Generally Create a brand new C# / Unity objects by a className inside the current assembly
+        /// </summary>
+        public static object ResolveFromClassName(
+            string className, LifeCycle lifeCycle = LifeCycle.Transient)
+        {
+            var type = GetDefaultInstance().GetTypeFromCurrentAssembly(className);
+            var resolveObject = Resolve(type, lifeCycle);
+            return resolveObject;
+        }
+        /// <summary>
+        /// Create a new brand C# only objects from a hashtable object
+        /// </summary>
+        /// <param name="parameters"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static T ResolveFromHashtable<T>(
+            Hashtable data,
+            object resolveFrom = null)
+        {
+            var resolveObject = (T) Resolve(typeof(T), LifeCycle.Transient, resolveFrom);
+
+            foreach (var key in data)
+            {
+                SetPropertyValue(resolveObject, key.ToString(), data[key]);
+                SetFieldValue(resolveObject, key.ToString(), data[key]);
+            }
+
+            //add to a shared pool
+            if (resolveObject != null) Pool<T>.AddItem(resolveObject);
+
+            return resolveObject;
         }
 
         /// <summary>
@@ -1782,35 +1852,6 @@ namespace UnityIoC
 
             return instanceFromPool;
         }
-
-
-//        /// <summary>
-//        /// Get or Create instances from Object Pools
-//        /// </summary>
-//        public static T ResolveFromPool<T>(
-//            int preload = 0,
-//            object resolveFrom = null,
-//            params object[] parameters) where T : IPoolable
-//        {
-//            if (!Initialized)
-//            {
-//                GetDefaultInstance(typeof(T));
-//            }
-//
-//            if (preload > 0 && preload > Pool<T>.List.Count)
-//            {
-//                PreloadFromPool<T>(preload, resolveFrom, parameters);
-//            }
-//
-//            var instanceFromPool = Pool<T>.List.GetObjectFromPool(resolveFrom, parameters);
-//
-//            if (instanceFromPool != null)
-//            {
-//                onResolved.Value = instanceFromPool;
-//            }
-//
-//            return instanceFromPool;
-//        }
 
         /// <summary>
         /// initialize pools by creating instances in advance
@@ -2002,16 +2043,32 @@ namespace UnityIoC
             params object[] parameters)
         {
             var context = GetDefaultInstance(typeToResolve);
-            var resolveObject = context
-                .ResolveObject(typeToResolve, lifeCycle, resolveFrom, parameters);
 
+            var resolveObject = context.ResolveObject(typeToResolve, lifeCycle, resolveFrom, parameters);
+
+            if (resolveObject != null)
+            {
+                //trigger the subject
+                onResolved.Value = resolveObject;
+            }
+
+            return resolveObject;
+        }
+
+        private static void CreateViewFromData(
+            object resolveObject,
+            LifeCycle lifeCycle = LifeCycle.Transient,
+            object resolveFrom = null)
+        {
+            if (resolveObject == null)
+            {
+                return;
+            }
+            
             if (lifeCycle != LifeCycle.Singleton && (lifeCycle & LifeCycle.Singleton) != LifeCycle.Singleton)
             {
                 if (resolveObject != null)
                 {
-                    //trigger the subject
-                    onResolved.Value = resolveObject;
-
                     //check if the resolved object implements the IDataBinding interface
                     var dataBindingTypes = resolveObject.GetType().GetInterfaces()
                         .Where(i => i.IsGenericType)
@@ -2036,27 +2093,27 @@ namespace UnityIoC
                                 if (Setting.CreateViewFromPool)
                                 {
                                     viewObject = ViewPools.GetObject(viewType,
-                                        () => context.ResolveObject(viewType, LifeCycle.Transient, resolveFrom,
+                                        () => DefaultInstance.ResolveObject(viewType, LifeCycle.Transient, resolveFrom,
                                             null) as Component);
                                 }
                                 else
                                 {
-                                    viewObject = context.ResolveObject(viewType, LifeCycle.Transient, resolveFrom,
+                                    viewObject = DefaultInstance.ResolveObject(viewType, LifeCycle.Transient,
+                                        resolveFrom,
                                         null);
                                 }
 
-                                BindDataWithView(typeToResolve, viewObject, resolveObject, resolveFrom);
+                                BindDataWithView(resolveObject, viewObject);
                             }
                         }
                     }
                 }
             }
-
-            return resolveObject;
         }
 
-        public static object BindDataWithView(Type typeToResolve, object viewObject, object dataObject,
-            object resolveFrom)
+        private static object BindDataWithView(
+            object dataObject,
+            object viewObject)
         {
             var observerTypes = viewObject.GetType().GetInterfaces()
                 .Where(i => i.IsGenericType)
@@ -2075,7 +2132,7 @@ namespace UnityIoC
                 if (dataObject.GetType() != dataObjectType)
                 {
                     var cachedObj =
-                        GetObjectFromCache(dataObjectType) ?? GetDefaultInstance(typeToResolve)
+                        GetObjectFromCache(dataObjectType) ?? GetDefaultInstance(dataObjectType)
                             .ResolveObject(dataObjectType, LifeCycle.Transient);
 
                     dataObject = cachedObj;
@@ -2108,57 +2165,6 @@ namespace UnityIoC
             //add to a shared pool
             if (resolveObject != null) Pool<T>.AddItem(resolveObject);
 
-            return resolveObject;
-        }
-
-        /// <summary>
-        /// Create a new brand C# only objects from a hashtable object
-        /// </summary>
-        /// <param name="parameters"></param>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public static T Resolve<T>(
-            Hashtable data,
-            object resolveFrom = null)
-        {
-            var resolveObject = (T) Resolve(typeof(T), LifeCycle.Transient, resolveFrom);
-
-            foreach (var key in data)
-            {
-                SetPropertyValue(resolveObject, key.ToString(), data[key]);
-                SetFieldValue(resolveObject, key.ToString(), data[key]);
-            }
-
-            //add to a shared pool
-            if (resolveObject != null) Pool<T>.AddItem(resolveObject);
-
-            return resolveObject;
-        }
-
-        /// <summary>
-        /// Genericly create a brand new C# / Unity objects by a className inside the current assembly
-        /// </summary>
-        public static TAbstract ResolveFromClassName<TAbstract>(
-            string className,
-            LifeCycle lifeCycle = LifeCycle.Transient)
-        {
-            var type = GetDefaultInstance(typeof(TAbstract)).GetTypeFromCurrentAssembly(className);
-            var resolveObject = Resolve(type, lifeCycle);
-
-            //add to a shared pool
-            var resolveFromClassName = (TAbstract) resolveObject;
-            if (resolveFromClassName != null) Pool<TAbstract>.AddItem(resolveFromClassName);
-            return resolveFromClassName;
-        }
-
-        /// <summary>
-        /// Generally Create a brand new C# / Unity objects by a className inside the current assembly
-        /// </summary>
-        public static object ResolveFromClassName(
-            string className, LifeCycle lifeCycle = LifeCycle.Transient)
-        {
-            var type = GetDefaultInstance().GetTypeFromCurrentAssembly(className);
-            var resolveObject = Resolve(type, lifeCycle);
             return resolveObject;
         }
 
@@ -2234,13 +2240,6 @@ namespace UnityIoC
                 var resolve = registeredObject.CreateInstance(context, lifeCycle, resolveFrom, parameters) as T;
                 if (resolve != null)
                 {
-                    Type type = resolve.GetType();
-                    if (!ResolvedObjects.ContainsKey(type))
-                    {
-                        ResolvedObjects[type] = new HashSet<object>();
-                    }
-
-                    ResolvedObjects[type].Add(resolve);
                     onResolved.Value = resolve;
                     Pool<T>.AddItem(resolve);
                 }
@@ -2364,7 +2363,7 @@ namespace UnityIoC
         /// <param name="filter"></param>
         /// <param name="updateAction"></param>
         /// <typeparam name="T"></typeparam>
-        public static void Delete<T>(T @object) 
+        public static void Delete<T>(T @object)
         {
             Update(o => ReferenceEquals(o, @object), (ref T obj) => obj = default(T));
         }
@@ -2375,7 +2374,7 @@ namespace UnityIoC
         /// <param name="filter"></param>
         /// <param name="updateAction"></param>
         /// <typeparam name="T"></typeparam>
-        public static void DeleteAll<T>() 
+        public static void DeleteAll<T>()
         {
             Update(o => true, (ref T obj) => obj = default(T));
         }
@@ -2396,6 +2395,7 @@ namespace UnityIoC
                 {
                     //call the delegate
                     var obj = (T) objs[index];
+
                     updateAction(ref obj);
 
                     //update the dataBindings
@@ -2435,9 +2435,10 @@ namespace UnityIoC
                     {
                         //remove the old object if data is null
                         OnDisposed.Value = objs[index];
-
                         //remove from a shared pool
                         Pool<T>.RemoveItem((T) objs[index]);
+//                        //remove obj from the interal cache of resolved objects
+//                        ResolvedObjects[type].Remove(objs[index]);
                     }
                 }
             }
@@ -2814,3 +2815,31 @@ namespace UnityIoC
         #endregion
     }
 }
+
+//        /// <summary>
+//        /// Get or Create instances from Object Pools
+//        /// </summary>
+//        public static T ResolveFromPool<T>(
+//            int preload = 0,
+//            object resolveFrom = null,
+//            params object[] parameters) where T : IPoolable
+//        {
+//            if (!Initialized)
+//            {
+//                GetDefaultInstance(typeof(T));
+//            }
+//
+//            if (preload > 0 && preload > Pool<T>.List.Count)
+//            {
+//                PreloadFromPool<T>(preload, resolveFrom, parameters);
+//            }
+//
+//            var instanceFromPool = Pool<T>.List.GetObjectFromPool(resolveFrom, parameters);
+//
+//            if (instanceFromPool != null)
+//            {
+//                onResolved.Value = instanceFromPool;
+//            }
+//
+//            return instanceFromPool;
+//        }

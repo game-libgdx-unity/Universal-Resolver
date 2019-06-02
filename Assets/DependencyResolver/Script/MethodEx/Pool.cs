@@ -83,8 +83,17 @@ public class Pool
         Type generic = typeof(Pool<>);
         Type[] typeArgs = {item.GetType()};
         Type constructed = generic.MakeGenericType(typeArgs);
-        var addMethod = constructed.GetMethod("AddItem", BindingFlags.Static | BindingFlags.Public);
-        addMethod.Invoke(null, new[] {item});
+        var method = constructed.GetMethod("AddItem", BindingFlags.Static | BindingFlags.Public);
+        method.Invoke(null, new[] {item});
+    }
+
+    public static void Remove(object item)
+    {
+        Type generic = typeof(Pool<>);
+        Type[] typeArgs = {item.GetType()};
+        Type constructed = generic.MakeGenericType(typeArgs);
+        var method = constructed.GetMethod("RemoveItem", BindingFlags.Static | BindingFlags.Public);
+        method.Invoke(null, new[] {item});
     }
 
     public static void Clear()
