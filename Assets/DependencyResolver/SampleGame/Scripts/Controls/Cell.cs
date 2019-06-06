@@ -21,7 +21,6 @@ public class Cell : MonoBehaviour, IDataBinding<CellData>
     [Inject] Text textUI;
     [Inject] Image background;
     [Inject] Outline outline;
-    [Inject] CellData cellData;
 
     public void OnNext(CellData data)
     {

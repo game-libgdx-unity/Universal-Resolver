@@ -573,7 +573,7 @@ namespace UnityIoC
             }
         }
 
-        private static object TryGetObjectFromCache(InjectBaseAttribute inject, Type type)
+        private object TryGetObjectFromCache(InjectBaseAttribute inject, Type type)
         {
             if ((inject.LifeCycle == LifeCycle.Cache ||
                  (inject.LifeCycle & LifeCycle.Cache) == LifeCycle.Cache) &&
@@ -891,13 +891,6 @@ namespace UnityIoC
         /// <returns>true if you want to stop other attribute process methods</returns>
         private Component[] GetComponentsFromGameObject(object mono, Type type, InjectBaseAttribute injectAttribute)
         {
-            //not supported for transient or singleton injections
-//            if (injectAttribute.LifeCycle == LifeCycle.Transient ||
-//                injectAttribute.LifeCycle == LifeCycle.Singleton)
-//            {
-//                return null;
-//            }
-
             var behaviour = mono as MonoBehaviour;
 
             if (behaviour == null) return null;
@@ -1095,7 +1088,6 @@ namespace UnityIoC
             if (sortableBehaviours.Any())
             {
                 debug.Log("Found sortableBehaviours behavior: " + sortableBehaviours.Count());
-
                 Array.Sort(sortableBehaviours, MonobehaviourComparer.Default);
 
                 foreach (var mono in sortableBehaviours)
@@ -1103,7 +1095,6 @@ namespace UnityIoC
                     if (mono)
                     {
                         debug.Log("Process on object " + mono.GetType().Name);
-
                         ProcessInjectAttribute(mono);
                     }
                 }
@@ -1114,12 +1105,11 @@ namespace UnityIoC
                 if (mono)
                 {
                     debug.Log("Process on object " + mono.GetType().Name);
-
                     ProcessInjectAttribute(mono);
                 }
             }
 
-            //Obsoleted: now you should write code in Start() after all dependencies got resolved.
+            //Obsoleted: now you just can write code in Start() after all dependencies got resolved.
             //IRunBeforeUpdate is now no more necessary.
             //process for IRunBeforeUpdate interface 
 //            var runBeforeUpdateComp = allBehaviours.Where(m => m is IRunBeforeUpdate).ToArray();
@@ -1220,7 +1210,6 @@ namespace UnityIoC
                 return;
             }
         }
-
         /// <summary>
         /// Read binding data to create registerObjects
         /// </summary>
@@ -1247,8 +1236,6 @@ namespace UnityIoC
                 }
             }
         }
-
-
         /// <summary>
         /// Load binding setting to inject for a type T in a scene
         /// </summary>
@@ -1563,7 +1550,7 @@ namespace UnityIoC
         /// <summary>
         /// Get all root gameObjects from cache
         /// </summary>
-        public static GameObject[] AllRootRootgameObjects
+        public static GameObject[] AllRootgameObjects
         {
             get
             {

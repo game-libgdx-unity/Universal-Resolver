@@ -458,7 +458,7 @@ namespace UnityIoC
                         if (abstractType.IsAbstract)
                         {
                             //search the abstractType from all root gameObjects and its descendants
-                            foreach (var gameObject in Context.AllRootRootgameObjects)
+                            foreach (var gameObject in Context.AllRootgameObjects)
                             {
                                 var children = gameObject.DescendantsAndSelf();
 
