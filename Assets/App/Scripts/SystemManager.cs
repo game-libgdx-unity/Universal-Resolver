@@ -16,23 +16,6 @@ public class SystemManager : SingletonBehaviour<SystemManager>
     protected override void Awake()
     {
         base.Awake();
-
-        Context.OnDisposed.Subscribe(this, obj =>
-        {
-            var updatable = obj as IUpdatable;
-            if (updatable != null)
-            {
-                updatable.Enable = false;
-                updatables.Remove(updatable);
-            }
-
-            var poolable = obj as IPoolable;
-            if (poolable != null)
-            {
-                poolable.Alive = false;
-            }
-        });
-
         Application.targetFrameRate = target_fps;
     }
 

@@ -46,8 +46,13 @@ public class MapGenerator : MonoBehaviour
                 print("Game status: " + status.ToString());
                 if (status == GameStatus.Completed)
                 {
-                    print("Finished");
+                    //show the button to reset the game
                     btnRestart.gameObject.SetActive(true);
+                }
+                else
+                {
+                    //hide UI elements/objects as default when game's starting
+                    btnRestart.gameObject.SetActive(false);
                 }
             })
             .AddTo(gameObject);
@@ -68,8 +73,6 @@ public class MapGenerator : MonoBehaviour
 
     private void Setup()
     {
-        //hide UI elements/objects as default when game's starting
-        btnRestart.gameObject.SetActive(false);
         gameStatus.Value = GameStatus.InProgress;
 
         //build the board

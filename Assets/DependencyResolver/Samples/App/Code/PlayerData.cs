@@ -32,10 +32,8 @@ public class PlayerData : IViewBinding<PlayerUI>
 
     public PlayerData(string name)
     {
-        if (meta == null)
-        {
-            meta = new MetaData();
-        }
+        meta = new MetaData();
+        combat = new Combat();
         
         this.meta.DisplayName = name;
     }

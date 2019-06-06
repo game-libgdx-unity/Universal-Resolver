@@ -1077,8 +1077,13 @@ namespace UnityIoC
                 {
                     var type = m.GetType();
                     var ns = type.Namespace;
-                    var ignored = type.GetCustomAttributes(typeof(IgnoreProcessingAttribute), true).Any();
-                    return !ignored && (ns == null || !ns.StartsWith("UnityEngine"));
+
+                    if (ns != null && ns.StartsWith("UnityEngine"))
+                    {
+                        return false;
+                    }
+
+                    return !type.GetCustomAttributes(typeof(IgnoreProcessingAttribute), true).Any();
                 })
                 .ToArray();
 
@@ -1115,7 +1120,7 @@ namespace UnityIoC
             }
 
             //Obsoleted: now you should write code in Start() after all dependencies got resolved.
-            //IRunBeforeUpdate is no more necessary.
+            //IRunBeforeUpdate is now no more necessary.
             //process for IRunBeforeUpdate interface 
 //            var runBeforeUpdateComp = allBehaviours.Where(m => m is IRunBeforeUpdate).ToArray();
 //            foreach (var mono in runBeforeUpdateComp)
@@ -1582,7 +1587,7 @@ namespace UnityIoC
             var output = new Observable<T>();
             onResolved.Subscribe(o =>
             {
-                if (o.GetType() == typeof(T))
+                if (o.GetType().IsInstanceOfType(typeof(T)))
                 {
                     output.Value = (T) o;
                 }
@@ -1648,7 +1653,7 @@ namespace UnityIoC
         }
 
         /// <summary>
-        /// Call GET Method to REST api for results parsed from json.
+        /// Call GET Method to REST api for parsed results from json.
         /// </summary>
         public static IEnumerator GetObjects<T>(
             string link,
@@ -1791,7 +1796,7 @@ namespace UnityIoC
         }
 
         /// <summary>
-        /// Create a new brand C# only objects from a hashtable object
+        /// Create a brand new C# only objects from a hashtable object
         /// </summary>
         /// <param name="parameters"></param>
         /// <typeparam name="T"></typeparam>
@@ -1818,7 +1823,7 @@ namespace UnityIoC
         }
 
         /// <summary>
-        /// Create a new brand C# only objects from a hashtable object with no key 'className' inside
+        /// Create a brand new C# only objects from a hashtable object with no key 'className' inside
         /// </summary>
         public static object ResolveFromHashtable(
             Hashtable data,
@@ -1838,6 +1843,7 @@ namespace UnityIoC
                 onResolved.Value = obj;
                 return obj;
             }
+
             return null;
         }
 
@@ -2187,7 +2193,7 @@ namespace UnityIoC
         }
 
         /// <summary>
-        /// Create a new brand C# only objects with parameters for its constructors
+        /// Create a brand new C# only objects with parameters for its constructors
         /// </summary>
         /// <param name="parameters"></param>
         /// <typeparam name="T"></typeparam>
@@ -2204,7 +2210,7 @@ namespace UnityIoC
         }
 
         /// <summary>
-        /// Create a new brand C#/Unity object as [transient], existing object as [singleton] or [component] which has been gotten from inside gameObject
+        /// Create a brand new C#/Unity object as [transient], existing object as [singleton] or [component] which has been gotten from inside gameObject
         /// </summary>
         public static T Resolve<T>(
             LifeCycle lifeCycle = LifeCycle.Default,
@@ -2212,12 +2218,10 @@ namespace UnityIoC
             params object[] parameters)
         {
             var obj = (T) Resolve(typeof(T), lifeCycle, resolveFrom, parameters);
-
             if (obj != null)
             {
                 Pool<T>.AddItem(obj);
             }
-
             return obj;
         }
 

@@ -628,12 +628,15 @@ namespace UnityIoC.Editor
         [Test]
         public void t38_Pool_General_Add()
         {
+            //add a data
             Pool.Add(new PlayerData("John"));
 
             Assert.IsNotNull(Pool<PlayerData>.List);
             Assert.IsNotEmpty(Pool<PlayerData>.List);
             Assert.AreEqual(1, Pool<PlayerData>.List.Count);
+            Assert.AreEqual("John", Pool<PlayerData>.List.First().name);
             
+            //make sure to clear the general pool before quiting your app
             Pool.Clear();
         }
 
