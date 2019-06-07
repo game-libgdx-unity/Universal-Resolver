@@ -38,11 +38,15 @@ namespace UnityIoC
         private Dictionary<Type, Component> monoScripts = new Dictionary<Type, Component>();
 
         /// <summary>
-        /// Automatic binding a external setting file with the same name as the assembly's then process all mono-behaviours in
-        /// scene by [inject] attributes
+        /// Automatic binding a external setting file with the same name as the assembly's
         /// </summary>
-        private bool automaticBinding = false;
+        private bool autoFindAndProcessSetting = false;
 
+//        /// <summary>
+//        /// Automatic then process all mono-behaviours in the current scene
+//        /// scene by [inject] attributes
+//        /// </summary>
+//        private bool autoProcessBehaviour = false;
         /// <summary>
         /// A targeted Type that context will retrieve its assembly for initializations.
         /// </summary>
@@ -93,6 +97,18 @@ namespace UnityIoC
         /// </summary>
         /// <param name="target">the object</param>
         /// <param name="autoFindBindSetting">if true, will load bindingsetting and process all game object for inject attribute</param>
+        public Context(BaseBindingSetting setting)
+        {
+            assemblyName = setting.name;
+            Initialize(null, false);
+            LoadBindingSetting(setting);
+        }
+
+        /// <summary>
+        /// Use the default assembly to process
+        /// </summary>
+        /// <param name="target">the object</param>
+        /// <param name="autoFindBindSetting">if true, will load bindingsetting and process all game object for inject attribute</param>
         public Context()
         {
             Initialize(null, false);
@@ -113,7 +129,7 @@ namespace UnityIoC
                 return;
             }
 
-            if (!automaticBinding)
+            if (!autoFindAndProcessSetting)
             {
                 return;
             }
@@ -128,6 +144,7 @@ namespace UnityIoC
             {
                 debug.Log("Found InjectIntoBindingSetting for assembly");
                 LoadBindingSetting(injectIntoBindingSetting);
+                return;
             }
 
             //try to get the default InjectIntoBindingSetting setting for current scene
@@ -139,6 +156,7 @@ namespace UnityIoC
             {
                 debug.Log("Found InjectIntoBindingSetting for scene");
                 LoadBindingSetting(sceneInjectIntoBindingSetting);
+                return;
             }
 
             //try to load a default BindingSetting setting for context
@@ -149,6 +167,7 @@ namespace UnityIoC
             {
                 debug.Log("Found binding setting for assembly");
                 LoadBindingSetting(bindingSetting);
+                return;
             }
 
             //try to get the default BindingSetting setting for current scene
@@ -160,9 +179,10 @@ namespace UnityIoC
             {
                 debug.Log("Found binding setting for scene");
                 LoadBindingSetting(sceneBindingSetting);
+                return;
             }
 
-
+            //just process even if no settings found
             ProcessInjectAttributeForMonoBehaviours();
         }
 
@@ -891,6 +911,13 @@ namespace UnityIoC
         /// <returns>true if you want to stop other attribute process methods</returns>
         private Component[] GetComponentsFromGameObject(object mono, Type type, InjectBaseAttribute injectAttribute)
         {
+            //not supported for transient or singleton injections
+//            if (injectAttribute.LifeCycle == LifeCycle.Transient ||
+//                injectAttribute.LifeCycle == LifeCycle.Singleton)
+//            {
+//                return null;
+//            }
+
             var behaviour = mono as MonoBehaviour;
 
             if (behaviour == null) return null;
@@ -935,7 +962,7 @@ namespace UnityIoC
                 defaultInstance = this;
             }
 
-            this.automaticBinding = automaticBinding;
+            this.autoFindAndProcessSetting = automaticBinding;
             targetType = target;
             container = new Container(this);
 
@@ -997,7 +1024,7 @@ namespace UnityIoC
         }
 
         public void ResolveAction<T>(Action<T> action, LifeCycle lifeCycle = LifeCycle.Default,
-            object resultFrom = null)
+            Type resultFrom = null)
         {
             var arg = (T) ResolveObject(typeof(T), lifeCycle, resultFrom);
             action(arg);
@@ -1006,7 +1033,7 @@ namespace UnityIoC
         public void ResolveAction<T1, T2>(Action<T1, T2> action,
             LifeCycle lifeCycle1 = LifeCycle.Default,
             LifeCycle lifeCycle2 = LifeCycle.Default,
-            object resultFrom1 = null, object resultFrom2 = null)
+            Type resultFrom1 = null, Type resultFrom2 = null)
         {
             var arg1 = (T1) ResolveObject(typeof(T1), lifeCycle1, resultFrom1);
             var arg2 = (T2) ResolveObject(typeof(T1), lifeCycle2, resultFrom2);
@@ -1014,7 +1041,7 @@ namespace UnityIoC
         }
 
         public Result ResolveFunc<Input, Result>(Func<Input, Result> func, LifeCycle lifeCycle = LifeCycle.Default,
-            object resultFrom = null)
+            Type resultFrom = null)
         {
             var arg = (Input) ResolveObject(typeof(Input), lifeCycle, resultFrom);
             return func(arg);
@@ -1023,8 +1050,8 @@ namespace UnityIoC
         public Result ResolveFunc<Input1, Input2, Result>(Func<Input1, Input2, Result> func,
             LifeCycle lifeCycle1 = LifeCycle.Default,
             LifeCycle lifeCycle2 = LifeCycle.Default,
-            object resultFrom1 = null,
-            object resultFrom2 = null)
+            Type resultFrom1 = null,
+            Type resultFrom2 = null)
         {
             var arg1 = (Input1) ResolveObject(typeof(Input1), lifeCycle1, resultFrom1);
             var arg2 = (Input2) ResolveObject(typeof(Input2), lifeCycle2, resultFrom2);
@@ -1210,6 +1237,7 @@ namespace UnityIoC
                 return;
             }
         }
+
         /// <summary>
         /// Read binding data to create registerObjects
         /// </summary>
@@ -1236,6 +1264,7 @@ namespace UnityIoC
                 }
             }
         }
+
         /// <summary>
         /// Load binding setting to inject for a type T in a scene
         /// </summary>
@@ -1396,7 +1425,7 @@ namespace UnityIoC
 
         public TTypeToResolve ResolveObject<TTypeToResolve>(
             LifeCycle lifeCycle = LifeCycle.Default,
-            object resolveFrom = null,
+            Type resolveFrom = null,
             params object[] parameters)
         {
             return (TTypeToResolve) ResolveObject(typeof(TTypeToResolve), lifeCycle, resolveFrom, parameters);
@@ -1405,7 +1434,7 @@ namespace UnityIoC
         public object ResolveObject(
             Type typeToResolve,
             LifeCycle lifeCycle = LifeCycle.Default,
-            object resolveFrom = null,
+            Type resolveFrom = null,
             params object[] parameters)
         {
             return container.ResolveObject(typeToResolve, lifeCycle, resolveFrom, parameters);
@@ -1969,7 +1998,7 @@ namespace UnityIoC
             bool recreate = false
         )
         {
-            return GetDefaultInstance(context.GetType(), Setting.AutoProcessBehavioursInScene, recreate);
+            return GetDefaultInstance(context.GetType(), Setting.AutoBindDefaultSetting, recreate);
         }
 
         /// <summary>
@@ -2067,7 +2096,7 @@ namespace UnityIoC
         public static object Resolve(
             Type typeToResolve,
             LifeCycle lifeCycle = LifeCycle.Default,
-            object resolveFrom = null,
+            Type resolveFrom = null,
             params object[] parameters)
         {
             var context = GetDefaultInstance(typeToResolve);
@@ -2086,7 +2115,7 @@ namespace UnityIoC
         private static void CreateViewFromData(
             object resolveObject,
             LifeCycle lifeCycle = LifeCycle.Transient,
-            object resolveFrom = null)
+            Type resolveFrom = null)
         {
             if (resolveObject == null)
             {
@@ -2121,7 +2150,8 @@ namespace UnityIoC
                                 if (Setting.CreateViewFromPool)
                                 {
                                     viewObject = ViewPools.GetObject(viewType,
-                                        () => DefaultInstance.ResolveObject(viewType, LifeCycle.Transient, resolveFrom,
+                                        () => DefaultInstance.ResolveObject(viewType, LifeCycle.Transient,
+                                            resolveFrom,
                                             null) as Component);
                                 }
                                 else
@@ -2201,10 +2231,25 @@ namespace UnityIoC
         /// </summary>
         public static T Resolve<T>(
             LifeCycle lifeCycle = LifeCycle.Default,
-            object resolveFrom = null,
+            Type resolveFrom = null,
             params object[] parameters)
         {
             var obj = (T) Resolve(typeof(T), lifeCycle, resolveFrom, parameters);
+            if (obj != null)
+            {
+                Pool<T>.AddItem(obj);
+            }
+            return obj;
+        }
+
+        /// <summary>
+        /// Create a brand new C#/Unity object as [transient], existing object as [singleton] or [component] which has been gotten from inside gameObject
+        /// </summary>
+        public static T Resolve<T>(
+            LifeCycle lifeCycle = LifeCycle.Default,
+            params object[] parameters)
+        {
+            var obj = (T) Resolve(typeof(T), lifeCycle, null, parameters);
             if (obj != null)
             {
                 Pool<T>.AddItem(obj);
@@ -2218,7 +2263,7 @@ namespace UnityIoC
         public static T Resolve<T>(
             Transform parents,
             LifeCycle lifeCycle = LifeCycle.Default,
-            object resolveFrom = null,
+            Type resolveFrom = null,
             params object[] parameters)
             where T : Component
         {
@@ -2820,7 +2865,7 @@ namespace UnityIoC
             /// <summary>
             /// if true, when the default instance get initialized, it will process all mono-behaviours in current active scenes. Default is true.
             /// </summary>
-            public static bool AutoProcessBehavioursInScene = true;
+            public static bool AutoBindDefaultSetting = true;
 
             /// <summary>
             /// Pool's collection will be constructed by Set, instead of List. Default is false.

@@ -1,6 +1,4 @@
-using System;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace UnityIoC
 {
@@ -21,9 +19,12 @@ namespace UnityIoC
                 return null;
             }
 
+#if UNITY_EDITOR
             //load from Resources folder if running in Editor
-#if !UNITY_EDITOR
-            return UnityEngine.Resources.Load(path);
+            if (Context.Setting.EditorLoadFromResource)
+            {
+                return Resources.Load(path);
+            }
 #endif
 
             //check if resources bundle is loaded, then load from the default bundle named "resources"
@@ -34,7 +35,7 @@ namespace UnityIoC
             }
 
             //if the bundle not found, go back to load from Resources folder
-            return UnityEngine.Resources.Load(path);
+            return Resources.Load(path);
         }
 
         /// <summary>
@@ -49,7 +50,7 @@ namespace UnityIoC
             //load from Resources folder if running in Editor
             if (Context.Setting.EditorLoadFromResource)
             {
-                asset = UnityEngine.Resources.Load<T>(path);
+                asset = Resources.Load<T>(path);
                 if (asset != null)
                 {
                     return asset;
@@ -64,7 +65,7 @@ namespace UnityIoC
             }
 
             //if the bundle not found, go back to load from Resources folder
-            return UnityEngine.Resources.Load<T>(path);
+            return Resources.Load<T>(path);
         }
 
         /// <summary>

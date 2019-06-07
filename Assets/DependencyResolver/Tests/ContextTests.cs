@@ -181,9 +181,9 @@ namespace UnityIoC.Editor
             var t2 = Context.Resolve<TestComponent2>();
             var t3 = Context.Resolve<TestComponent3>();
 
-            var i1 = Context.Resolve<IAbstract>(resolveFrom: t1);
-            var i2 = Context.Resolve<IAbstract>(resolveFrom: t2);
-            var i3 = Context.Resolve<IAbstract>(resolveFrom: t3);
+            var i1 = Context.Resolve<IAbstract>(resolveFrom: t1.GetType());
+            var i2 = Context.Resolve<IAbstract>(resolveFrom: t2.GetType());
+            var i3 = Context.Resolve<IAbstract>(resolveFrom: t3.GetType());
 
             Assert.IsInstanceOf<ImplClass>(i1);
             Assert.IsInstanceOf<ImplClass2>(i2);

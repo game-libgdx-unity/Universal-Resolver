@@ -18,7 +18,7 @@ public class ContextBehaviour : MonoBehaviour
     /// Allow Context to log its actions when it registers or resolves objects.
     /// </summary>
     public bool enableLogging = false;
-    
+
     /// <summary>
     /// This is the default name of the default assembly that unity generated to compile your code
     /// </summary>
@@ -42,7 +42,7 @@ public class ContextBehaviour : MonoBehaviour
     /// <summary>
     /// if true, when the default instance get initialized, it will process all mono-behaviours in current active scenes. Default is true.
     /// </summary>
-    public bool AutoProcessBehaviours = true;
+    public bool AutoLoadSetting = true;
 
     /// <summary>
     /// If true, Pool will use HashSet as the collection instead of using List
@@ -55,8 +55,7 @@ public class ContextBehaviour : MonoBehaviour
     public bool AutoCreateContext = true;
 
     /// <summary>
-    /// Path to load a resource locally. Default is Prefabs/{type}
-    /// You can use {type}, {scene}, {id} to modify the path 
+    /// Path to load a resource locally. You can use {type}, {scene}, {id} to modify the path 
     /// </summary>
     public string[] assetPaths =
     {
@@ -78,7 +77,7 @@ public class ContextBehaviour : MonoBehaviour
         }
 
         Context.Setting.CreateViewFromPool = CreateViewsFromPools;
-        Context.Setting.AutoProcessBehavioursInScene = AutoProcessBehaviours;
+        Context.Setting.AutoBindDefaultSetting = AutoLoadSetting;
         Context.Setting.AutoDisposeWhenSceneChanged = AutoDisposeOnUnload;
         Context.Setting.UseSetForCollection = UseSetForPoolCollection;
         Context.Setting.EditorLoadFromResource = EditorLoadFromResource;
@@ -88,18 +87,26 @@ public class ContextBehaviour : MonoBehaviour
             assetPaths.Length > 0 || AutoCreateContext)
         {
             Debug.Log("Context is created automatically!");
-            var context = Context.GetDefaultInstance();
 
-            if (assetPaths.Length > 0)
-            {
-                assetPaths.CopyTo(context.assetPaths, 0);
-            }
+            Context context = null;
 
             if (customSetting)
             {
-                context.LoadBindingSetting(customSetting);
+                context = new Context(customSetting)
+                {
+                    assetPaths = assetPaths
+                };
+            }
+            else
+            {
+                context = new Context(this, AutoLoadSetting)
+                {
+                    assetPaths = assetPaths
+                };
             }
 
+            Context.DefaultInstance = context;
+            
             if (bindings.Length > 0)
             {
                 context.DefaultContainer.registeredTypes.Add(typeof(GameObject));
@@ -113,7 +120,13 @@ public class ContextBehaviour : MonoBehaviour
                     context.DefaultContainer.registeredObjects.Add(registeredObject);
                 }
             }
-            
+
+            //force auto process if settings require it to run.
+            if (customSetting && !customSetting.autoProcessSceneObjects && AutoLoadSetting)
+            {
+                context.ProcessInjectAttributeForMonoBehaviours();
+            }
+
             return;
         }
 

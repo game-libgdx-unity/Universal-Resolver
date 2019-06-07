@@ -14,8 +14,8 @@ namespace App.Scripts.Boards
 
         [Inject] private Random Random { get; set; }
 
-//        [Inject] ICollection<CellData> CellData;
-        [Inject] IList<CellData> CellData;
+        [Inject] ICollection<CellData> CellData;
+//        [Inject] IList<CellData> CellData;
 //      ICollection<CellData> CellData = Pool<CellData>.List;
 //      [Singleton] private List<CellData> CellData;
 

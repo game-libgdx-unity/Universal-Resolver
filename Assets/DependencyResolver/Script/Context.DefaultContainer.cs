@@ -126,7 +126,7 @@ namespace UnityIoC
                                                       System.Reflection.BindingFlags.NonPublic |
                                                       System.Reflection.BindingFlags.Public;
 
-            internal HashSet<Type> registeredTypes = new HashSet<Type>();
+            public HashSet<Type> registeredTypes = new HashSet<Type>();
 
             /// <summary>
             /// cache of processings to find out the appropriate RegisteredObject  
@@ -138,7 +138,7 @@ namespace UnityIoC
             /// <summary>
             /// cache of bindings which are registered inside context.
             /// </summary>
-            internal List<RegisteredObject> registeredObjects = new List<RegisteredObject>();
+            public List<RegisteredObject> registeredObjects = new List<RegisteredObject>();
 
             private readonly Logger debug = new Logger(typeof(Container));
 

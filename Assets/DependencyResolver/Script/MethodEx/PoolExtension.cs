@@ -107,7 +107,7 @@ public static class PoolExtension
 
     public static T GetObjectFromPool<T>(
         this List<T> objects,
-        object resolveFrom = null,
+        Type resolveFrom = null,
         params object[] parameters)
         where T : IPoolable
     {

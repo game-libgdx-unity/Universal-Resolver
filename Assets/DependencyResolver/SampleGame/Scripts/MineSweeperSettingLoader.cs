@@ -11,10 +11,8 @@ public class MineSweeperSettingLoader : MonoBehaviour
     {
         if (!Context.Initialized)
         {
-            Context.Setting.AutoProcessBehavioursInScene = false;
+            Context.Setting.AutoBindDefaultSetting = false;
             Context.GetDefaultInstance(this, false).LoadBindingSetting(gameSetting);
         }
-        
-        Context.DefaultInstance.ProcessInjectAttributeForMonoBehaviours();
     }
 }

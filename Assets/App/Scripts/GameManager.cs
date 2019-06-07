@@ -20,7 +20,7 @@ public class GameManager : MonoBehaviour
     // Start is called before the first frame update
     IEnumerator Start()
     {
-        enemyGroup = Context.Resolve<UpdatableGroup<BasicEnemy>>(LifeCycle.Singleton, null, maxObj, enemyPrefab);
+        enemyGroup = Context.Resolve<UpdatableGroup<BasicEnemy>>(LifeCycle.Singleton, maxObj, enemyPrefab);
         SystemManager.Instance.Add(enemyGroup);
         
         var motherShip = Context.Resolve<MotherShip>(motherShipPrefab);

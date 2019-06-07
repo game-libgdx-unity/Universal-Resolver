@@ -24,19 +24,12 @@ public class MapGenerator : MonoBehaviour
     [SerializeField, Inject] private GridLayoutGroup gridLayout;
     [SerializeField, Inject] private Button btnRestart;
 
-    [SerializeField, Inject("MapGenerator")] private RectTransform container;
+    [SerializeField, Inject("Map")] private RectTransform container;
 
     [Singleton] private IGameSolver gameSolver;
     [Singleton] private IGameBoard gameBoard;
     [Singleton] private Observable<GameStatus> gameStatus;
     [Singleton] private GameSetting gameSetting;
-
-    private void Awake()
-    {
-        UniversalResolverDebug.EnableLogging = false;
-        Context.Setting.CreateViewFromPool = true;
-        Context.GetDefaultInstance(this);
-    }
 
     private void Start()
     {
@@ -73,6 +66,7 @@ public class MapGenerator : MonoBehaviour
 
     private void Setup()
     {
+        //modify the state of gameStatus
         gameStatus.Value = GameStatus.InProgress;
 
         //build the board
@@ -88,9 +82,10 @@ public class MapGenerator : MonoBehaviour
         yield return null;
 
         //delete all cells which are resolved by the Context
-        //This also will delete all associated Views with the data cell objects.
+        //This also wiemove all associated Views with the data cell objects.
         Context.DeleteAll<CellData>();
 
+        //setup a new game
         Setup();
     }
 }
