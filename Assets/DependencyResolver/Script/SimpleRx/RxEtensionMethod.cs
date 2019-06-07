@@ -329,12 +329,12 @@ public class Observable<T> : IReactiveProperty<T>, IDisposable
                     try
                     {
                         observer.OnNext(_value);
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
                     }
                     catch (Exception ex)
                     {
                         observer.OnError(ex);
 
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
 
                         Debug.LogError(ex.Message);
                         Debug.LogError(ex.StackTrace);

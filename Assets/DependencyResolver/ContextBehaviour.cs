@@ -6,6 +6,38 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityIoC;
 using Object = UnityEngine.Object;
+#if UNITY_EDITOR
+using UnityEditor;
+
+[CustomEditor(typeof(ContextBehaviour))]
+public class ContextBehaviourInspector : Editor
+{
+    public override void OnInspectorGUI()
+    {
+        //hide the AutoLoadSetting if customBindingSetting is null
+        ContextBehaviour cb = (ContextBehaviour) serializedObject.targetObject;
+
+        EditorGUI.BeginChangeCheck();
+
+        if (cb.customSetting == null)
+        {
+            string[] propertyToExclude = {nameof(cb.AutoLoadSetting)};
+            DrawPropertiesExcluding(serializedObject, propertyToExclude);
+        }
+        else
+        {
+            DrawDefaultInspector();
+        }
+
+        if (EditorGUI.EndChangeCheck())
+        {
+            serializedObject.ApplyModifiedProperties();
+        }
+    }
+}
+
+#endif
+
 
 public class ContextBehaviour : MonoBehaviour
 {
@@ -15,14 +47,20 @@ public class ContextBehaviour : MonoBehaviour
     public BaseBindingSetting customSetting;
 
     /// <summary>
-    /// Allow Context to log its actions when it registers or resolves objects.
+    /// if true, when the default instance get initialized, it will process all mono-behaviours in current active scenes. Default is true.
     /// </summary>
-    public bool enableLogging = false;
+    public bool AutoLoadSetting = true;
 
     /// <summary>
     /// This is the default name of the default assembly that unity generated to compile your code
     /// </summary>
     public string DefaultBundleName = "resources";
+
+    /// <summary>
+    /// Allow Context to log its actions when it registers or resolves objects.
+    /// </summary>
+    public bool enableLogging = false;
+
 
     /// <summary>
     /// While running in editor, always load from resources before searching in asset bundles
@@ -38,11 +76,6 @@ public class ContextBehaviour : MonoBehaviour
     /// if true, when a new scene is unloaded, call the Dispose method. Default is false.
     /// </summary>
     public bool AutoDisposeOnUnload;
-
-    /// <summary>
-    /// if true, when the default instance get initialized, it will process all mono-behaviours in current active scenes. Default is true.
-    /// </summary>
-    public bool AutoLoadSetting = true;
 
     /// <summary>
     /// If true, Pool will use HashSet as the collection instead of using List
@@ -106,7 +139,7 @@ public class ContextBehaviour : MonoBehaviour
             }
 
             Context.DefaultInstance = context;
-            
+
             if (bindings.Length > 0)
             {
                 context.DefaultContainer.registeredTypes.Add(typeof(GameObject));
