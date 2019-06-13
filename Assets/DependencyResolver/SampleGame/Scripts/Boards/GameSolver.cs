@@ -14,10 +14,7 @@ namespace App.Scripts.Boards
 
         [Inject] private Random Random { get; set; }
 
-        [Inject] ICollection<CellData> CellData;
-//        [Inject] IList<CellData> CellData;
-//      ICollection<CellData> CellData = Pool<CellData>.List;
-//      [Singleton] private List<CellData> CellData;
+        [Inject] IEnumerable<CellData> CellData;
 
         public IEnumerator Solve(float waitForNextStep)
         {
@@ -92,11 +89,11 @@ namespace App.Scripts.Boards
         {
             Debug.Log("RandomMove");
 
-            var randomID = Random.Next(1, CellData.Count);
+            var randomID = Random.Next(1, CellData.Count());
             var cell = CellData.First(x => x.ID == randomID);
             while (cell.IsOpened.Value || cell.IsFlagged.Value)
             {
-                randomID = Random.Next(1, CellData.Count);
+                randomID = Random.Next(1, CellData.Count());
                 cell = CellData.First(x => x.ID == randomID);
             }
 

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityIoC;
 using Object = UnityEngine.Object;
 #if UNITY_EDITOR
@@ -26,7 +27,15 @@ public class ContextBehaviourInspector : Editor
         }
         else
         {
-            DrawDefaultInspector();
+            if (cb.customSetting.autoProcessSceneObjects)
+            {
+                string[] propertyToExclude = {nameof(cb.bindingsInScene)};
+                DrawPropertiesExcluding(serializedObject, propertyToExclude);
+            }
+            else
+            {
+                DrawDefaultInspector();
+            }
         }
 
         if (EditorGUI.EndChangeCheck())
@@ -88,6 +97,18 @@ public class ContextBehaviour : MonoBehaviour
     public bool AutoCreateContext = true;
 
     /// <summary>
+    /// Allow to search on objects in the scene for the needed prefabs, Default is false
+    /// </summary>
+    public bool SearchPrefabFromScene;
+    
+    [HideInInspector]
+    /// <summary>
+    /// 
+    /// If true, Context will be never process on all Behaviours, Default is false
+    /// </summary>
+    public bool DisableProcessAllBehaviour = false;
+
+    /// <summary>
     /// Path to load a resource locally. You can use {type}, {scene}, {id} to modify the path 
     /// </summary>
     public string[] assetPaths =
@@ -98,7 +119,7 @@ public class ContextBehaviour : MonoBehaviour
         "Prefabs/{scene}/{type}",
     };
 
-    public BindingInScene[] bindings;
+    public BindingInScene[] bindingsInScene;
 
     void Awake()
     {
@@ -115,39 +136,36 @@ public class ContextBehaviour : MonoBehaviour
         Context.Setting.UseSetForCollection = UseSetForPoolCollection;
         Context.Setting.EditorLoadFromResource = EditorLoadFromResource;
 
-
-        if (customSetting != null || bindings.Length > 0 ||
+        if (customSetting != null || bindingsInScene.Length > 0 ||
             assetPaths.Length > 0 || AutoCreateContext)
         {
             Debug.Log("Context is created automatically!");
 
             Context context = null;
 
-            if (customSetting)
+            if (!customSetting)
             {
-                context = new Context(customSetting)
-                {
-                    assetPaths = assetPaths
-                };
+                context = new Context(this, AutoLoadSetting, SearchPrefabFromScene, DisableProcessAllBehaviour, assetPaths);
             }
             else
             {
-                context = new Context(this, AutoLoadSetting)
-                {
-                    assetPaths = assetPaths
-                };
+                context = new Context(customSetting, SearchPrefabFromScene, DisableProcessAllBehaviour, assetPaths);
             }
 
             Context.DefaultInstance = context;
 
-            if (bindings.Length > 0)
+            if (bindingsInScene.Length > 0)
             {
                 context.DefaultContainer.registeredTypes.Add(typeof(GameObject));
 
-                foreach (var binding in bindings)
+                foreach (var binding in bindingsInScene)
                 {
-                    Context.RegisteredObject registeredObject = new Context.RegisteredObject(typeof(GameObject),
-                        typeof(GameObject), binding.GameObject, LifeCycle.Prefab,
+                    Context.RegisteredObject registeredObject = 
+                        new Context.RegisteredObject(
+                            typeof(GameObject),
+                        typeof(GameObject), 
+                            binding.GameObject, 
+                            LifeCycle.Prefab,
                         context.GetTypeFromCurrentAssembly(binding.TypeObjHolder.name));
 
                     context.DefaultContainer.registeredObjects.Add(registeredObject);
@@ -155,9 +173,12 @@ public class ContextBehaviour : MonoBehaviour
             }
 
             //force auto process if settings require it to run.
-            if (customSetting && !customSetting.autoProcessSceneObjects && AutoLoadSetting)
+            if (customSetting && !customSetting.autoProcessSceneObjects || !customSetting)
             {
-                context.ProcessInjectAttributeForMonoBehaviours();
+                if ( AutoLoadSetting && !DisableProcessAllBehaviour)
+                {
+                    context.ProcessInjectAttributeForMonoBehaviours();
+                }
             }
 
             return;

@@ -6,6 +6,7 @@
  **/
 
 
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityIoC;
@@ -21,6 +22,16 @@ public class Cell : MonoBehaviour, IDataBinding<CellData>
     [Inject] Text textUI;
     [Inject] Image background;
     [Inject] Outline outline;
+//    [Inject("/MapCanvas")] private MapGenerator mapGenerator;
+    [Singleton] private MapGenerator mapGenerator;
+
+    private void Start()
+    {
+        if (!transform.parent)
+        {
+            transform.SetParent(mapGenerator.transform.GetChild(0).transform);
+        }
+    }
 
     public void OnNext(CellData data)
     {

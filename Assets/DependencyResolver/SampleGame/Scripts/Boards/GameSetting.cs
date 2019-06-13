@@ -8,7 +8,7 @@
 using System;
 namespace App.Scripts.Boards
 {
-    [Serializable]
+//    [CreateAssetMenu(fileName = "New GameSetting", menuName = "GameSetting Data", order = 51)]
     public class GameSetting
     {
         public int Width = 10;

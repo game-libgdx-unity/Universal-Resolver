@@ -63,6 +63,7 @@ public class Pool<T>
 public class Pool
 {
     public static HashSet<Type> Types = new HashSet<Type>();
+    public static Dictionary<Type, object> GetListCache = new Dictionary<Type, object>();
 
     public static object GetList(Type type)
     {
@@ -70,11 +71,17 @@ public class Pool
         {
             return null;
         }
-        
+
+        if (GetListCache.ContainsKey(type))
+        {
+            return GetListCache[type];
+        }
+
         Type generic = typeof(Pool<>);
         Type constructed = generic.MakeGenericType(type);
-
         var list = constructed.GetProperty("List", BindingFlags.Public | BindingFlags.Static).GetValue(null);
+        GetListCache[type] = list;
+        
         return list;
     }
 

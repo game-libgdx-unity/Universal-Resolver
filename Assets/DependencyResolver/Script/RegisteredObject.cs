@@ -53,7 +53,7 @@ namespace UnityIoC
             public RegisteredObject(
                 Type abstractType,
                 object instance) :
-                this(abstractType, instance.GetType(), instance)
+                this(abstractType, instance.GetType(), instance, LifeCycle.Singleton)
             {
             }
 
@@ -199,7 +199,7 @@ namespace UnityIoC
                     else
                     {
                         //try to find component from current scene then
-                        if (Instance == null)
+                        if (context.searchPrefabFromScene && Instance == null)
                         {
                             if (concreteType.IsSubclassOf(typeof(MonoBehaviour)) && AllBehaviours != null &&
                                 AllBehaviours.Length > 0)

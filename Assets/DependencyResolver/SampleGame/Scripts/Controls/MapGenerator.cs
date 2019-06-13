@@ -17,19 +17,17 @@ using UnityEngine.UI;
 using UnityIoC;
 using Debug = UnityEngine.Debug;
 
-
 [ProcessingOrder(1)]
 public class MapGenerator : MonoBehaviour
 {
+
     [SerializeField, Inject] private GridLayoutGroup gridLayout;
     [SerializeField, Inject] private Button btnRestart;
 
-    [SerializeField, Inject("Map")] private RectTransform container;
-
     [Singleton] private IGameSolver gameSolver;
+    [Singleton] private GameSetting gameSetting;
     [Singleton] private IGameBoard gameBoard;
     [Singleton] private Observable<GameStatus> gameStatus;
-    [Singleton] private GameSetting gameSetting;
 
     private void Start()
     {
@@ -70,7 +68,7 @@ public class MapGenerator : MonoBehaviour
         gameStatus.Value = GameStatus.InProgress;
 
         //build the board
-        gameBoard.Build(gameSetting.Width, gameSetting.Height, gameSetting.MineCount);
+        gameBoard.Build();
 
         //solve the game
         StartCoroutine(gameSolver.Solve(1f));

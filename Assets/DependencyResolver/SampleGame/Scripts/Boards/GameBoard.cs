@@ -10,12 +10,9 @@ namespace App.Scripts.Boards
 {
     public class GameBoard : IGameBoard
     {
-        [Inject] ICollection<CellData> Cells;
-//        [Inject] IList<CellData> Cells;
-//        ICollection<CellData> Cells = Pool<CellData>.List;
-//        [Singleton] private List<CellData> Cells;
-        [Singleton] private Observable<GameStatus> Status { get; set; }
-        [Singleton] private GameSetting GameSettings { get; set; }
+        [Inject] private IEnumerable<CellData> Cells; 
+        [Singleton] private Observable<GameStatus> Status;
+        [Singleton] private GameSetting GameSettings;
 
         public int Width
         {
@@ -44,12 +41,9 @@ namespace App.Scripts.Boards
         /// </summary>
         public void Build()
         {
-            Debug.Assert(Cells != null);
-            Build(GameSettings.Width, GameSettings.Height, GameSettings.MineCount);
-        }
-
-        public void Build(int width, int height, int mines)
-        {
+            int width = GameSettings.Width;
+            int height = GameSettings.Height;
+            
             var id = 0;
             for (var i = 1; i <= height; i++)
             {
@@ -124,7 +118,7 @@ namespace App.Scripts.Boards
         /// <param name="rand"></param>
         public void FirstMove(int x, int y, Random rand)
         {
-            Debug.Log("First move, cell count: " + Cells.Count);
+            Debug.Log("First move, cell count: " + Cells.Count());
 
             var neighbors = GetNeighbors(x, y);
             neighbors.Add(GetCellAt(x, y)); //there is no mine around user's first move

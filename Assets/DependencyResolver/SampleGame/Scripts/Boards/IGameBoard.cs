@@ -11,7 +11,7 @@ namespace App.Scripts.Boards
 {
     public interface IGameBoard : IBoard
     {
-        void Build(int width, int height, int mines);
+        void Build();
         CellData GetCellAt(int firstMoveX, int firstMoveY);
         void Open(int randomX, int randomY);
         List<CellData> GetNeighbors(int x, int y);

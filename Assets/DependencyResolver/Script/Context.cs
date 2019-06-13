@@ -40,13 +40,8 @@ namespace UnityIoC
         /// <summary>
         /// Automatic binding a external setting file with the same name as the assembly's
         /// </summary>
-        private bool autoFindAndProcessSetting = false;
+        private bool autoFindSetting = false;
 
-//        /// <summary>
-//        /// Automatic then process all mono-behaviours in the current scene
-//        /// scene by [inject] attributes
-//        /// </summary>
-//        private bool autoProcessBehaviour = false;
         /// <summary>
         /// A targeted Type that context will retrieve its assembly for initializations.
         /// </summary>
@@ -67,6 +62,11 @@ namespace UnityIoC
         /// </summary>
         private string assemblyName = "";
 
+        /// <summary>
+        /// Allow to search on objects in the scene for the needed prefabs
+        /// </summary>
+        private bool searchPrefabFromScene;
+
         #endregion
 
         #region Constructors
@@ -76,9 +76,12 @@ namespace UnityIoC
         /// </summary>
         /// <param name="target">the object</param>
         /// <param name="autoFindBindSetting">if true, will load bindingsetting and process all game object for inject attribute</param>
-        public Context(object target, bool autoFindBindSetting = true)
+        public Context(object target, bool autoFindBindSetting = true,
+            bool searchPrefabFromScene = false,
+            bool disableProcessAllBehaviours = false, string[] assetPaths = null)
         {
-            Initialize(target.GetType(), autoFindBindSetting);
+            this.searchPrefabFromScene = searchPrefabFromScene;
+            Initialize(target.GetType(), autoFindBindSetting, disableProcessAllBehaviours, assetPaths);
         }
 
         /// <summary>
@@ -86,9 +89,12 @@ namespace UnityIoC
         /// </summary>
         /// <param name="target">the object</param>
         /// <param name="autoFindBindSetting">if true, will load bindingsetting and process all game object for inject attribute</param>
-        public Context(Type typeInTargetedAssembly, bool autoFindBindSetting = true)
+        public Context(Type typeInTargetedAssembly, bool autoFindBindSetting = true,
+            bool searchPrefabFromScene = false,
+            bool disableProcessAllBehaviours = false, string[] assetPaths = null)
         {
-            Initialize(typeInTargetedAssembly, autoFindBindSetting);
+            this.searchPrefabFromScene = searchPrefabFromScene;
+            Initialize(typeInTargetedAssembly, autoFindBindSetting, disableProcessAllBehaviours, assetPaths);
         }
 
 
@@ -97,10 +103,13 @@ namespace UnityIoC
         /// </summary>
         /// <param name="target">the object</param>
         /// <param name="autoFindBindSetting">if true, will load bindingsetting and process all game object for inject attribute</param>
-        public Context(BaseBindingSetting setting)
+        public Context(BaseBindingSetting setting,
+            bool searchPrefabFromScene = false,
+            bool disableProcessAllBehaviours = false, string[] assetPaths = null)
         {
+            this.searchPrefabFromScene = searchPrefabFromScene;
             assemblyName = setting.name;
-            Initialize(null, false);
+            Initialize(null, false, disableProcessAllBehaviours, assetPaths);
             LoadBindingSetting(setting);
         }
 
@@ -126,11 +135,6 @@ namespace UnityIoC
             if (container == null)
             {
                 debug.LogError("You need to call Initialize before calling this method");
-                return;
-            }
-
-            if (!autoFindAndProcessSetting)
-            {
                 return;
             }
 
@@ -182,8 +186,12 @@ namespace UnityIoC
                 return;
             }
 
-            //just process even if no settings found
-            ProcessInjectAttributeForMonoBehaviours();
+
+            if (autoFindSetting && !DisableProcessAllBehaviour)
+            {
+                //just process even if no settings found
+                ProcessInjectAttributeForMonoBehaviours();
+            }
         }
 
         /// <summary>
@@ -219,11 +227,15 @@ namespace UnityIoC
                     {
                         bindingSetting.ImplementedType = prefab.GetComponent(bindingSetting.AbstractType).GetType();
                     }
+
+                    bindingSetting.Prefab = (GameObject) bindingSetting.ImplementedTypeHolder;
                 }
                 else
                 {
                     bindingSetting.ImplementedType =
                         GetTypeFromCurrentAssembly(bindingSetting.ImplementedTypeHolder.name);
+
+                    bindingSetting.Prefab = null;
                 }
 
                 if (bindingSetting.ImplementedType == null)
@@ -637,30 +649,39 @@ namespace UnityIoC
                 }
 
                 bool defaultValue = false;
-
-                var overrideAttribute =
-                    field.GetCustomAttributes(typeof(OverrideAttribute), true).FirstOrDefault();
-
                 //only process a field if the field's value is not set yet
                 var value = field.GetValue(mono);
 
-                if (overrideAttribute == null)
+                if (type.IsSubclassOf(typeof(MonoBehaviour)) && value == null)
                 {
-                    if (field.FieldType.IsArray)
+                    defaultValue = true;
+                }
+                else
+                {
+                    var overrideAttribute =
+                        field.GetCustomAttributes(typeof(OverrideAttribute), true).FirstOrDefault();
+
+                    if (overrideAttribute == null)
                     {
-                        if (value != null)
+                        if (field.FieldType.IsArray)
                         {
-                            defaultValue = value != value.DefaultValue();
-                            var array = value as Array;
-                            if (array.Length == 0)
+                            if (value != null)
                             {
-                                defaultValue = true;
+                                defaultValue = value != value.DefaultValue();
+                                var array = value as Array;
+                                if (array.Length == 0)
+                                {
+                                    defaultValue = true;
+                                }
                             }
                         }
-                    }
-                    else
-                    {
-                        defaultValue = value != value.DefaultValue();
+                        else
+                        {
+                            if (value != null)
+                            {
+                                defaultValue = value != value.DefaultValue();
+                            }
+                        }
                     }
                 }
 
@@ -672,14 +693,29 @@ namespace UnityIoC
                     if (inject.LifeCycle == LifeCycle.Singleton ||
                         (inject.LifeCycle & LifeCycle.Singleton) == LifeCycle.Singleton)
                     {
-                        debug.Log(string.Format("Bind instance for field {0}", field.Name));
-                        container.BindInstance(field.FieldType, value);
+                        if (type.IsSubclassOf(typeof(MonoBehaviour)))
+                        {
+                            if (container.registeredTypes.Contains(type))
+                            {
+                                value = container.ResolveObject(type, inject.LifeCycle);
+                            }
+
+                            if (value == null)
+                            {
+                                value = AllBehaviours.FirstOrDefault(b =>
+                                    b.GetType() == type || b.GetType().IsSubclassOf(type));
+                            }
+
+                            if (value != null)
+                            {
+                                debug.Log(string.Format("Bind instance for field {0}", field.Name));
+                                container.BindInstance(field.FieldType, value);
+                                field.SetValue(mono, value);
+                                continue;
+                            }
+                        }
                     }
-
-                    continue;
                 }
-
-                injectAttributes.Add(inject);
 
                 debug.Log("Processing field {0}", field.Name);
 
@@ -709,9 +745,9 @@ namespace UnityIoC
                 else if (type.IsGenericType)
                 {
                     var genericTypeDefinition = type.GetGenericTypeDefinition();
-                    var collectionType = typeof(ICollection<>);
                     if (
-                        genericTypeDefinition == collectionType ||
+                        genericTypeDefinition == typeof(IEnumerable<>) ||
+                        genericTypeDefinition == typeof(ICollection<>) ||
                         Setting.UseSetForCollection && genericTypeDefinition == typeof(ISet<>) ||
                         !Setting.UseSetForCollection && genericTypeDefinition == typeof(IList<>)
                     )
@@ -955,14 +991,21 @@ namespace UnityIoC
         }
 
 
-        private void Initialize(Type target = null, bool automaticBinding = false)
+        private void Initialize(Type target = null, bool automaticBinding = false,
+            bool disableProcessAllBehaviours = false, string[] assetPaths = null)
         {
             if (!Initialized)
             {
                 defaultInstance = this;
             }
 
-            this.autoFindAndProcessSetting = automaticBinding;
+            this.DisableProcessAllBehaviour = disableProcessAllBehaviours;
+            this.autoFindSetting = automaticBinding;
+            if (assetPaths != null && assetPaths.Length > 0)
+            {
+                assetPaths.CopyTo(this.assetPaths, 0);
+            }
+
             targetType = target;
             container = new Container(this);
 
@@ -974,6 +1017,11 @@ namespace UnityIoC
         #endregion
 
         #region Public members
+
+        /// <summary>
+        /// disable every process related to AllBehaviours
+        /// </summary>
+        public bool DisableProcessAllBehaviour { get; set; }
 
         /// <summary>
         /// Get current scene name
@@ -1078,7 +1126,7 @@ namespace UnityIoC
             }
 
             return hashSet.Last(
-                o => type.IsInterface && type.IsAssignableFrom(o.GetType())
+                o => type.IsInterface && type.IsInstanceOfType(o)
                      || !type.IsInterface && o.GetType() == type);
         }
 
@@ -1258,7 +1306,7 @@ namespace UnityIoC
                     assemblyName = bindingSetting.assemblyHolder.name;
                 }
 
-                if (bindingSetting.autoProcessSceneObjects)
+                if (bindingSetting.autoProcessSceneObjects && !DisableProcessAllBehaviour)
                 {
                     ProcessInjectAttributeForMonoBehaviours(bindingSetting.ignoreGameComponent);
                 }
@@ -1313,7 +1361,7 @@ namespace UnityIoC
                 assemblyName = bindingSetting.assemblyHolder.name;
             }
 
-            if (bindingSetting.autoProcessSceneObjects)
+            if (bindingSetting.autoProcessSceneObjects && !DisableProcessAllBehaviour)
             {
                 ProcessInjectAttributeForMonoBehaviours(bindingSetting.ignoreGameComponent);
             }
@@ -1364,7 +1412,7 @@ namespace UnityIoC
                 }
             }
 
-            if (bindingSetting.autoProcessSceneObjects)
+            if (bindingSetting.autoProcessSceneObjects && !DisableProcessAllBehaviour)
             {
                 ProcessInjectAttributeForMonoBehaviours(bindingSetting.ignoreGameComponent);
             }
@@ -1396,7 +1444,7 @@ namespace UnityIoC
                     assemblyName = bindingSetting.assemblyHolder.name;
                 }
 
-                if (bindingSetting.autoProcessSceneObjects)
+                if (bindingSetting.autoProcessSceneObjects && !DisableProcessAllBehaviour)
                 {
                     ProcessInjectAttributeForMonoBehaviours(bindingSetting.ignoreGameComponent);
                 }
@@ -1766,7 +1814,7 @@ namespace UnityIoC
         /// <param name="lifeCycle"></param>
         /// <param name="resolveFrom"></param>
         /// <returns></returns>
-        public static object ResolveFromJson(string json, LifeCycle lifeCycle = LifeCycle.Transient,
+        public static object ResolveFromJson(string json, LifeCycle lifeCycle = LifeCycle.Default,
             object resolveFrom = null)
         {
             //find the className inside the json
@@ -1789,7 +1837,7 @@ namespace UnityIoC
         /// </summary>
         public static TAbstractType ResolveFromClassName<TAbstractType>(
             string className,
-            LifeCycle lifeCycle = LifeCycle.Transient)
+            LifeCycle lifeCycle = LifeCycle.Default)
         {
             var type = GetDefaultInstance(typeof(TAbstractType)).GetTypeFromCurrentAssembly(className);
             var resolveObject = Resolve(type, lifeCycle);
@@ -1804,7 +1852,7 @@ namespace UnityIoC
         /// Generally Create a brand new C# / Unity objects by a className inside the current assembly
         /// </summary>
         public static object ResolveFromClassName(
-            string className, LifeCycle lifeCycle = LifeCycle.Transient)
+            string className, LifeCycle lifeCycle = LifeCycle.Default)
         {
             var type = GetDefaultInstance().GetTypeFromCurrentAssembly(className);
             var resolveObject = Resolve(type, lifeCycle);
@@ -2114,7 +2162,7 @@ namespace UnityIoC
 
         private static void CreateViewFromData(
             object resolveObject,
-            LifeCycle lifeCycle = LifeCycle.Transient,
+            LifeCycle lifeCycle = LifeCycle.Default,
             Type resolveFrom = null)
         {
             if (resolveObject == null)
@@ -2150,7 +2198,8 @@ namespace UnityIoC
                                 if (Setting.CreateViewFromPool)
                                 {
                                     viewObject = ViewPools.GetObject(viewType,
-                                        () => DefaultInstance.ResolveObject(viewType, LifeCycle.Transient,
+                                        () => GetDefaultInstance(resolveObject.GetType()).ResolveObject(viewType,
+                                            LifeCycle.Transient,
                                             resolveFrom,
                                             null) as Component);
                                 }
@@ -2239,6 +2288,7 @@ namespace UnityIoC
             {
                 Pool<T>.AddItem(obj);
             }
+
             return obj;
         }
 
@@ -2254,6 +2304,7 @@ namespace UnityIoC
             {
                 Pool<T>.AddItem(obj);
             }
+
             return obj;
         }
 

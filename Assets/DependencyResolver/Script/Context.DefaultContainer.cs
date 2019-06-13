@@ -99,7 +99,6 @@ namespace UnityIoC
             {
                 ResolveFrom = resolveFrom;
                 context.LoadBindingSettingForType(resolveFrom.GetType(), bindingData);
-
             }
 
             public override object ResolveObject(Type abstractType, LifeCycle preferredLifeCycle = LifeCycle.Default, object resolveFrom = null,
@@ -350,14 +349,14 @@ namespace UnityIoC
                 Bind<TTypeToResolve, TTypeToResolve>(lifeCycle);
             }
 
-            public TTypeToResolve Resolve<TTypeToResolve>(
+            public TTypeToResolve ResolveObject<TTypeToResolve>(
                 LifeCycle lifeCycle = LifeCycle.Default,
                 params object[] parameters)
             {
                 return (TTypeToResolve) ResolveObject(typeof(TTypeToResolve), lifeCycle, null, parameters);
             }
 
-            public object Resolve(
+            public object ResolveObject(
                 Type typeToResolve,
                 LifeCycle lifeCycle = LifeCycle.Default,
                 params object[] parameters
@@ -392,7 +391,7 @@ namespace UnityIoC
                 {
                     if (parameters != null && parameters.Length == 1 && parameters[0].GetType() == abstractType)
                         return parameters[0];
-                    
+
                     return Activator.CreateInstance(abstractType);
                 }
 
@@ -404,9 +403,10 @@ namespace UnityIoC
                     return string.Empty;
                 }
 
-                if (abstractType.IsSubclassOf(typeof(ScriptableObject)) && parameters != null && parameters.Cast<string>().Count() == 1)
+                if (abstractType.IsSubclassOf(typeof(ScriptableObject)) && parameters != null &&
+                    parameters.Length == 1 && parameters[0] is string)
                 {
-                    return MyResources.Load(parameters[0] as string);
+                    return MyResources.Load((string) parameters[0]);
                 }
 
                 //process for other reference types
@@ -455,14 +455,33 @@ namespace UnityIoC
                         debug.Log(
                             "The type {0} has not been registered", abstractType.Name);
 
-                        if (abstractType.IsAbstract)
+                        if (context.searchPrefabFromScene && abstractType.IsAbstract)
                         {
                             //search the abstractType from all root gameObjects and its descendants
-                            foreach (var gameObject in Context.AllRootgameObjects)
+                            foreach (var child in AllRootgameObjects)
                             {
-                                var children = gameObject.DescendantsAndSelf();
+                                var component = child.GetComponent(abstractType);
 
-                                foreach (var child in children)
+                                if (component != null)
+                                {
+                                    registeredObject = new RegisteredObject(
+                                        abstractType,
+                                        abstractType,
+                                        context,
+                                        preferredLifeCycle);
+
+                                    registeredObject.GameObject = component.gameObject;
+                                    registeredObjects.Add(registeredObject);
+
+                                    registeredTypes.Add(abstractType);
+
+                                    return component;
+                                }
+                            }
+
+                            foreach (var go in AllRootgameObjects)
+                            {
+                                foreach (var child in go.Descendants())
                                 {
                                     var component = child.GetComponent(abstractType);
 
@@ -500,7 +519,8 @@ namespace UnityIoC
                             preferredLifeCycle);
 
 
-                        if (abstractType.IsSubclassOf(typeof(Component)) &&
+                        if (context.searchPrefabFromScene &&
+                            abstractType.IsSubclassOf(typeof(Component)) &&
                             !context.monoScripts.ContainsKey(abstractType))
                         {
                             Component findObjOnScene = null;
@@ -615,6 +635,7 @@ namespace UnityIoC
                     preferredLifeCycle);
 
                 registeredObjects.Add(registeredObject);
+
                 var resolveObject = GetInstance(registeredObject, preferredLifeCycle, resolveFrom, parameters);
                 //store as cached
                 if (!abstractType.IsArray)
