@@ -9,8 +9,10 @@ namespace UnityIoC
         Transient = 1 << 0,
         Singleton = 1 << 1,
         Component = 1 << 2,
-        Prefab = 1 << 3,
-        Cache = 1 << 4,
+        Children = 1 << 3,
+        Prefab = 1 << 4,
+        Cache = 1 << 5,
+        
         SingletonComponent = Singleton | Component,
 
         Inject = Default |

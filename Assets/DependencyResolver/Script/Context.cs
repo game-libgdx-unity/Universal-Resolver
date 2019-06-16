@@ -11,6 +11,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
@@ -1789,6 +1791,8 @@ namespace UnityIoC
             return default(T);
         }
 
+        private const string UniRxNameSpace = "UniRx";
+
         /// <summary>
         /// Get C# object from a given json as string
         /// </summary>
@@ -1797,14 +1801,59 @@ namespace UnityIoC
         /// <returns></returns>
         public static T ResolveFromJson<T>(string json)
         {
-            var obj = JsonUtility.FromJson<T>(json);
+            var obj = typeof(T).Namespace != UniRxNameSpace ? JsonUtility.FromJson<T>(json) : FromJson<T>(json);
             if (obj != null)
             {
                 Pool<T>.AddItem(obj);
                 onResolved.Value = obj;
             }
-
             return obj;
+        }
+
+        /// <summary>
+        /// Json support for unity reactive extensions 
+        /// </summary>
+        public static T FromJson<T>(string json)
+        {
+            var type = typeof(T);
+            T output = Activator.CreateInstance<T>();
+            var data = JObject.Parse(json);
+            foreach (var property in data.Properties())
+            {
+                object value = null;
+                var field = type.GetField(property.Name, BindingFlags.Public | BindingFlags.Instance);
+                if (field.FieldType == typeof(UniRx.IntReactiveProperty))
+                {
+                    value = new UniRx.IntReactiveProperty((int) property.Value);
+                }
+
+                field.SetValue(output, value);
+            }
+
+            return output;
+        }
+        
+        /// <summary>
+        /// Json support for unity reactive extensions 
+        /// </summary>
+        public static string ToJson<T>(T obj)
+        {
+            JObject jObject = new JObject();
+            var type = typeof(T);
+
+            foreach (var field in type.GetFields()
+                .Where(t => !t.GetCustomAttributes(typeof(NonSerializedAttribute), true).Any()))
+            {
+                var property = field.GetValue(obj);
+//            var value = field.FieldType.GetProperty("Value", BindingFlags.Public | BindingFlags.Instance)
+//                .GetValue(property); 
+                var value = field.FieldType.BaseType.GetField("value", BindingFlags.NonPublic | BindingFlags.Instance)
+                    .GetValue(property);
+
+                jObject.Add(field.Name, JToken.FromObject(value));
+            }
+
+            return jObject.ToString(Formatting.None);
         }
 
         /// <summary>

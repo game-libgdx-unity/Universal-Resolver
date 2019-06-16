@@ -240,9 +240,14 @@ public class ObservableDisposable<T> : IDisposable
 public class Observable<T> : IReactiveProperty<T>, IDisposable
 {
     static readonly IEqualityComparer<T> defaultEqualityComparer = global::EqualityComparer.GetDefault<T>();
+    
+    [NonSerialized]
     public HashSet<IObserver<T>> observers = new HashSet<IObserver<T>>();
 
+    [NonSerialized]
     private bool isDisposed;
+    
+    [SerializeField]
     private T _value;
 
     protected virtual IEqualityComparer<T> EqualityComparer

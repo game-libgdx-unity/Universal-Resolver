@@ -16,13 +16,14 @@ using Object = UnityEngine.Object;
 public class ComponentAttribute : InjectBaseAttribute, IComponentResolvable, IComponentArrayResolvable
 {
     public static ComponentAttribute DefaultInstance = new ComponentAttribute();
+
     public ComponentAttribute()
-        : base(LifeCycle.Component | LifeCycle.Default, null)
+        : base(LifeCycle.Component, null)
     {
     }
 
     public ComponentAttribute(string path = null)
-        : base(LifeCycle.Component | LifeCycle.Default, path)
+        : base(LifeCycle.Component, path)
     {
     }
 
@@ -163,12 +164,12 @@ public class ComponentAttribute : InjectBaseAttribute, IComponentResolvable, ICo
 public class ChildrenAttribute : InjectBaseAttribute, IComponentResolvable, IComponentArrayResolvable
 {
     public ChildrenAttribute()
-        : base(LifeCycle.Component | LifeCycle.Default, null)
+        : base(LifeCycle.Children, null)
     {
     }
 
     public ChildrenAttribute(string path = null)
-        : base(LifeCycle.Component | LifeCycle.Default, path)
+        : base(LifeCycle.Children, path)
     {
     }
 
@@ -202,6 +203,10 @@ public class ChildrenAttribute : InjectBaseAttribute, IComponentResolvable, ICom
 
 public class ParentsAttribute : InjectBaseAttribute, IComponentResolvable
 {
+    public ParentsAttribute() : base(LifeCycle.Default)
+    {
+    }
+
     public Component GetComponent(MonoBehaviour behaviour, Type type)
     {
         var componentInParent = behaviour.GetComponentInParent(type);

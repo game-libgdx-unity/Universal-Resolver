@@ -15,8 +15,6 @@ public class PlayerListUI : MonoBehaviour
         {
             Context.Resolve<PlayerData>(friendName);
         }
-
-        Invoke("ChangeName", 1);
     }
 
     /// <summary>

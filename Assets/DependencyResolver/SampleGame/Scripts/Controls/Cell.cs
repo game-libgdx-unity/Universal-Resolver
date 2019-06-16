@@ -52,11 +52,11 @@ public class Cell : MonoBehaviour, IDataBinding<CellData>
         });
 
         //when a cell is revealed
-        cellData.IsOpened.Subscribe(this, isRevealed =>
+        cellData.IsOpened.Subscribe(this, isOpened =>
         {
-            textUI.enabled = isRevealed;
-            background.color = isRevealed ? Color.white : Color.gray;
-            if (isRevealed)
+            textUI.enabled = isOpened;
+            background.color = isOpened ? Color.white : Color.gray;
+            if (isOpened)
             {
                 //when the opened cell is determined that it's a mines
                 cellData.IsMine.Subscribe(this, isMined =>
