@@ -78,9 +78,11 @@ namespace UnityIoC
         /// </summary>
         /// <param name="target">the object</param>
         /// <param name="autoFindBindSetting">if true, will load bindingsetting and process all game object for inject attribute</param>
-        public Context(object target, bool autoFindBindSetting = true,
+        public Context(object target,
+            bool autoFindBindSetting = true,
             bool searchPrefabFromScene = false,
-            bool disableProcessAllBehaviours = false, string[] assetPaths = null)
+            bool disableProcessAllBehaviours = false,
+            string[] assetPaths = null)
         {
             this.searchPrefabFromScene = searchPrefabFromScene;
             Initialize(target.GetType(), autoFindBindSetting, disableProcessAllBehaviours, assetPaths);
@@ -107,7 +109,8 @@ namespace UnityIoC
         /// <param name="autoFindBindSetting">if true, will load bindingsetting and process all game object for inject attribute</param>
         public Context(BaseBindingSetting setting,
             bool searchPrefabFromScene = false,
-            bool disableProcessAllBehaviours = false, string[] assetPaths = null)
+            bool disableProcessAllBehaviours = false,
+            string[] assetPaths = null)
         {
             this.searchPrefabFromScene = searchPrefabFromScene;
             assemblyName = setting.name;
@@ -140,7 +143,10 @@ namespace UnityIoC
                 return;
             }
 
-            debug.Log("Processing assembly {0}...", CurrentAssembly.GetName().Name);
+            if (!autoFindSetting)
+            {
+                return;
+            }
 
             //try to load a default InjectIntoBindingSetting setting for context
             var injectIntoBindingSetting =
@@ -189,11 +195,12 @@ namespace UnityIoC
             }
 
 
-            if (autoFindSetting && !DisableProcessAllBehaviour)
+            if (DisableProcessAllBehaviour)
             {
-                //just process even if no settings found
-                ProcessInjectAttributeForMonoBehaviours();
+                return;
             }
+
+            ProcessInjectAttributeForMonoBehaviours();
         }
 
         /// <summary>
@@ -1585,6 +1592,44 @@ namespace UnityIoC
                 return _onResolved;
             }
         }
+        /// <summary>
+        /// just a private variable
+        /// </summary>
+        private static Observable<object> _onViewResolved;
+
+        /// <summary>
+        /// subject to resolving object
+        /// </summary>
+        internal static Observable<object> onViewResolved
+        {
+            get
+            {
+                if (_onViewResolved == null)
+                {
+                    _onViewResolved = new Observable<object>();
+                    _onViewResolved.Subscribe(obj =>
+                        {
+                            if (obj != null)
+                            {
+                                Type type = obj.GetType();
+                                if (!ResolvedObjects.ContainsKey(type))
+                                {
+                                    ResolvedObjects[type] = new HashSet<object>();
+                                }
+
+                                //add this obj to internal cache
+                                ResolvedObjects[type].Add(obj);
+
+                                //Create view for this obj (in case it's necessary)
+                                CreateViewFromData(obj);
+                            }
+                        }
+                    );
+                }
+
+                return _onViewResolved;
+            }
+        }
 
         /// <summary>
         /// just a private variable
@@ -1653,9 +1698,21 @@ namespace UnityIoC
             var output = new Observable<T>();
             onResolved.Subscribe(o =>
             {
-                if (o.GetType().IsInstanceOfType(typeof(T)))
+                if (o is T obj)
                 {
-                    output.Value = (T) o;
+                    output.Value = obj;
+                }
+            });
+            return output;
+        }
+        public static Observable<T> OnViewResolved<T>()
+        {
+            var output = new Observable<T>();
+            onViewResolved.Subscribe(o =>
+            {
+                if (o is T obj)
+                {
+                    output.Value = obj;
                 }
             });
             return output;
@@ -1807,6 +1864,7 @@ namespace UnityIoC
                 Pool<T>.AddItem(obj);
                 onResolved.Value = obj;
             }
+
             return obj;
         }
 
@@ -1832,7 +1890,7 @@ namespace UnityIoC
 
             return output;
         }
-        
+
         /// <summary>
         /// Json support for unity reactive extensions 
         /// </summary>
@@ -2071,6 +2129,11 @@ namespace UnityIoC
             return DefaultInstance.CreateInstance(origin);
         }
 
+        public static Object Instantiate(Object origin)
+        {
+            return DefaultInstance.CreateInstance(origin);
+        }
+
         /// <summary>
         /// Clone an object from an existing one
         /// </summary>
@@ -2147,8 +2210,13 @@ namespace UnityIoC
                 onResolved.Dispose();
                 _onResolved = null;
             }
+            
+            if (!onViewResolved.IsDisposed)
+            {
+                onViewResolved.Dispose();
+                _onViewResolved = null;
+            }
 
-            //recycle the observable
             if (!OnDisposed.IsDisposed)
             {
                 OnDisposed.Dispose();
@@ -2210,63 +2278,102 @@ namespace UnityIoC
         }
 
         private static void CreateViewFromData(
-            object resolveObject,
+            object data,
             LifeCycle lifeCycle = LifeCycle.Default,
             Type resolveFrom = null)
         {
-            if (resolveObject == null)
+            if (data == null)
             {
                 return;
             }
 
             if (lifeCycle != LifeCycle.Singleton && (lifeCycle & LifeCycle.Singleton) != LifeCycle.Singleton)
             {
-                if (resolveObject != null)
+                //check if the resolved object implements the IDataBinding interface
+                var dataBindingTypes = data.GetType().GetInterfaces()
+                    .Where(i => i.IsGenericType)
+                    .Where(i => i.GetGenericTypeDefinition() == typeof(IViewBinding<>) ||
+                                i.GetGenericTypeDefinition() == typeof(IViewBinding<,>) ||
+                                i.GetGenericTypeDefinition() == typeof(IViewBinding<,,>) ||
+                                i.GetGenericTypeDefinition() == typeof(IViewBinding<,,,>) ||
+                                i.GetGenericTypeDefinition() == typeof(IViewBinding<,,,,>)
+                    );
+
+                //check if the resolved object implements the IBindByID interface
+                var bindByID = data as IBindByID;
+                var bindingID = bindByID != null ? bindByID.GetID().ToString() : string.Empty;
+
+                if (dataBindingTypes.Length > 0)
                 {
-                    //check if the resolved object implements the IDataBinding interface
-                    var dataBindingTypes = resolveObject.GetType().GetInterfaces()
-                        .Where(i => i.IsGenericType)
-                        .Where(i => i.GetGenericTypeDefinition() == typeof(IViewBinding<>) ||
-                                    i.GetGenericTypeDefinition() == typeof(IViewBinding<,>) ||
-                                    i.GetGenericTypeDefinition() == typeof(IViewBinding<,,>) ||
-                                    i.GetGenericTypeDefinition() == typeof(IViewBinding<,,,>) ||
-                                    i.GetGenericTypeDefinition() == typeof(IViewBinding<,,,,>)
-                        );
-
-                    if (dataBindingTypes.Length > 0)
+                    foreach (var dataBindingType in dataBindingTypes)
                     {
-                        foreach (var dataBindingType in dataBindingTypes)
+                        //resolve the type that is in the type argument of IDataBinding<> 
+                        var viewTypes = dataBindingType.GetGenericArguments();
+                        object viewObject = null;
+
+                        foreach (var viewType in viewTypes)
                         {
-                            //resolve the type that is in the type argument of IDataBinding<> 
-                            var viewTypes = dataBindingType.GetGenericArguments();
-
-                            foreach (var viewType in viewTypes)
+                            //resolve by ID, currently not support pools
+                            if (bindingID != string.Empty)
                             {
-                                object viewObject;
-
-                                if (Setting.CreateViewFromPool)
+                                foreach (var assetPath in DefaultInstance.assetPaths)
                                 {
-                                    viewObject = ViewPools.GetObject(viewType,
-                                        () => GetDefaultInstance(resolveObject.GetType()).ResolveObject(viewType,
+                                    var path = assetPath.Replace(
+                                            "{scene}",
+                                            SceneManager.GetActiveScene().name)
+                                        .Replace("{type}", viewType.Name);
+
+                                    var prefab = MyResources.Load(path + bindingID) as GameObject;
+                                    if (prefab != null)
+                                    {
+                                        var gameObject = Instantiate(prefab) as GameObject;
+                                        var viewAsComponent = gameObject.GetComponent(viewType);
+                                        if (viewAsComponent != null)
+                                        {
+                                            viewObject = viewAsComponent;
+                                        }
+                                        else
+                                        {
+                                            viewObject = gameObject;
+                                        }
+
+                                        break;
+                                    }
+                                }
+                            }
+                            else if (Setting.CreateViewFromPool)
+                            {
+                                viewObject = ViewPools.GetObject(viewType,
+                                    () => GetDefaultInstance(data.GetType())
+                                        .ResolveObject(
+                                            viewType,
                                             LifeCycle.Transient,
                                             resolveFrom,
                                             null) as Component);
-                                }
-                                else
-                                {
-                                    viewObject = DefaultInstance.ResolveObject(viewType, LifeCycle.Transient,
-                                        resolveFrom,
-                                        null);
-                                }
-
-                                BindDataWithView(resolveObject, viewObject);
                             }
+                            else
+                            {
+                                viewObject = DefaultInstance.ResolveObject(viewType, LifeCycle.Transient,
+                                    resolveFrom,
+                                    null);
+                            }
+
+                            //trigger the observer
+                            onViewResolved.Value = viewObject;
+                            //bind just created View with its data
+                            BindDataWithView(data, viewObject);
                         }
                     }
                 }
             }
         }
 
+        /// <summary>
+        /// trigger "OnNext", then add the data-view to caches
+        /// </summary>
+        /// <param name="dataObject"></param>
+        /// <param name="viewObject"></param>
+        /// <returns></returns>
         private static object BindDataWithView(
             object dataObject,
             object viewObject)
@@ -2275,36 +2382,62 @@ namespace UnityIoC
                 .Where(i => i.IsGenericType)
                 .Where(i => i.GetGenericTypeDefinition() == typeof(IDataBinding<>));
 
-            //Bind View for the data object
-            foreach (var observerType in observerTypes)
+            if (observerTypes.Length > 0)
             {
-                var dataObjectType = observerType.GetGenericArguments().FirstOrDefault();
-
-                var mi = viewObject.GetType().GetMethods()
-                    .FirstOrDefault(m =>
-                        m.Name == "OnNext" && m.GetParameters().FirstOrDefault().ParameterType ==
-                        dataObjectType);
-
-                if (dataObject.GetType() != dataObjectType)
+                //Bind View for the data object
+                foreach (var observerType in observerTypes)
                 {
-                    var cachedObj =
-                        GetObjectFromCache(dataObjectType) ?? GetDefaultInstance(dataObjectType)
-                            .ResolveObject(dataObjectType, LifeCycle.Transient);
+                    var dataObjectType = observerType.GetGenericArguments().FirstOrDefault();
 
-                    dataObject = cachedObj;
+                    var mi = viewObject.GetType().GetMethods()
+                        .FirstOrDefault(m =>
+                            m.Name == "OnNext" && m.GetParameters().FirstOrDefault().ParameterType ==
+                            dataObjectType);
+
+                    if (dataObject.GetType() != dataObjectType)
+                    {
+                        var cachedObj =
+                            GetObjectFromCache(dataObjectType) ?? GetDefaultInstance(dataObjectType)
+                                .ResolveObject(dataObjectType, LifeCycle.Transient);
+
+                        dataObject = cachedObj;
+                    }
+
+                    mi.Invoke(viewObject, new[] {dataObject});
+
+                    AddToCache(dataObject, viewObject);
+                }
+            }
+            else
+            {
+                var viewAsGO = viewObject as GameObject;
+                if (viewAsGO != null)
+                {
+                    viewAsGO.SendMessage("OnNext", dataObject, SendMessageOptions.DontRequireReceiver);
+                }
+                else
+                {
+                    var viewAsBehaviour = viewObject as MonoBehaviour;
+                    if (viewAsBehaviour != null)
+                    {
+                        viewAsBehaviour.SendMessage("OnNext", dataObject, SendMessageOptions.DontRequireReceiver);
+                    }
                 }
 
-                mi.Invoke(viewObject, new[] {dataObject});
-
-                if (!DataViewBindings.ContainsKey(dataObject))
-                {
-                    DataViewBindings[dataObject] = new HashSet<object>();
-                }
-
-                DataViewBindings[dataObject].Add(viewObject);
+                AddToCache(dataObject, viewObject);
             }
 
             return viewObject;
+        }
+
+        private static void AddToCache(object dataObject, object viewObject)
+        {
+            if (!DataViewBindings.ContainsKey(dataObject))
+            {
+                DataViewBindings[dataObject] = new HashSet<object>();
+            }
+
+            DataViewBindings[dataObject].Add(viewObject);
         }
 
         /// <summary>
@@ -2460,6 +2593,24 @@ namespace UnityIoC
             }
 
             return default(T);
+        }
+
+        /// <summary>
+        ///Get all ViewLayers of an object
+        /// </summary>
+        /// <param name="obj">view object</param>
+        /// <typeparam name="T"></typeparam>
+        public static HashSet<object> GetView<T>(T obj)
+        {
+            Type type = typeof(T);
+            HashSet<object> viewLayers = null;
+
+            if (DataViewBindings.ContainsKey(obj))
+            {
+                viewLayers = DataViewBindings[obj];
+            }
+
+            return viewLayers ?? new HashSet<object>();
         }
 
         /// <summary>

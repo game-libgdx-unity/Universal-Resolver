@@ -20,22 +20,17 @@ public class ContextBehaviourInspector : Editor
 
         EditorGUI.BeginChangeCheck();
 
-        if (cb.customSetting == null)
+        if (cb.customSetting != null)
         {
             string[] propertyToExclude = {nameof(cb.AutoLoadSetting)};
-            DrawPropertiesExcluding(serializedObject, propertyToExclude);
-        }
-        else
-        {
+            
             if (cb.customSetting.autoProcessSceneObjects)
             {
-                string[] propertyToExclude = {nameof(cb.bindingsInScene)};
-                DrawPropertiesExcluding(serializedObject, propertyToExclude);
+                propertyToExclude = new[] { nameof(cb.bindingsInScene), nameof(cb.AutoLoadSetting)};
+               
             }
-            else
-            {
-                DrawDefaultInspector();
-            }
+            
+            DrawPropertiesExcluding(serializedObject, propertyToExclude);
         }
 
         if (EditorGUI.EndChangeCheck())
@@ -55,10 +50,6 @@ public class ContextBehaviour : MonoBehaviour
     /// </summary>
     public BaseBindingSetting customSetting;
 
-    /// <summary>
-    /// if true, when the default instance get initialized, it will process all mono-behaviours in current active scenes. Default is true.
-    /// </summary>
-    public bool AutoLoadSetting = true;
 
     /// <summary>
     /// This is the default name of the default assembly that unity generated to compile your code
@@ -66,10 +57,14 @@ public class ContextBehaviour : MonoBehaviour
     public string DefaultBundleName = "resources";
 
     /// <summary>
+    /// if true, when the default instance get initialized, it will process all mono-behaviours in current active scenes. Default is true.
+    /// </summary>
+    public bool AutoLoadSetting = true;
+
+    /// <summary>
     /// Allow Context to log its actions when it registers or resolves objects.
     /// </summary>
     public bool enableLogging = false;
-
 
     /// <summary>
     /// While running in editor, always load from resources before searching in asset bundles
@@ -82,6 +77,11 @@ public class ContextBehaviour : MonoBehaviour
     public bool CreateViewsFromPools = true;
 
     /// <summary>
+    /// If true, Context will be never process on all Behaviours, Default is false
+    /// </summary>
+    public bool DisableProcessAllBehaviour = true;
+
+    /// <summary>
     /// if true, when a new scene is unloaded, call the Dispose method. Default is false.
     /// </summary>
     public bool AutoDisposeOnUnload;
@@ -92,21 +92,9 @@ public class ContextBehaviour : MonoBehaviour
     public bool UseSetForPoolCollection = false;
 
     /// <summary>
-    /// If true, Context will be created automatically by default assembly
-    /// </summary>
-    public bool AutoCreateContext = true;
-
-    /// <summary>
     /// Allow to search on objects in the scene for the needed prefabs, Default is false
     /// </summary>
-    public bool SearchPrefabFromScene;
-    
-    [HideInInspector]
-    /// <summary>
-    /// 
-    /// If true, Context will be never process on all Behaviours, Default is false
-    /// </summary>
-    public bool DisableProcessAllBehaviour = false;
+    public bool SearchPrefabFromScene = false;
 
     /// <summary>
     /// Path to load a resource locally. You can use {type}, {scene}, {id} to modify the path 
@@ -136,8 +124,7 @@ public class ContextBehaviour : MonoBehaviour
         Context.Setting.UseSetForCollection = UseSetForPoolCollection;
         Context.Setting.EditorLoadFromResource = EditorLoadFromResource;
 
-        if (customSetting != null || bindingsInScene.Length > 0 ||
-            assetPaths.Length > 0 || AutoCreateContext)
+        if (customSetting != null || bindingsInScene.Length > 0 || assetPaths.Length > 0)
         {
             Debug.Log("Context is created automatically!");
 
@@ -145,11 +132,13 @@ public class ContextBehaviour : MonoBehaviour
 
             if (!customSetting)
             {
-                context = new Context(this, AutoLoadSetting, SearchPrefabFromScene, DisableProcessAllBehaviour, assetPaths);
+                context = new Context(this, AutoLoadSetting, SearchPrefabFromScene, DisableProcessAllBehaviour,
+                    assetPaths);
             }
             else
             {
-                context = new Context(customSetting, SearchPrefabFromScene, DisableProcessAllBehaviour, assetPaths);
+                context = new Context(customSetting, SearchPrefabFromScene, DisableProcessAllBehaviour,
+                    assetPaths);
             }
 
             Context.DefaultInstance = context;
@@ -160,13 +149,13 @@ public class ContextBehaviour : MonoBehaviour
 
                 foreach (var binding in bindingsInScene)
                 {
-                    Context.RegisteredObject registeredObject = 
+                    Context.RegisteredObject registeredObject =
                         new Context.RegisteredObject(
                             typeof(GameObject),
-                        typeof(GameObject), 
-                            binding.GameObject, 
+                            typeof(GameObject),
+                            binding.GameObject,
                             LifeCycle.Prefab,
-                        context.GetTypeFromCurrentAssembly(binding.TypeObjHolder.name));
+                            context.GetTypeFromCurrentAssembly(binding.TypeObjHolder.name));
 
                     context.DefaultContainer.registeredObjects.Add(registeredObject);
                 }
@@ -175,7 +164,7 @@ public class ContextBehaviour : MonoBehaviour
             //force auto process if settings require it to run.
             if (customSetting && !customSetting.autoProcessSceneObjects || !customSetting)
             {
-                if ( AutoLoadSetting && !DisableProcessAllBehaviour)
+                if (AutoLoadSetting && !DisableProcessAllBehaviour)
                 {
                     context.ProcessInjectAttributeForMonoBehaviours();
                 }

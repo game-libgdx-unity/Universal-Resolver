@@ -3,6 +3,13 @@ using System;
 namespace UnityIoC
 {
     /// <summary>
+    /// Bind a view by a given id
+    /// </summary>
+    public interface IBindByID
+    {
+        object GetID();
+    }
+    /// <summary>
     /// Use to Bind a Data layer with a View Layer
     /// </summary>
     /// <typeparam name="T"></typeparam>

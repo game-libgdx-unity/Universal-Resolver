@@ -1,4 +1,6 @@
+using System;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace UnityIoC
 {
@@ -63,9 +65,36 @@ namespace UnityIoC
             {
                 return asset;
             }
-
             //if the bundle not found, go back to load from Resources folder
             return Resources.Load<T>(path);
+        }
+        /// <summary>
+        /// /// Load a generic resource
+        /// </summary>
+        /// <param name="path"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static Object Load(string path, Type type) 
+        {
+            Object asset;
+            //load from Resources folder if running in Editor
+            if (Context.Setting.EditorLoadFromResource)
+            {
+                asset = Resources.Load(path, type);
+                if (asset != null)
+                {
+                    return asset;
+                }
+            }
+
+            //check if resources bundle is loaded, then load from the default bundle named "resources"
+            asset = AssetBundleDownloader.Instance.Get(path);
+            if (asset != null)
+            {
+                return asset;
+            }
+            //if the bundle not found, go back to load from Resources folder
+            return Resources.Load(path, type);
         }
 
         /// <summary>

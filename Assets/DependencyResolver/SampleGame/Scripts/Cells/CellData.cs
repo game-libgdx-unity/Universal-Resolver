@@ -1,6 +1,6 @@
 ﻿using UnityIoC;
 
-public class CellData : IViewBinding<Cell>
+public class CellData : IViewBinding<CellView>
 {
     public int ID { get; set; }
     public int X { get; set; }

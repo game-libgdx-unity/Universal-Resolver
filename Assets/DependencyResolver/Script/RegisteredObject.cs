@@ -251,10 +251,11 @@ namespace UnityIoC
                 {
                     for (var i = 0; i < context.assetPaths.Length; i++)
                     {
-                        context.assetPaths[i] = context.assetPaths[i].Replace("{scene}", 
-                            SceneManager.GetActiveScene().name);
-                        
-                        var path = context.assetPaths[i].Replace("{type}", TypeName);
+                        var path = context.assetPaths[i]
+                            .Replace("{scene}",
+                            SceneManager.GetActiveScene().name)
+                            .Replace("{type}", TypeName);
+
                         prefab = MyResources.Load<GameObject>(path);
                         if (prefab)
                         {
@@ -267,7 +268,7 @@ namespace UnityIoC
                 {
                     //cache prefab from bundles/resources 
                     GameObject = prefab;
-                    
+
                     //create an instance from this prefab
                     Debug.Log("Found prefab for {0} .......", TypeName);
                     GameObject prefabInstance = Object.Instantiate(prefab);

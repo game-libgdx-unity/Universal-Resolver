@@ -138,6 +138,26 @@ namespace UniRx
         }
     }
 
+
+    /// <summary>
+    /// Inspectable ReactiveProperty.
+    /// </summary>
+    [Serializable]
+    public class DateTimeReactiveProperty : ReactiveProperty<DateTime>
+    {
+        public DateTimeReactiveProperty()
+            : base()
+        {
+
+        }
+
+        public DateTimeReactiveProperty(DateTime initialValue)
+            : base(initialValue)
+        {
+
+        }
+    }
+
     /// <summary>Inspectable ReactiveProperty.</summary>
     [Serializable]
     public class Vector2ReactiveProperty : ReactiveProperty<Vector2>

@@ -24,9 +24,9 @@ public class MapGenerator : MonoBehaviour
     [SerializeField, Inject] private GridLayoutGroup gridLayout;
     [SerializeField, Inject] private Button btnRestart;
 
+    [Singleton] private IGameBoard gameBoard;
     [Singleton] private IGameSolver gameSolver;
     [Singleton] private GameSetting gameSetting;
-    [Singleton] private IGameBoard gameBoard;
     [Singleton] private Observable<GameStatus> gameStatus;
 
     private void Start()
@@ -58,6 +58,11 @@ public class MapGenerator : MonoBehaviour
         gridLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
         gridLayout.constraintCount = gameSetting.Width;
 
+        //setup for CellView
+        Context.OnViewResolved<CellView>()
+            .Subscribe(v => { v.transform.SetParent(transform.GetChild(0)); })
+            .AddTo(this);
+        
         //setup a new game
         Setup();
     }
