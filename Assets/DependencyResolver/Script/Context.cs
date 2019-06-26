@@ -720,10 +720,11 @@ namespace UnityIoC
                                 debug.Log(string.Format("Bind instance for field {0}", field.Name));
                                 container.BindInstance(field.FieldType, value);
                                 field.SetValue(mono, value);
-                                continue;
                             }
                         }
                     }
+
+                    continue;
                 }
 
                 debug.Log("Processing field {0}", field.Name);
@@ -1146,6 +1147,11 @@ namespace UnityIoC
         public void ProcessInjectAttributeForMonoBehaviours(bool ignoreComponents = false)
         {
             if (!Application.isPlaying)
+            {
+                return;
+            }
+
+            if (DisableProcessAllBehaviour)
             {
                 return;
             }
@@ -1592,6 +1598,7 @@ namespace UnityIoC
                 return _onResolved;
             }
         }
+
         /// <summary>
         /// just a private variable
         /// </summary>
@@ -1607,24 +1614,6 @@ namespace UnityIoC
                 if (_onViewResolved == null)
                 {
                     _onViewResolved = new Observable<object>();
-                    _onViewResolved.Subscribe(obj =>
-                        {
-                            if (obj != null)
-                            {
-                                Type type = obj.GetType();
-                                if (!ResolvedObjects.ContainsKey(type))
-                                {
-                                    ResolvedObjects[type] = new HashSet<object>();
-                                }
-
-                                //add this obj to internal cache
-                                ResolvedObjects[type].Add(obj);
-
-                                //Create view for this obj (in case it's necessary)
-                                CreateViewFromData(obj);
-                            }
-                        }
-                    );
                 }
 
                 return _onViewResolved;
@@ -1705,6 +1694,7 @@ namespace UnityIoC
             });
             return output;
         }
+
         public static Observable<T> OnViewResolved<T>()
         {
             var output = new Observable<T>();
@@ -1858,7 +1848,9 @@ namespace UnityIoC
         /// <returns></returns>
         public static T ResolveFromJson<T>(string json)
         {
-            var obj = typeof(T).Namespace != UniRxNameSpace ? JsonUtility.FromJson<T>(json) : FromJson<T>(json);
+            var obj = typeof(T).Namespace != UniRxNameSpace
+                ? JsonUtility.FromJson<T>(json)
+                : RxJson.FromJson<T>(json);
             if (obj != null)
             {
                 Pool<T>.AddItem(obj);
@@ -1866,52 +1858,6 @@ namespace UnityIoC
             }
 
             return obj;
-        }
-
-        /// <summary>
-        /// Json support for unity reactive extensions 
-        /// </summary>
-        public static T FromJson<T>(string json)
-        {
-            var type = typeof(T);
-            T output = Activator.CreateInstance<T>();
-            var data = JObject.Parse(json);
-            foreach (var property in data.Properties())
-            {
-                object value = null;
-                var field = type.GetField(property.Name, BindingFlags.Public | BindingFlags.Instance);
-                if (field.FieldType == typeof(UniRx.IntReactiveProperty))
-                {
-                    value = new UniRx.IntReactiveProperty((int) property.Value);
-                }
-
-                field.SetValue(output, value);
-            }
-
-            return output;
-        }
-
-        /// <summary>
-        /// Json support for unity reactive extensions 
-        /// </summary>
-        public static string ToJson<T>(T obj)
-        {
-            JObject jObject = new JObject();
-            var type = typeof(T);
-
-            foreach (var field in type.GetFields()
-                .Where(t => !t.GetCustomAttributes(typeof(NonSerializedAttribute), true).Any()))
-            {
-                var property = field.GetValue(obj);
-//            var value = field.FieldType.GetProperty("Value", BindingFlags.Public | BindingFlags.Instance)
-//                .GetValue(property); 
-                var value = field.FieldType.BaseType.GetField("value", BindingFlags.NonPublic | BindingFlags.Instance)
-                    .GetValue(property);
-
-                jObject.Add(field.Name, JToken.FromObject(value));
-            }
-
-            return jObject.ToString(Formatting.None);
         }
 
         /// <summary>
@@ -1969,9 +1915,6 @@ namespace UnityIoC
         /// <summary>
         /// Create a brand new C# only objects from a hashtable object
         /// </summary>
-        /// <param name="parameters"></param>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
         public static T ResolveFromHashtable<T>(
             Hashtable data,
             object resolveFrom = null) where T : new()
@@ -2021,10 +1964,6 @@ namespace UnityIoC
         /// <summary>
         /// Get an Unity Object from Resources or AssetBundles by a given path
         /// </summary>
-        /// <param name="atestscriptableobject"></param>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
         public static T ResolveFromAssets<T>(string path) where T : class
         {
             var obj = MyResources.Load(path) as T;
@@ -2180,8 +2119,6 @@ namespace UnityIoC
             return defaultInstance;
         }
 
-        public static string LastSceneName;
-
         /// <summary>
         /// Reset static members to default, should be called if you have changed scene
         /// </summary>
@@ -2210,7 +2147,7 @@ namespace UnityIoC
                 onResolved.Dispose();
                 _onResolved = null;
             }
-            
+
             if (!onViewResolved.IsDisposed)
             {
                 onViewResolved.Dispose();
@@ -2231,9 +2168,9 @@ namespace UnityIoC
             }
 
             //remove cache of behaviours
-            if (AllBehaviours != null)
+            if (_allBehaviours != null)
             {
-                Array.Clear(AllBehaviours, 0, AllBehaviours.Length);
+                Array.Clear(_allBehaviours, 0, _allBehaviours.Length);
                 _allBehaviours = null;
             }
 

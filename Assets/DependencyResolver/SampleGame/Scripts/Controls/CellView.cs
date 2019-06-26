@@ -18,10 +18,9 @@ using UnityIoC;
 public class CellView : MonoBehaviour, IDataBinding<CellData>
 {
     //presentation layer
-    [Inject] Text textUI;
-    [Inject] Image background;
-
-    [Inject] Outline outline;
+    [SerializeField] Text textUI;
+    [SerializeField] Image background;
+    [SerializeField] Outline outline;
 
 //    [Inject("/MapCanvas")] private MapGenerator mapGenerator;
     public void OnNext(CellData data)

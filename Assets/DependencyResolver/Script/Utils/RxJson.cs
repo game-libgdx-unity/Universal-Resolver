@@ -8,7 +8,7 @@ using UnityEngine;
 
 public static class RxJson
 {
-    public static T RxFromJson<T>(string json)
+    public static T FromJson<T>(string json)
     {
         Type type = typeof(T);
 
@@ -80,7 +80,7 @@ public static class RxJson
         return output;
     }
 
-    public static string RxToJson<T>(T obj)
+    public static string ToJson<T>(T obj)
     {
         var type = typeof(T);
         JObject jObject = new JObject();

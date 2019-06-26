@@ -21,8 +21,8 @@ using Debug = UnityEngine.Debug;
 public class MapGenerator : MonoBehaviour
 {
 
-    [SerializeField, Inject] private GridLayoutGroup gridLayout;
-    [SerializeField, Inject] private Button btnRestart;
+    [SerializeField] private GridLayoutGroup gridLayout;
+    [SerializeField] private Button btnRestart;
 
     [Singleton] private IGameBoard gameBoard;
     [Singleton] private IGameSolver gameSolver;

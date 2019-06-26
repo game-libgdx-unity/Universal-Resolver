@@ -18,3 +18,18 @@ public class FakeCellData : IViewBinding<FakeCellView>, IBindByID
         return id;
     }
 }
+
+public class FakeCellDataRx : IViewBinding<FakeCellView>, IBindByID
+{
+    public int id;
+
+    public FakeCellDataRx(int id)
+    {
+        this.id = id;
+    }
+
+    public object GetID()
+    {
+        return id;
+    }
+}

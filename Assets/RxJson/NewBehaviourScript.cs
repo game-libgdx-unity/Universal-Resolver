@@ -9,7 +9,7 @@ public class NewBehaviourScript : MonoBehaviour
         var json =
             "{\"testInt\": 5,\"anEnum\":1,\"aData\":{\"property\":7},\"property\": 10,\"property3\": 10,\"Property4\":{\"property\":5},\"Property5\":1}";
 
-        UniRxData d = RxJson.RxFromJson<UniRxData>(json);
+        UniRxData d = RxJson.FromJson<UniRxData>(json);
         Debug.Log(d.testInt);
         Debug.Log(d.aData.property);
         Debug.Log(d.anEnum);
@@ -19,10 +19,10 @@ public class NewBehaviourScript : MonoBehaviour
 
         d.property2 = new UniRx.IntReactiveProperty(5);
 //        d.aData = new Data(){property = 7};
-        var j = RxJson.RxToJson(d);
+        var j = RxJson.ToJson(d);
         Debug.Log(j);
 
-        var d2 = RxJson.RxFromJson<NonRxData>(j);
+        var d2 = RxJson.FromJson<NonRxData>(j);
         Debug.Log(d2.testInt);
         Debug.Log(d2.aData.property);
         Debug.Log(d2.anEnum);
