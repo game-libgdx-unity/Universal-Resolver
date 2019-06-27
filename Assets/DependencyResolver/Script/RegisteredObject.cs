@@ -253,8 +253,9 @@ namespace UnityIoC
                     {
                         var path = context.assetPaths[i]
                             .Replace("{scene}",
-                            SceneManager.GetActiveScene().name)
-                            .Replace("{type}", TypeName);
+                                SceneManager.GetActiveScene().name)
+                            .Replace("{type}", TypeName)
+                            .Replace("{id}", string.Empty);
 
                         prefab = MyResources.Load<GameObject>(path);
                         if (prefab)

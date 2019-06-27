@@ -2258,9 +2258,10 @@ namespace UnityIoC
                                     var path = assetPath.Replace(
                                             "{scene}",
                                             SceneManager.GetActiveScene().name)
-                                        .Replace("{type}", viewType.Name);
+                                        .Replace("{type}", viewType.Name)
+                                        .Replace("{id}", bindingID);
 
-                                    var prefab = MyResources.Load(path + bindingID) as GameObject;
+                                    var prefab = MyResources.Load(path) as GameObject;
                                     if (prefab != null)
                                     {
                                         var gameObject = Instantiate(prefab) as GameObject;
