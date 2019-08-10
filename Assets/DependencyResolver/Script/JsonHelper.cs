@@ -22,6 +22,11 @@ namespace UnityIoC
         {
             return JsonUtility.FromJson<T>(json);
         }
+
+        public static string toJson<T>(T obj)
+        {
+            return JsonUtility.ToJson(obj);
+        }
     }
 
     [Serializable]

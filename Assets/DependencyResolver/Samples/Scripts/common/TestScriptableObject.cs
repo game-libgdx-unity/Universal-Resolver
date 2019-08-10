@@ -4,7 +4,7 @@ using UnityEditor;
 using UnityEngine;
 
 [CreateAssetMenu()]
-public class TestScriptableObject : ScriptableObject
+public class EnemyData : ScriptableObject
 {
     public int Amount;
 }

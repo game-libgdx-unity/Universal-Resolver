@@ -515,10 +515,10 @@ namespace UnityIoC.Editor
             //now check number of cached object
             objCount = Context.ResolvedObjects[typeof(PlayerData)].Count;
             Assert.IsTrue(objCount == 3);
-            
+
             //get a shared pool
             Assert.AreEqual(3, Pool<PlayerData>.List.Count);
-            
+
             //continue trying to create another player
             var jimmy = Context.Resolve<PlayerData>("Jimmy");
 
@@ -527,13 +527,13 @@ namespace UnityIoC.Editor
 
             //try to delete david
             Context.Delete<PlayerData>(p => p.name == "David");
-            
+
             //now check number of cached object
             objCount = Context.ResolvedObjects[typeof(PlayerData)].Count;
             Assert.IsTrue(objCount == 3);
             //get a shared pool
             Assert.IsTrue(Pool<PlayerData>.List.Count == Context.ResolvedObjects[typeof(PlayerData)].Count);
-            
+
             Assert.IsTrue(jimmy.name == "Dung");
             Assert.IsTrue(jane.name == "Nguyen");
             Assert.IsTrue(Context.GetObject<PlayerData>(p => p.name == "David") == null);
@@ -569,11 +569,11 @@ namespace UnityIoC.Editor
         [Test]
         public void t34_context_resolve_ScriptableObject()
         {
-            var obj = Context.ResolveFromAssets<TestScriptableObject>("ATestScriptableObject");
+            var obj = Context.ResolveFromAssets<EnemyData>("ATestScriptableObject");
             Assert.AreEqual(100, obj.Amount);
 
-            Assert.AreEqual(1, Context.GetObjects<TestScriptableObject>().Length);
-            Assert.AreEqual(obj, Context.GetObjectFromCache(typeof(TestScriptableObject)));
+            Assert.AreEqual(1, Context.GetObjects<EnemyData>().Length);
+            Assert.AreEqual(obj, Context.GetObjectFromCache(typeof(EnemyData)));
         }
 
         [Test]
@@ -587,8 +587,8 @@ namespace UnityIoC.Editor
             Assert.IsNotNull(view2);
         }
 
-//
-//
+        //
+        //
         [Test]
         public void t36_resolve_by_className_generic()
         {
@@ -623,8 +623,8 @@ namespace UnityIoC.Editor
             Assert.IsInstanceOf<ImplClass3>(imp3);
         }
 
-//
-//
+        //
+        //
         [Test]
         public void t38_Pool_General_Add()
         {
@@ -635,7 +635,7 @@ namespace UnityIoC.Editor
             Assert.IsNotEmpty(Pool<PlayerData>.List);
             Assert.AreEqual(1, Pool<PlayerData>.List.Count);
             Assert.AreEqual("John", Pool<PlayerData>.List.First().name);
-            
+
             //make sure to clear the general pool before quiting your app
             Pool.Clear();
         }
@@ -644,7 +644,7 @@ namespace UnityIoC.Editor
         public void t39_Pool_General_clear()
         {
             Assert.AreEqual(0, Pool.Types.Count);
-            
+
             Pool.Add(new PlayerData("John"));
             Assert.AreEqual(1, Pool<PlayerData>.List.Count);
 
@@ -659,9 +659,9 @@ namespace UnityIoC.Editor
             Pool<PlayerData>.AddItem(new PlayerData("John"));
 
             Context.Setting.UseSetForCollection = false;
-            
+
             var list = Pool.GetList(typeof(PlayerData)) as List<PlayerData>;
-            
+
             Assert.IsNotNull(list);
             Assert.AreEqual(1, list.Count);
         }
@@ -669,13 +669,13 @@ namespace UnityIoC.Editor
         public void t41_Pool_General_getList()
         {
             Context.Setting.UseSetForCollection = false;
-            
+
             var list = Pool.GetList(typeof(PlayerData)) as List<PlayerData>;
-            
+
             Pool<PlayerData>.AddItem(new PlayerData("John"));
             Pool<PlayerData>.AddItem(new PlayerData("Jean"));
             Pool<PlayerData>.AddItem(new PlayerData("Jan"));
-            
+
             Assert.IsNotNull(list);
             Assert.AreEqual(3, list.Count);
         }
@@ -688,10 +688,10 @@ namespace UnityIoC.Editor
             Context.Resolve<PlayerData>();
             Context.Resolve<PlayerData>();
             Context.Resolve<PlayerData>();
-            
+
             var list = Pool<PlayerData>.List;
             var list2 = Context.GetObjects<PlayerData>();
-            
+
             Assert.IsNotNull(list);
             Assert.IsNotNull(list2);
             Assert.AreEqual(list.Count, list2.Length);
@@ -716,9 +716,9 @@ namespace UnityIoC.Editor
             Context.GetDefaultInstance(this);
 
             Assert.IsTrue(Context.Initialized);
-//dispose
+            //dispose
             Context.Reset();
-//assert
+            //assert
             Assert.IsFalse(Context.Initialized);
         }
     }
@@ -734,8 +734,8 @@ namespace UnityIoC.Editor
             this.name = name;
         }
 
-//        public PlayerData()
-//        {
-//        }
+        //        public PlayerData()
+        //        {
+        //        }
     }
 }
