@@ -84,7 +84,7 @@ public class ContextBehaviour : MonoBehaviour
     /// <summary>
     /// if true, when a new scene is unloaded, call the Dispose method. Default is false.
     /// </summary>
-    public bool AutoDisposeOnUnload;
+    public bool AutoDisposeOnDestroy = false;
 
     /// <summary>
     /// If true, Pool will use HashSet as the collection instead of using List
@@ -120,7 +120,7 @@ public class ContextBehaviour : MonoBehaviour
 
         Context.Setting.CreateViewFromPool = CreateViewsFromPools;
         Context.Setting.AutoBindDefaultSetting = AutoLoadSetting;
-        Context.Setting.AutoDisposeWhenSceneChanged = AutoDisposeOnUnload;
+        Context.Setting.AutoDisposeWhenSceneChanged = AutoDisposeOnDestroy;
         Context.Setting.UseSetForCollection = UseSetForPoolCollection;
         Context.Setting.EditorLoadFromResource = EditorLoadFromResource;
 

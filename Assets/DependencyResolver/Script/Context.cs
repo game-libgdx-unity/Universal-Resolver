@@ -1628,7 +1628,7 @@ namespace UnityIoC
         /// <summary>
         /// subject to resolving object
         /// </summary>
-        public static Observable<object> OnDisposed
+        public static Observable<object> onDisposed
         {
             get
             {
@@ -1686,6 +1686,19 @@ namespace UnityIoC
         {
             var output = new Observable<T>();
             onResolved.Subscribe(o =>
+            {
+                if (o is T obj)
+                {
+                    output.Value = obj;
+                }
+            });
+            return output;
+        }
+
+        public static Observable<T> OnDisposed<T>()
+        {
+            var output = new Observable<T>();
+            onDisposed.Subscribe(o =>
             {
                 if (o is T obj)
                 {
@@ -2154,9 +2167,9 @@ namespace UnityIoC
                 _onViewResolved = null;
             }
 
-            if (!OnDisposed.IsDisposed)
+            if (!onDisposed.IsDisposed)
             {
-                OnDisposed.Dispose();
+                onDisposed.Dispose();
                 _onDisposed = null;
             }
 
@@ -2499,17 +2512,16 @@ namespace UnityIoC
         /// <param name="filter"></param>
         /// <param name="updateAction"></param>
         /// <typeparam name="T"></typeparam>
-        public static T Update<T>(T obj, Action<T> updateAction)
+        public static T Update<T>(T obj, Action<T> updateAction = null)
         {
             var type = typeof(T);
             if (ResolvedObjects.ContainsKey(type))
             {
-                updateAction(obj);
+                updateAction?.Invoke(obj);
                 UpdateView(ref obj);
 
                 return obj;
             }
-
             return default(T);
         }
 
@@ -2519,12 +2531,12 @@ namespace UnityIoC
         /// <param name="filter"></param>
         /// <param name="updateAction"></param>
         /// <typeparam name="T"></typeparam>
-        public static T Update<T>(ref T obj, RefAction<T> updateAction)
+        public static T Update<T>(ref T obj, RefAction<T> updateAction = null)
         {
             var type = typeof(T);
             if (ResolvedObjects.ContainsKey(type))
             {
-                updateAction(ref obj);
+                updateAction?.Invoke(ref obj);
                 UpdateView(ref obj);
 
                 return obj;
@@ -2556,7 +2568,7 @@ namespace UnityIoC
         /// </summary>
         /// <param name="obj">view object</param>
         /// <typeparam name="T"></typeparam>
-        public static HashSet<object> UpdateView<T>(ref T obj)
+        private static HashSet<object> UpdateView<T>(ref T obj)
         {
             Type type = typeof(T);
             HashSet<object> viewLayers = null;
@@ -2589,7 +2601,7 @@ namespace UnityIoC
                     else
                     {
                         var mi = viewLayer.GetType().GetMethod("OnNext", new[] {obj.GetType()});
-                        mi.Invoke(viewLayer, new object[] {obj});
+                        mi?.Invoke(viewLayer, new object[] {obj});
                     }
                 }
             }
@@ -2597,9 +2609,9 @@ namespace UnityIoC
             if (obj == null)
             {
                 //remove object if data is null
-                OnDisposed.Value = obj;
+                onDisposed.Value = obj;
 
-                //remove from a shared pool
+                //remove from the shared pool
                 Pool<T>.RemoveItem(obj);
             }
 
@@ -2694,7 +2706,7 @@ namespace UnityIoC
                     if (obj == null)
                     {
                         //remove the old object if data is null
-                        OnDisposed.Value = objs[index];
+                        onDisposed.Value = objs[index];
                         //remove from a shared pool
                         Pool<T>.RemoveItem((T) objs[index]);
 //                        //remove obj from the interal cache of resolved objects
@@ -2785,7 +2797,7 @@ namespace UnityIoC
                 }
 
                 DataViewBindings.Remove(obj);
-                OnDisposed.Value = obj;
+                onDisposed.Value = obj;
 
                 var disposable = obj as IDisposable;
                 if (disposable != null)

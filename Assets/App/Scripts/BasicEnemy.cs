@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using UniRx;
 using UnityEngine;
+using UnityEngine.Assertions;
 using UnityIoC;
 using UTJ;
 
-public class BasicEnemy : IUpdatable
+public class BasicEnemy : IUpdatable, IUpdatableItem<BasicEnemy>
 {
     private static double game_time;
     
@@ -14,23 +15,31 @@ public class BasicEnemy : IUpdatable
 
     private Vector3 targeted_pos;
     private IEnumerator routine;
-    
-    Utility.WaitForSeconds moveUp = new Utility.WaitForSeconds(1f, game_time);
-    Utility.WaitForSeconds moveForward = new Utility.WaitForSeconds(3f, game_time);
+
+    private Utility.WaitForSeconds moveUp;
+    private Utility.WaitForSeconds moveForward;
+
+    public EnemyData Data;
 
     public void Init()
     {
-        targeted_pos = new Vector3(0, 0, 0);
+        //set the updating routine
         routine = GetRoutine();
 
-        moveUp.reset(game_time);
-        moveForward.reset(game_time);
-    }
-    public BasicEnemy()
-    {
+        //setup routine timeline
+        moveUp = new Utility.WaitForSeconds(Data.moveUpDuration, game_time);
+        moveForward = new Utility.WaitForSeconds(Data.forwardDuration, game_time);
+        
         //setup physics materials 
         rigidbody.setDamper(2f);
         rigidbody.setRotateDamper(4f);
+
+        //setup target position
+        targeted_pos = new Vector3(0, 0, 0);        
+        
+
+        moveUp.reset(game_time);
+        moveForward.reset(game_time);
     }
 
     private IEnumerator GetRoutine()
@@ -53,8 +62,7 @@ public class BasicEnemy : IUpdatable
 
         yield return null;
 
-        Alive = false;
-        Enable = false;
+        Group.RemoveFromPool(this);
     }
     
 
@@ -78,5 +86,11 @@ public class BasicEnemy : IUpdatable
         {
             return rigidbody.transform;
         }
+        set
+        {
+            rigidbody.transform = value;
+        }
     }
+
+    public UpdatableGroup<BasicEnemy> Group { get; set; }
 }

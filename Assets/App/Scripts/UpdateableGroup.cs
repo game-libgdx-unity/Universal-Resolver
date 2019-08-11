@@ -10,7 +10,7 @@ namespace UnityIoC
     /// <summary>
     /// Manage updatable objects of a particular Type
     /// </summary>
-    public class UpdatableGroup<T> : IUpdatable where T : IUpdatable, new()
+    public class UpdatableGroup<T> : IUpdatable where T : IUpdatable, IUpdatableItem<T>, new()
     {
         private static double game_time;
 
@@ -25,7 +25,7 @@ namespace UnityIoC
         private Material material;
         private Mesh mesh;
 
-        public UpdatableGroup(int maxObj, GameObject gameObject)
+        public UpdatableGroup(int maxObj, GameObject prefab)
         {
             this.maxObj = maxObj;
             items = new T[maxObj];
@@ -33,19 +33,20 @@ namespace UnityIoC
             for (int i = 0; i < maxObj; i++)
             {
                 items[i] = new T();
+                items[i].Group = this;
             }
 
             matrixces = new Matrix4x4[maxObj];
             routine = GetRoutine();
-            mesh = gameObject.GetComponent<MeshFilter>().sharedMesh;
-            material = gameObject.GetComponent<Renderer>().sharedMaterial;
+            mesh = prefab.GetComponent<MeshFilter>().sharedMesh;
+            material = prefab.GetComponent<Renderer>().sharedMaterial;
 
             //UpdatableGroup doesn't pool, so set them in constructors
             //otherwises, these properties shouldn't be modified.
             Alive = true;
             Enable = true;
         }
-
+        
         public void RemoveFromPool(T obj)
         {
             obj.Alive = false;
@@ -53,7 +54,7 @@ namespace UnityIoC
             activeObj--;
         }
 
-        public T GetFromPool()
+        public T GetFromPool(Action<T> beforeInit = null)
         {
             for (int i = 0; i < maxObj; i++)
             {
@@ -62,6 +63,9 @@ namespace UnityIoC
                     activeObj++;
                     items[i].Alive = true;
                     items[i].Enable = true;
+
+                    beforeInit?.Invoke(items[i]);
+
                     items[i].Init();
 
                     return items[i];
@@ -120,6 +124,6 @@ namespace UnityIoC
             Graphics.DrawMeshInstanced(mesh, 0, material, matrixces, currentIndex, null, ShadowCastingMode.Off, false);
         }
 
-        public MyTransform Transform { get; }
+        public MyTransform Transform { get; set; }
     }
 }

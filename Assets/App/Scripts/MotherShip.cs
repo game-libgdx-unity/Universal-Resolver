@@ -7,6 +7,8 @@ public class MotherShip : IUpdatable
     private Material material;
     private Mesh mesh;
     
+    public MyTransform Transform { get; set; }
+    
     public MotherShip(GameObject prefab)
     {
         Enable = true;
@@ -20,10 +22,9 @@ public class MotherShip : IUpdatable
     public bool Enable { get; set; }
     public void Update(float delta_time, double game_time)
     {
-        Graphics.DrawMesh(mesh, Transform.position, Quaternion.identity, material, 0);
+        Graphics.DrawMesh(mesh, Transform.position, Transform.rotation, material, 0);
     }
 
-    public MyTransform Transform { get; }
     
     public bool Alive { get; set; }
     public void Init()

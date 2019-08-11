@@ -406,7 +406,7 @@ namespace UnityIoC
                 if (abstractType.IsSubclassOf(typeof(ScriptableObject)) && parameters != null &&
                     parameters.Length == 1 && parameters[0] is string)
                 {
-                    return MyResources.Load((string) parameters[0]);
+                    return Object.Instantiate(MyResources.Load((string) parameters[0]));
                 }
 
                 //process for other reference types

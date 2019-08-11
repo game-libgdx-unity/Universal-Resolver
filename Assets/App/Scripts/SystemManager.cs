@@ -17,6 +17,10 @@ public class SystemManager : SingletonBehaviour<SystemManager>
     {
         base.Awake();
         Application.targetFrameRate = target_fps;
+        
+        Context.OnResolved<IUpdatable>().Subscribe(SystemManager.Instance.Add);
+        Context.OnDisposed<IUpdatable>().Subscribe(SystemManager.Instance.Remove);
+
     }
 
     private void Update()
@@ -35,5 +39,10 @@ public class SystemManager : SingletonBehaviour<SystemManager>
     public void Add(IUpdatable updatable)
     {
         updatables.Add(updatable);
+    }
+
+    public void Remove(IUpdatable updatable)
+    {
+        updatables.Remove(updatable);
     }
 }

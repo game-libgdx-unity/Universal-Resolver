@@ -2,6 +2,7 @@
  */
 
 using UnityEngine;
+using UnityIoC;
 
 namespace UTJ {
 

@@ -32,6 +32,6 @@ namespace UnityIoC
         public bool Enable { get; set; }
 
         private new Transform transform;
-        public MyTransform Transform { get; }
+        public MyTransform Transform { get; set; }
     }
 }

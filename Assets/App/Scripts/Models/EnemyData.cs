@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-[CreateAssetMenu()]
+[CreateAssetMenu(fileName = "Enemy", menuName = "Models/Enemy", order = 0)]
 public class EnemyData : ScriptableObject
 {
-    public int Amount;
+    public float moveUpDuration;
+    public float forwardDuration;
 }
