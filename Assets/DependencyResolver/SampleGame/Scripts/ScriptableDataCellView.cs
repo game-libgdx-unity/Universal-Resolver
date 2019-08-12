@@ -4,8 +4,14 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityIoC;
 
-public class ScriptableDataCellView : MonoBehaviour, IDataBinding< FakeCellScriptableObject>
+public class ScriptableDataCellView : MonoBehaviour, IDataBinding< FakeCellScriptableObject, FakeCellData>
 {
+    
+    public void OnNext(FakeCellData t)
+    {
+        Debug.Log("Prefab Id from FakeCellData: " + t.id);
+    }
+    
     public void OnNext(FakeCellScriptableObject t)
     {
         Debug.Log("Prefab Id from scriptableObject: " + t.id);

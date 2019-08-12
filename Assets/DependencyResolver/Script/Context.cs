@@ -1599,6 +1599,28 @@ namespace UnityIoC
             }
         }
 
+
+        /// <summary>
+        /// just a private variable
+        /// </summary>
+        private static Observable<object> _onUpdated;
+
+        /// <summary>
+        /// subject to resolving object
+        /// </summary>
+        internal static Observable<object> onUpdated
+        {
+            get
+            {
+                if (_onUpdated == null)
+                {
+                    _onUpdated = new Observable<object>();
+                }
+
+                return _onUpdated;
+            }
+        }
+
         /// <summary>
         /// just a private variable
         /// </summary>
@@ -1686,6 +1708,19 @@ namespace UnityIoC
         {
             var output = new Observable<T>();
             onResolved.Subscribe(o =>
+            {
+                if (o is T obj)
+                {
+                    output.Value = obj;
+                }
+            });
+            return output;
+        }
+
+        public static Observable<T> OnUpdated<T>()
+        {
+            var output = new Observable<T>();
+            onUpdated.Subscribe(o =>
             {
                 if (o is T obj)
                 {
@@ -2161,6 +2196,12 @@ namespace UnityIoC
                 _onResolved = null;
             }
 
+            if (!onUpdated.IsDisposed)
+            {
+                onUpdated.Dispose();
+                _onUpdated = null;
+            }
+
             if (!onViewResolved.IsDisposed)
             {
                 onViewResolved.Dispose();
@@ -2518,10 +2559,12 @@ namespace UnityIoC
             if (ResolvedObjects.ContainsKey(type))
             {
                 updateAction?.Invoke(obj);
+                onUpdated.Value = obj;
                 UpdateView(ref obj);
 
                 return obj;
             }
+
             return default(T);
         }
 
@@ -2537,6 +2580,7 @@ namespace UnityIoC
             if (ResolvedObjects.ContainsKey(type))
             {
                 updateAction?.Invoke(ref obj);
+                onUpdated.Value = obj;
                 UpdateView(ref obj);
 
                 return obj;
@@ -2670,6 +2714,9 @@ namespace UnityIoC
 
                     updateAction(ref obj);
 
+                    //trigger the observable
+                    onUpdated.Value = obj;
+
                     //update the dataBindings
                     if (DataViewBindings.ContainsKey(objs[index]))
                     {
@@ -2733,7 +2780,8 @@ namespace UnityIoC
                     //call the delegate
                     var obj = objs[index] as T;
                     updateAction(obj);
-
+                    //trigger the observable
+                    onUpdated.Value = obj;
                     //update the dataBindings
                     if (DataViewBindings.ContainsKey(objs[index]))
                     {

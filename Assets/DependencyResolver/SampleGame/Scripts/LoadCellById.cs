@@ -12,6 +12,11 @@ public class LoadCellById : MonoBehaviour
         Context.OnViewResolved<ScriptableDataCellView>()
             .Subscribe(v => { v.transform.SetParent(transform.GetChild(0)); })
             .AddTo(this);
+
+        Context.OnUpdated<FakeCellScriptableObject>()
+            .Subscribe(data => { Debug.Log("updated on FakeCellScriptableObject with id " + data.id); })
+            .AddTo(this);
+        
         var c0 = Context.Resolve<FakeCellScriptableObject>("Data/Cell1");
         var c1 = Context.Resolve<FakeCellScriptableObject>("Data/Cell2");
         var c2 = Context.Resolve<FakeCellScriptableObject>("Data/Cell3");
@@ -27,7 +32,6 @@ public class LoadCellById : MonoBehaviour
         
         
         c3.backgroundColor = Color.black;
-        //update view
         Context.Update(c3);
 
         var views = Context.GetView(c3);

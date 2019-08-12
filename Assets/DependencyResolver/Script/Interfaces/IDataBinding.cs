@@ -13,7 +13,7 @@ namespace UnityIoC
     /// Use to Bind a View layer with multiple data Layers
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public interface IDataView<T1, T2, T3, T4, T5>
+    public interface IDataBinding<T1, T2, T3, T4, T5>
     {
         void OnNext(T1 t);
         void OnNext(T2 t);
@@ -26,7 +26,7 @@ namespace UnityIoC
     /// Use to Bind a View layer with multiple data Layers
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public interface IDataView<T1, T2, T3, T4>
+    public interface IDataBinding<T1, T2, T3, T4>
     {
         void OnNext(T1 t);
         void OnNext(T2 t);
@@ -38,7 +38,7 @@ namespace UnityIoC
     /// Use to Bind a View layer with multiple data Layers
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public interface IDataView<T1, T2, T3>
+    public interface IDataBinding<T1, T2, T3>
     {
         void OnNext(T1 t);
         void OnNext(T2 t);
@@ -49,7 +49,7 @@ namespace UnityIoC
     /// Use to Bind a View layer with multiple data Layers
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public interface IDataView<T1, T2>
+    public interface IDataBinding<T1, T2>
     {
         void OnNext(T1 t);
         void OnNext(T2 t);
