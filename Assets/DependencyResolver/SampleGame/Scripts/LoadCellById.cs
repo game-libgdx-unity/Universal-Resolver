@@ -36,6 +36,7 @@ public class LoadCellById : MonoBehaviour
 
         var views = Context.GetView(c3);
         Debug.Log("View C3: "+views.Count);
+        
 //        Context.Delete(c3);
 
 //

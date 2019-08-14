@@ -161,7 +161,7 @@ namespace UnityIoC
 
             //try to get the default InjectIntoBindingSetting setting for current scene
             var sceneInjectIntoBindingSetting = Resources.Load<InjectIntoBindingSetting>(
-                string.Format("{0}_{1}", CurrentAssembly.GetName().Name, SceneManager.GetActiveScene().name)
+                String.Format("{0}_{1}", CurrentAssembly.GetName().Name, SceneManager.GetActiveScene().name)
             );
 
             if (sceneInjectIntoBindingSetting)
@@ -184,7 +184,7 @@ namespace UnityIoC
 
             //try to get the default BindingSetting setting for current scene
             var sceneBindingSetting = Resources.Load<BindingSetting>(
-                string.Format("{0}_{1}", CurrentAssembly.GetName().Name, SceneManager.GetActiveScene().name)
+                String.Format("{0}_{1}", CurrentAssembly.GetName().Name, SceneManager.GetActiveScene().name)
             );
 
             if (sceneBindingSetting)
@@ -448,7 +448,7 @@ namespace UnityIoC
 
             if (methods.Length <= 0) return;
 
-            debug.Log(string.Format("Found {0} method to process", methods.Length));
+            debug.Log(String.Format("Found {0} method to process", methods.Length));
 
             foreach (var method in methods)
             {
@@ -510,7 +510,7 @@ namespace UnityIoC
 
             if (properties.Length <= 0) return;
 
-            debug.Log(string.Format("Found {0} property to process", properties.Length));
+            debug.Log(String.Format("Found {0} property to process", properties.Length));
 
             foreach (var property in properties)
             {
@@ -635,7 +635,7 @@ namespace UnityIoC
                 .ToArray();
 
             if (fieldInfos.Length > 0)
-                debug.Log(string.Format("Found {0} fieldInfo to process", fieldInfos.Length));
+                debug.Log(String.Format("Found {0} fieldInfo to process", fieldInfos.Length));
 
             foreach (var field in fieldInfos)
             {
@@ -696,7 +696,7 @@ namespace UnityIoC
 
                 if (defaultValue)
                 {
-                    debug.Log(string.Format("Don't set value for field {0} due to non-default value", field.Name));
+                    debug.Log(String.Format("Don't set value for field {0} due to non-default value", field.Name));
 
                     //check to bind this instance as singleton
                     if (inject.LifeCycle == LifeCycle.Singleton ||
@@ -717,7 +717,7 @@ namespace UnityIoC
 
                             if (value != null)
                             {
-                                debug.Log(string.Format("Bind instance for field {0}", field.Name));
+                                debug.Log(String.Format("Bind instance for field {0}", field.Name));
                                 container.BindInstance(field.FieldType, value);
                                 field.SetValue(mono, value);
                             }
@@ -1056,7 +1056,7 @@ namespace UnityIoC
                     {
                         try
                         {
-                            if (string.IsNullOrEmpty(assemblyName))
+                            if (String.IsNullOrEmpty(assemblyName))
                             {
                                 _currentAssembly = Assembly.Load(Setting.AssemblyName);
                             }
@@ -1560,6 +1560,17 @@ namespace UnityIoC
             }
         }
 
+
+        private static Observable<Exception> _onError;
+
+        /// <summary>
+        /// Validate data model
+        /// </summary>
+        internal static bool ValidateData<T>(ref T data)
+        {
+            return true;
+        }
+
         /// <summary>
         /// just a private variable
         /// </summary>
@@ -1877,7 +1888,7 @@ namespace UnityIoC
         public static T PatchObjectFromJson<T>(object obj, string json) where T : class
         {
             JsonUtility.FromJsonOverwrite(json, obj);
-            UpdateView(ref obj);
+            Update(ref obj);
             if (obj != null)
             {
                 return obj as T;
@@ -2161,7 +2172,7 @@ namespace UnityIoC
                     SceneManager.sceneLoaded += SceneManagerOnSceneLoaded;
                 }
 
-                defaultInstance = new Context(type, automaticBind);
+                defaultInstance = new Context(type, false, false, false);
             }
 
             return defaultInstance;
@@ -2182,12 +2193,22 @@ namespace UnityIoC
             {
                 SceneManager.sceneLoaded -= SceneManagerOnSceneLoaded;
             }
+            
+            //remove constraints
+            ClearConstraints();
 
             //remove caches
             ResolvedObjects.Clear();
             DataViewBindings.Clear();
             Pool.Clear();
             ViewPools.Clear();
+
+            //recycle the observable
+            if (!onExceptionRaised.IsDisposed)
+            {
+                _onExceptionRaised.Dispose();
+                _onExceptionRaised = null;
+            }
 
             //recycle the observable
             if (!onResolved.IsDisposed)
@@ -2244,11 +2265,6 @@ namespace UnityIoC
         /// <summary>
         /// Create a brand new object as [transient], existing object as [singleton] or getting [component] from inside gameObject
         /// </summary>
-        /// <param name="typeToResolve"></param>
-        /// <param name="lifeCycle"></param>
-        /// <param name="resolveFrom"></param>
-        /// <param name="parameters"></param>
-        /// <returns></returns>
         public static object Resolve(
             Type typeToResolve,
             LifeCycle lifeCycle = LifeCycle.Default,
@@ -2256,6 +2272,10 @@ namespace UnityIoC
             params object[] parameters)
         {
             var context = GetDefaultInstance(typeToResolve);
+
+            //todo: add  onDataValidated
+            //todo: add  onExceptionRaised (invalidated or sth else)
+
 
             var resolveObject = context.ResolveObject(typeToResolve, lifeCycle, resolveFrom, parameters);
 
@@ -2292,7 +2312,7 @@ namespace UnityIoC
 
                 //check if the resolved object implements the IBindByID interface
                 var bindByID = data as IBindByID;
-                var bindingID = bindByID != null ? bindByID.GetID().ToString() : string.Empty;
+                var bindingID = bindByID != null ? bindByID.GetID().ToString() : String.Empty;
 
                 if (dataBindingTypes.Length > 0)
                 {
@@ -2305,7 +2325,7 @@ namespace UnityIoC
                         foreach (var viewType in viewTypes)
                         {
                             //resolve by ID, currently not support pools
-                            if (bindingID != string.Empty)
+                            if (bindingID != String.Empty)
                             {
                                 foreach (var assetPath in DefaultInstance.assetPaths)
                                 {
@@ -2443,6 +2463,17 @@ namespace UnityIoC
         {
             var resolveObject = (T) Resolve(typeof(T), LifeCycle.Transient, null, parameters);
 
+            var obj = resolveObject as object;
+            if (obj != null)
+            {
+                var valid = ValidateData(typeof(T), ref obj);
+                if (!valid)
+                {
+                    Context.Delete(resolveObject);
+                    return default(T);
+                }
+            }
+
             //add to a shared pool
             if (resolveObject != null) Pool<T>.AddItem(resolveObject);
 
@@ -2559,7 +2590,11 @@ namespace UnityIoC
             if (ResolvedObjects.ContainsKey(type))
             {
                 updateAction?.Invoke(obj);
-                onUpdated.Value = obj;
+                if (obj != null)
+                {
+                    if (obj != null) onUpdated.Value = obj;
+                }
+
                 UpdateView(ref obj);
 
                 return obj;
@@ -2580,7 +2615,9 @@ namespace UnityIoC
             if (ResolvedObjects.ContainsKey(type))
             {
                 updateAction?.Invoke(ref obj);
-                onUpdated.Value = obj;
+                if (obj != null)
+                    if (obj != null)
+                        onUpdated.Value = obj;
                 UpdateView(ref obj);
 
                 return obj;
@@ -2715,7 +2752,7 @@ namespace UnityIoC
                     updateAction(ref obj);
 
                     //trigger the observable
-                    onUpdated.Value = obj;
+                    if (obj != null) onUpdated.Value = obj;
 
                     //update the dataBindings
                     if (DataViewBindings.ContainsKey(objs[index]))
@@ -2781,7 +2818,7 @@ namespace UnityIoC
                     var obj = objs[index] as T;
                     updateAction(obj);
                     //trigger the observable
-                    onUpdated.Value = obj;
+                    if (obj != null) onUpdated.Value = obj;
                     //update the dataBindings
                     if (DataViewBindings.ContainsKey(objs[index]))
                     {
@@ -2803,6 +2840,7 @@ namespace UnityIoC
         /// <returns></returns>
         public static T[] GetObjects<T>() where T : class
         {
+//            Debug.Log(typeof(T));
             return ResolvedObjects[typeof(T)].Cast<T>().ToArray();
         }
 
@@ -2910,6 +2948,18 @@ namespace UnityIoC
         public static void Bind<TAbstract, TConcrete>(LifeCycle lifeCycle = LifeCycle.Default)
         {
             GetDefaultInstance(typeof(TAbstract)).container.Bind<TAbstract, TConcrete>(lifeCycle);
+        }
+
+
+        /// <summary>
+        /// Unbind a TAbstract with a TConcrete
+        /// </summary>
+        /// <param name="lifeCycle"></param>
+        /// <typeparam name="TAbstract"></typeparam>
+        /// <typeparam name="TConcrete"></typeparam>
+        public static void Unbind<TAbstract>()
+        {
+            GetDefaultInstance(typeof(TAbstract)).container.Unbind(typeof(TAbstract));
         }
 
         /// <summary>
@@ -3085,6 +3135,34 @@ namespace UnityIoC
             return GetDefaultInstance(type).GetObjectFromGameObject(obj, type);
         }
 
+        private static Observable<Exception> _onExceptionRaised;
+
+        public static Observable<Exception> onExceptionRaised
+        {
+            get
+            {
+                if (_onExceptionRaised == null)
+                {
+                    _onExceptionRaised = new Observable<Exception>();
+                }
+
+                return _onExceptionRaised;
+            }
+        }
+
+        public static Observable<T> OnExceptionRaised<T>() where T : Exception
+        {
+            var output = new Observable<T>();
+            onExceptionRaised.Subscribe(ex =>
+            {
+                if (ex is T obj)
+                {
+                    output.Value = obj;
+                }
+            });
+            return output;
+        }
+
         #endregion
 
         #region Settings
@@ -3114,7 +3192,7 @@ namespace UnityIoC
             /// <summary>
             /// if true, when the default instance get initialized, it will process all mono-behaviours in current active scenes. Default is true.
             /// </summary>
-            public static bool AutoBindDefaultSetting = true;
+            public static bool AutoBindDefaultSetting = false;
 
             /// <summary>
             /// Pool's collection will be constructed by Set, instead of List. Default is false.
@@ -3133,6 +3211,40 @@ namespace UnityIoC
         }
 
         #endregion
+
+        public static ICollection<ValidState> GetValidators(Type type)
+        {
+            if (!ValidatorCollection.ContainsKey(type))
+            {
+                ValidatorCollection[type] = new HashSet<ValidState>();
+            }
+
+            return ValidatorCollection[type];
+        }
+
+        public static bool RemoveConstraint(Type dataType, string msg = null)
+        {
+            if (ValidatorCollection.ContainsKey(dataType))
+            {
+                if (!String.IsNullOrEmpty(msg))
+                {
+                    var validStates = ValidatorCollection[dataType];
+                    foreach (var validState in validStates.ToList())
+                    {
+                        if (validState.message == msg)
+                        {
+                            validStates.Remove(validState);
+                        }
+                    }
+
+                    return true;
+                }
+
+                return ValidatorCollection.Remove(dataType);
+            }
+
+            return true;
+        }
     }
 }
 

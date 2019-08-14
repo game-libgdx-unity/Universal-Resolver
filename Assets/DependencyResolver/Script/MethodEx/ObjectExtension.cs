@@ -10,6 +10,7 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 public static class ObjectExtension
 {
@@ -45,6 +46,26 @@ public static class ObjectExtension
         return dst as T;
     }
 
+    
+
+    public static T Clone<T>(this Object source) where T : Object
+    {
+        if (typeof(T).IsSubclassOf(typeof(Object)))
+        {
+            var clone = Object.Instantiate(source as Object);
+            return (T) clone;
+        }
+        
+        var serialized = JsonUtility.ToJson(source);
+        return JsonUtility.FromJson<T>(serialized);
+    }
+    
+
+    public static T Clone<T>(this T source)
+    {
+        return JsonClone(source);
+    }
+    
     public static T BinaryClone<T>(this T objSource)
     {
         if (objSource == null)

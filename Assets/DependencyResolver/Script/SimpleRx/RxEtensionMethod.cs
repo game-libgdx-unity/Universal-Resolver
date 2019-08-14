@@ -13,6 +13,7 @@ using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityIoC;
+using Action = System.Action;
 using Object = UnityEngine.Object;
 using PropertyAttribute = UnityEngine.PropertyAttribute;
 #if UNITY_EDITOR

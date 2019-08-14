@@ -6,6 +6,8 @@
  **/
 
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -255,7 +257,7 @@ namespace UnityIoC
                             .Replace("{scene}",
                                 SceneManager.GetActiveScene().name)
                             .Replace("{type}", TypeName)
-                            .Replace("{id}", string.Empty);
+                            .Replace("{id}", String.Empty);
 
                         prefab = MyResources.Load<GameObject>(path);
                         if (prefab)
@@ -314,6 +316,36 @@ namespace UnityIoC
 
                 Instance = null;
             }
+        }
+
+        private static IDictionary<Type, ICollection<ValidState>> validatorlist;
+
+        public static bool ValidateData(Type type, ref object data)
+        {
+            var result = true;
+            var validStates = GetValidators(type);
+            foreach (var validState in validStates)
+            {
+                var validator = validState.predicator;
+                if (!validator(ref data))
+                {
+                    result = false;
+                    var exception = new InvalidDataException(validState.message);
+                    exception.Data.Add("data", data.Clone());
+                    Context.onExceptionRaised.Value = exception;
+                    break;
+                }
+            }
+
+            return result;
+        }
+
+        public static bool RemoveConstraint(ValidState.Predicator validator, string msg = null)
+        {
+            var methodInfo = validator.Method;
+            var dataType = methodInfo.GetParameters().FirstOrDefault()?.ParameterType;
+
+            return RemoveConstraint(dataType, msg);
         }
     }
 }

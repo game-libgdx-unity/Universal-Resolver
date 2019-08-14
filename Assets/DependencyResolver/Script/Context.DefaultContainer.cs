@@ -238,8 +238,9 @@ namespace UnityIoC
                             debug.Log("Unbind {0} registered for {1}", data.ImplementedType,
                                 data.AbstractType);
 
-                            RemoveRegisteredObjectFromCache(registeredObject);
+                            RemoveRegisteredObjectsFromCache(registeredObject);
                             registeredObjects.RemoveAt(i);
+                            registeredTypes.Remove(data.AbstractType);
                             i--;
                         }
                     }
@@ -248,8 +249,9 @@ namespace UnityIoC
                         debug.Log("Unbind {0} registered for {1}", data.ImplementedType,
                             data.AbstractType);
 
-                        RemoveRegisteredObjectFromCache(registeredObject);
+                        RemoveRegisteredObjectsFromCache(registeredObject);
                         registeredObjects.RemoveAt(i);
+                        registeredTypes.Remove(data.AbstractType);
                         i--;
                     }
                 }
@@ -278,8 +280,27 @@ namespace UnityIoC
 
                 return item;
             }
+            
+            public void Unbind(Type abstractType)
+            {
+                for (var i = 0; i < registeredObjects.Count; i++)
+                {
+                    var registeredObject = registeredObjects[i];
 
-            private void RemoveRegisteredObjectFromCache(RegisteredObject registeredObject)
+                    if (registeredObject.AbstractType != abstractType)
+                        continue;
+
+                    debug.Log("Unbind {0} registered for {1}", registeredObject.ImplementedType,
+                        registeredObject.AbstractType);
+                    
+                    RemoveRegisteredObjectsFromCache(registeredObject);
+                    registeredObjects.RemoveAt(i);
+                    registeredTypes.Remove(abstractType);
+                    i--;
+                }
+            }
+
+            private void RemoveRegisteredObjectsFromCache(RegisteredObject registeredObject)
             {
                 foreach (var item in CachedResolveResults.Where(kvp => kvp.Value == registeredObject).ToList())
                 {
@@ -314,6 +335,8 @@ namespace UnityIoC
                         debug.Log("Already registered type of " + typeToResolve + " will unbind them first");
 
 //                        RemoveRegisteredObjectFromCache(registeredObject);
+                        
+                        registeredTypes.Remove(typeToResolve);
                         registeredObjects.RemoveAll(r =>
                             r.ImplementedType == typeConcrete && r.AbstractType == typeToResolve);
                     }
@@ -383,7 +406,7 @@ namespace UnityIoC
                 Type resolveFrom = null,
                 params object[] parameters
             )
-            {
+            {                
                 ResolveInput resolveInput = new ResolveInput();
 
                 //quick return for some particular types & cases.
@@ -400,7 +423,7 @@ namespace UnityIoC
                     if (parameters != null && parameters.Length == 1 && parameters[0] is string)
                         return parameters[0];
 
-                    return string.Empty;
+                    return String.Empty;
                 }
 
                 if (abstractType.IsSubclassOf(typeof(ScriptableObject)) && parameters != null &&
@@ -751,6 +774,47 @@ namespace UnityIoC
                     yield return ResolveObject(parameter.ParameterType, LifeCycle.Default, type, null);
                 }
             }
+        }
+
+        public static IDictionary<Type, ICollection<ValidState>> ValidatorCollection
+        {
+            get
+            {
+                if (validatorlist == null)
+                {
+                    validatorlist = new Dictionary<Type, ICollection<ValidState>>();
+                }
+
+                return validatorlist;
+            }
+        }
+
+        public static void AddConstraint(
+            Type dataType,
+            ValidState.Predicator validator,
+            string msg,
+            When action = When.Resolve
+        )
+        {
+            if (dataType != null)
+            {
+                ValidState vs = new ValidState();
+                vs.predicator = validator;
+                vs.message = msg;
+                vs.action = action;
+
+                if (!ValidatorCollection.ContainsKey(dataType))
+                {
+                    ValidatorCollection[dataType] = new HashSet<ValidState>();
+                }
+
+                ValidatorCollection[dataType].Add(vs);
+            }
+        }
+
+        public static void ClearConstraints()
+        {
+            validatorlist?.Clear();
         }
     }
 }
