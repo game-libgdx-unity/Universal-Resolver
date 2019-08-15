@@ -13,12 +13,10 @@ namespace UnityIoC
     /// </summary>
     public static class UniversalResolverDebug
     {
-        public static bool EnableLogging = true;
-
         [Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
         public static void Log(this Logger logger, string s, params object[] param)
         {
-            if (EnableLogging && logger.enableLogging)
+            if (Context.Setting.EnableLogging && logger.enableLogging)
             {
                 UnityEngine.Debug.LogFormat("{0}\t{1}", logger.type.Name,
                     string.Format(s.CapitalizeFirstChar(), param));
@@ -28,7 +26,7 @@ namespace UnityIoC
         [Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
         public static void LogError(this Logger logger, string s, params object[] param)
         {
-            if (EnableLogging && logger.enableLogging)
+            if (Context.Setting.EnableLogging && logger.enableLogging)
             {
                 UnityEngine.Debug.LogErrorFormat("{0}\t{1}", logger.type.Name,
                     string.Format(s.CapitalizeFirstChar(), param));
@@ -38,28 +36,28 @@ namespace UnityIoC
         [Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
         public static void Log(string s, params object[] param)
         {
-            if (!EnableLogging) return;
+            if (!Context.Setting.EnableLogging) return;
             UnityEngine.Debug.LogFormat(s.TabAndCapitalizeFirstChar(), param);
         }
 
         [Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
         public static void LogError(string s, params object[] param)
         {
-            if (!EnableLogging) return;
+            if (!Context.Setting.EnableLogging) return;
             UnityEngine.Debug.LogErrorFormat(s.TabAndCapitalizeFirstChar(), param);
         }
 
         [Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
         public static void LogFormat(string s, params object[] param)
         {
-            if (!EnableLogging) return;
+            if (!Context.Setting.EnableLogging) return;
             UnityEngine.Debug.LogFormat(s.TabAndCapitalizeFirstChar(), param);
         }
 
         [Conditional("UNITY_EDITOR"), Conditional("DEVELOPMENT_BUILD")]
         public static void LogErrorFormat(string s, params object[] param)
         {
-            if (!EnableLogging) return;
+            if (!Context.Setting.EnableLogging) return;
             UnityEngine.Debug.LogErrorFormat(s.TabAndCapitalizeFirstChar(), param);
         }
 

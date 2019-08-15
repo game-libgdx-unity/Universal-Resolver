@@ -111,7 +111,7 @@ public class ContextBehaviour : MonoBehaviour
 
     void Awake()
     {
-        UniversalResolverDebug.EnableLogging = enableLogging;
+        Context.Setting.EnableLogging = enableLogging;
 
         if (!string.IsNullOrEmpty(DefaultBundleName))
         {

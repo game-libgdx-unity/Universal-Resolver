@@ -332,7 +332,7 @@ namespace UnityIoC
                     result = false;
                     var exception = new InvalidDataException(validState.message);
                     exception.Data.Add("data", data.Clone());
-                    Context.onExceptionRaised.Value = exception;
+                    Context.onEventRaised.Value = exception;
                     break;
                 }
             }

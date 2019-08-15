@@ -12,7 +12,7 @@ public class MineSweeper : MonoBehaviour
     private void Awake()
     {
         Debug.LogFormat("Time loading scene: {0}", Time.realtimeSinceStartup);
-        UniversalResolverDebug.EnableLogging = false;
+        Context.Setting.EnableLogging = false;
 
         var b = Benchmark.Start();
 

@@ -2204,10 +2204,10 @@ namespace UnityIoC
             ViewPools.Clear();
 
             //recycle the observable
-            if (!onExceptionRaised.IsDisposed)
+            if (!onEventRaised.IsDisposed)
             {
-                _onExceptionRaised.Dispose();
-                _onExceptionRaised = null;
+                _onEventRaised.Dispose();
+                _onEventRaised = null;
             }
 
             //recycle the observable
@@ -3135,25 +3135,25 @@ namespace UnityIoC
             return GetDefaultInstance(type).GetObjectFromGameObject(obj, type);
         }
 
-        private static Observable<Exception> _onExceptionRaised;
+        private static Observable<Exception> _onEventRaised;
 
-        public static Observable<Exception> onExceptionRaised
+        public static Observable<Exception> onEventRaised
         {
             get
             {
-                if (_onExceptionRaised == null)
+                if (_onEventRaised == null)
                 {
-                    _onExceptionRaised = new Observable<Exception>();
+                    _onEventRaised = new Observable<Exception>();
                 }
 
-                return _onExceptionRaised;
+                return _onEventRaised;
             }
         }
 
-        public static Observable<T> OnExceptionRaised<T>() where T : Exception
+        public static Observable<T> OnEventRaised<T>()
         {
             var output = new Observable<T>();
-            onExceptionRaised.Subscribe(ex =>
+            onEventRaised.Subscribe(ex =>
             {
                 if (ex is T obj)
                 {
@@ -3208,6 +3208,8 @@ namespace UnityIoC
             /// While running in editor, always load from resources before searching in asset bundles
             /// </summary>
             public static bool EditorLoadFromResource = true;
+
+            public static bool EnableLogging = true;
         }
 
         #endregion

@@ -18,7 +18,7 @@ namespace SceneTest
 		void Start () {
 			
 			//disable context logs to console
-			UnityIoC.UniversalResolverDebug.EnableLogging = false;
+			Context.Setting.EnableLogging = false;
 			
 			
 			//create a context with automatic load binding setting from current assembly name

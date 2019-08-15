@@ -10,7 +10,9 @@ public class TestUnbind : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        Context.Setting.EnableLogging = false;
         
+        var msg = "Maximun count of IAstract reached";
         Context.AddConstraint(typeof(IAbstract), (ref object o) =>
             {
                 var countAbstract = Pool<IAbstract>.List.Count;
@@ -20,9 +22,15 @@ public class TestUnbind : MonoBehaviour
                 }
                 return true;
             }
-            , "Maximun count of IAstract reached");
+            , msg);
 
-        Context.OnExceptionRaised<InvalidDataException>().SubscribeToConsole("Exception");
+        Context.OnResolved<IAbstract>().SubscribeToConsole("IAbstract");
+        
+        Context.OnResolved<ImplClass>().SubscribeToConsole("ImplCLass");
+        
+        Context.OnResolved<ImplClass2>().SubscribeToConsole("ImplCLass 2");
+
+        Context.OnEventRaised<InvalidDataException>().SubscribeToConsole("Exception");
         
         Context.Bind<IAbstract, ImplClass>();
 
@@ -41,5 +49,13 @@ public class TestUnbind : MonoBehaviour
         
         count = Pool<IAbstract>.List.Count;
         Debug.Log("C: "+count);
+
+        var success = Context.RemoveConstraint(typeof(IAbstract), msg);
+        Debug.Log("Remove constraint: "+success);
+        
+        Context.Resolve<IAbstract>();
+        count = Pool<IAbstract>.List.Count;
+        Debug.Log("C: "+count);
+
     }
 }
