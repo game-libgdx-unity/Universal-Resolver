@@ -205,8 +205,7 @@ namespace UnityIoC
 
                 if (registeredTypes.Contains(typeof(TTypeToResolve)))
                 {
-                    debug.Log("Cannot register a Type twice");
-                    return;
+                    Unbind<TTypeToResolve>();
                 }
 
                 debug.Log("register type: " + typeof(TTypeToResolve));

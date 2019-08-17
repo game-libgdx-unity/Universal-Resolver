@@ -38,8 +38,6 @@ public class TestUnbind : MonoBehaviour
         var deleteOne = Context.Resolve<IAbstract>();
         deleteOne.DoSomething();
 
-        Context.Unbind<IAbstract>();
-
         Context.Bind<IAbstract, ImplClass2>();
 
         var cantDelete = Context.Resolve<IAbstract>();
