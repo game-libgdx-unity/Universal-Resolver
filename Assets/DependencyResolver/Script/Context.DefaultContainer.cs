@@ -775,46 +775,5 @@ namespace UnityIoC
                 }
             }
         }
-
-        public static IDictionary<Type, ICollection<ValidState>> ValidatorCollection
-        {
-            get
-            {
-                if (validatorlist == null)
-                {
-                    validatorlist = new Dictionary<Type, ICollection<ValidState>>();
-                }
-
-                return validatorlist;
-            }
-        }
-
-        public static void AddConstraint(
-            Type dataType,
-            ValidState.Predicator validator,
-            string msg,
-            When action = When.Resolve
-        )
-        {
-            if (dataType != null)
-            {
-                ValidState vs = new ValidState();
-                vs.predicator = validator;
-                vs.message = msg;
-                vs.action = action;
-
-                if (!ValidatorCollection.ContainsKey(dataType))
-                {
-                    ValidatorCollection[dataType] = new HashSet<ValidState>();
-                }
-
-                ValidatorCollection[dataType].Add(vs);
-            }
-        }
-
-        public static void ClearConstraints()
-        {
-            validatorlist?.Clear();
-        }
     }
 }

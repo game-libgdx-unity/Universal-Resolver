@@ -50,6 +50,11 @@ public static class ObjectExtension
 
     public static T Clone<T>(this Object source) where T : Object
     {
+        if (source == null)
+        {
+            return default(T);
+        }
+        
         if (typeof(T).IsSubclassOf(typeof(Object)))
         {
             var clone = Object.Instantiate(source as Object);
@@ -61,8 +66,19 @@ public static class ObjectExtension
     }
     
 
-    public static T Clone<T>(this T source)
+    public static object Clone(this object source)
     {
+        
+        if (source == null)
+        {
+            return null;
+        }
+        
+        if (source.GetType().IsSubclassOf(typeof(Object)))
+        {
+            return ((Object) source).Clone<Object>();
+        }
+
         return JsonClone(source);
     }
     
@@ -87,6 +103,11 @@ public static class ObjectExtension
 
     public static T JsonClone<T>(this T source)
     {
+        if (source == null)
+        {
+            return default(T);
+        }
+        
         var serialized = JsonUtility.ToJson(source);
         return JsonUtility.FromJson<T>(serialized);
     }
@@ -104,10 +125,12 @@ public static class ObjectExtension
     }
 
     public static T DeepCloneObject<T>(this T objSource)
-
     {
-        //Get the type of source object and create a new instance of that type
-
+        if (objSource == null)
+        {
+            return default(T);
+        }
+        
         Type typeSource = objSource.GetType();
 
         object objTarget = null;

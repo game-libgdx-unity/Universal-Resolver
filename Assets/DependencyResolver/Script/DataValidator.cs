@@ -8,10 +8,13 @@ namespace UnityIoC
     [Flags]
     public enum When
     {
-        Resolve = 1,
-        Update = 2,
-        Delete = 3,
-        All = Resolve | Update | Delete
+        BeforeResolve = 1 << 0,
+        AfterResolve = 1 << 1,
+        BeforeUpdate = 1 << 2,
+        AfterUpdate = 1 << 3,
+        BeforeDelete = 1 << 4,
+        AfterDelete = 1 << 5,
+        All = BeforeResolve | AfterResolve| BeforeUpdate | AfterUpdate | BeforeDelete | AfterDelete
     }
 
     public class ValidState
@@ -20,6 +23,6 @@ namespace UnityIoC
 
         public Predicator predicator;
         public string message;
-        public When action;
+        public When when;
     }
 }

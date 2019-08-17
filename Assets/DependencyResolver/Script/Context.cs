@@ -8,11 +8,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
@@ -42,7 +40,7 @@ namespace UnityIoC
         /// <summary>
         /// Automatic binding a external setting file with the same name as the assembly's
         /// </summary>
-        private bool autoFindSetting = false;
+        private bool autoFindSetting;
 
         /// <summary>
         /// A targeted Type that context will retrieve its assembly for initializations.
@@ -1009,8 +1007,8 @@ namespace UnityIoC
                 defaultInstance = this;
             }
 
-            this.DisableProcessAllBehaviour = disableProcessAllBehaviours;
-            this.autoFindSetting = automaticBinding;
+            DisableProcessAllBehaviour = disableProcessAllBehaviours;
+            autoFindSetting = automaticBinding;
             if (assetPaths != null && assetPaths.Length > 0)
             {
                 assetPaths.CopyTo(this.assetPaths, 0);
@@ -1297,7 +1295,6 @@ namespace UnityIoC
             if (bs)
             {
                 LoadBindingSetting(bs);
-                return;
             }
         }
 
@@ -1562,14 +1559,6 @@ namespace UnityIoC
 
 
         private static Observable<Exception> _onError;
-
-        /// <summary>
-        /// Validate data model
-        /// </summary>
-        internal static bool ValidateData<T>(ref T data)
-        {
-            return true;
-        }
 
         /// <summary>
         /// just a private variable
@@ -2193,7 +2182,7 @@ namespace UnityIoC
             {
                 SceneManager.sceneLoaded -= SceneManagerOnSceneLoaded;
             }
-            
+
             //remove constraints
             ClearConstraints();
 
@@ -2272,11 +2261,6 @@ namespace UnityIoC
             params object[] parameters)
         {
             var context = GetDefaultInstance(typeToResolve);
-
-            //todo: add  onDataValidated
-            //todo: add  onExceptionRaised (invalidated or sth else)
-
-
             var resolveObject = context.ResolveObject(typeToResolve, lifeCycle, resolveFrom, parameters);
 
             if (resolveObject != null)
@@ -2461,15 +2445,26 @@ namespace UnityIoC
         public static T Resolve<T>(
             params object[] parameters)
         {
-            var resolveObject = (T) Resolve(typeof(T), LifeCycle.Transient, null, parameters);
-
+            T resolveObject = default(T);
             var obj = resolveObject as object;
+            var valid = ValidateData(typeof(T), ref obj, When.BeforeResolve);
+            if (!valid)
+            {
+                return default(T);
+            }
+
+            if (resolveObject == null)
+            {
+                resolveObject = (T) Resolve(typeof(T), LifeCycle.Transient, null, parameters);
+            }
+
+            obj = resolveObject;
             if (obj != null)
             {
-                var valid = ValidateData(typeof(T), ref obj);
+                valid = ValidateData(typeof(T), ref obj, When.AfterResolve);
                 if (!valid)
                 {
-                    Context.Delete(resolveObject);
+                    Delete(resolveObject);
                     return default(T);
                 }
             }
@@ -2578,21 +2573,58 @@ namespace UnityIoC
             return Resolve<T>(parents, lifeCycle, resolveFrom, parameters);
         }
 
+        public static void Update<T>(object key, T obj) where T : IBindByID
+        {
+            var id = obj.GetID();
+            if (!obj.Equals(key))
+            {
+                onEventRaised.Value = new InvalidDataException("Id and Object's Id do not match!");
+                return;
+            }
+
+            Func<T, bool> filter = o => o.GetID().Equals(key);
+            RefAction<T> updater = (ref T o) => o = (T) obj.Clone();
+
+            Update(filter, updater);
+        }
+
         /// <summary>
-        /// Update objects from resolvedObject cache by an action
+        /// Update objects from resolvedObjects cache by an action
         /// </summary>
         /// <param name="filter"></param>
         /// <param name="updateAction"></param>
         /// <typeparam name="T"></typeparam>
         public static T Update<T>(T obj, Action<T> updateAction = null)
         {
+            var data = obj as object;
+            if (data != null)
+            {
+                var valid = ValidateData(typeof(T), ref data, When.BeforeUpdate);
+                if (!valid)
+                {
+                    return default(T);
+                }
+            }
+
             var type = typeof(T);
             if (ResolvedObjects.ContainsKey(type))
             {
                 updateAction?.Invoke(obj);
                 if (obj != null)
                 {
-                    if (obj != null) onUpdated.Value = obj;
+                    if (obj != null)
+                    {
+                        onUpdated.Value = obj;
+                    }
+                }
+
+                if (data != null)
+                {
+                    var valid = ValidateData(typeof(T), ref data, When.AfterUpdate);
+                    if (!valid)
+                    {
+                        return default(T);
+                    }
                 }
 
                 UpdateView(ref obj);
@@ -2604,20 +2636,40 @@ namespace UnityIoC
         }
 
         /// <summary>
-        /// Update objects as ref from resolvedObject cache by an action
+        /// Update objects as ref from resolvedObjects cache by an action
         /// </summary>
         /// <param name="filter"></param>
         /// <param name="updateAction"></param>
         /// <typeparam name="T"></typeparam>
         public static T Update<T>(ref T obj, RefAction<T> updateAction = null)
         {
+            var data = obj as object;
+            if (data != null)
+            {
+                var valid = ValidateData(typeof(T), ref data, When.BeforeUpdate);
+                if (!valid)
+                {
+                    return default(T);
+                }
+            }
+
             var type = typeof(T);
             if (ResolvedObjects.ContainsKey(type))
             {
                 updateAction?.Invoke(ref obj);
+
                 if (obj != null)
-                    if (obj != null)
-                        onUpdated.Value = obj;
+                    onUpdated.Value = obj;
+
+                if (data != null)
+                {
+                    var valid = ValidateData(typeof(T), ref data, When.AfterUpdate);
+                    if (!valid)
+                    {
+                        return default(T);
+                    }
+                }
+
                 UpdateView(ref obj);
 
                 return obj;
@@ -2702,13 +2754,20 @@ namespace UnityIoC
         /// <summary>
         /// Delete an object of a type from resolvedObject cache
         /// </summary>
-        /// <param name="filter"></param>
-        /// <param name="updateAction"></param>
-        /// <typeparam name="T"></typeparam>
         public static void Delete<T>(Func<T, bool> filter)
         {
-            Update(filter, (ref T obj) => obj = default(T));
+            Update(filter, (ref T obj) => obj = default(T), true);
         }
+        
+        /// <summary>
+        /// Delete an object by its Id
+        /// </summary>
+        public static void Delete<T>(object key) where T : IBindByID
+        {
+            Func<T, bool> filter = o => o.GetID().Equals(key);
+            Delete(filter);
+        }
+
 
         /// <summary>
         /// Delete an object of a type from resolvedObject cache
@@ -2718,7 +2777,17 @@ namespace UnityIoC
         /// <typeparam name="T"></typeparam>
         public static void Delete<T>(T @object)
         {
-            Update(o => ReferenceEquals(o, @object), (ref T obj) => obj = default(T));
+            var data = @object as object;
+            if (data != null)
+            {
+                var valid = ValidateData(typeof(T), ref data, When.BeforeDelete);
+                if (!valid)
+                {
+                    return;
+                }
+            }
+
+            Update(o => ReferenceEquals(o, @object), (ref T obj) => obj = default(T), true);
         }
 
         /// <summary>
@@ -2729,7 +2798,7 @@ namespace UnityIoC
         /// <typeparam name="T"></typeparam>
         public static void DeleteAll<T>()
         {
-            Update(o => true, (ref T obj) => obj = default(T));
+            Update(o => true, (ref T obj) => obj = default(T), true);
         }
 
         /// <summary>
@@ -2738,63 +2807,107 @@ namespace UnityIoC
         /// <param name="filter"></param>
         /// <param name="updateAction"></param>
         /// <typeparam name="T"></typeparam>
-        public static void Update<T>(Func<T, bool> filter, RefAction<T> updateAction)
+        public static void Update<T>(Func<T, bool> filter, RefAction<T> updateAction, bool isDelete = false)
         {
-            var type = typeof(T);
-            if (ResolvedObjects.ContainsKey(type))
+            var updateType = typeof(T);
+
+            foreach (var type in ResolvedObjects.Keys.Where(
+                t => t == updateType ||
+                     t.IsSubclassOf(updateType) ||
+                     updateType.IsAssignableFrom(t)))
             {
-                var objs = ResolvedObjects[type].Where(o => filter((T) o)).ToArray();
-                for (var index = 0; index < objs.Length; index++)
+                if (ResolvedObjects.ContainsKey(type))
                 {
-                    //call the delegate
-                    var obj = (T) objs[index];
-
-                    updateAction(ref obj);
-
-                    //trigger the observable
-                    if (obj != null) onUpdated.Value = obj;
-
-                    //update the dataBindings
-                    if (DataViewBindings.ContainsKey(objs[index]))
+                    var objs = ResolvedObjects[type].Where(o => filter((T) o)).ToArray();
+                    for (var index = 0; index < objs.Length; index++)
                     {
-                        var viewLayers = DataViewBindings[objs[index]];
+                        //call the delegate
+                        var obj = (T) objs[index];
 
-                        foreach (var viewLayer in viewLayers)
+                        var data = obj.Clone();
+                        if (!isDelete && data != null)
                         {
-                            if (obj == null)
+                            var valid = ValidateData(typeof(T), ref objs[index], When.BeforeUpdate);
+                            if (!valid)
                             {
-                                //remove view if data is null
-                                var viewAsBehaviour = viewLayer as MonoBehaviour;
-                                if (viewAsBehaviour != null)
-                                {
-                                    if (Setting.CreateViewFromPool)
-                                    {
-                                        viewAsBehaviour.gameObject.SetActive(false);
-                                    }
-                                    else
-                                    {
-                                        Object.Destroy(viewAsBehaviour.gameObject);
-                                    }
-                                }
-
-                                DataViewBindings.Remove(objs[index]);
-                            }
-                            else
-                            {
-                                var mi = viewLayer.GetType().GetMethod("OnNext");
-                                mi.Invoke(viewLayer, new object[] {obj});
+                                continue;
                             }
                         }
-                    }
 
-                    if (obj == null)
-                    {
-                        //remove the old object if data is null
-                        onDisposed.Value = objs[index];
-                        //remove from a shared pool
-                        Pool<T>.RemoveItem((T) objs[index]);
+                        //Do update
+                        updateAction(ref obj);
+                        //trigger the observable
+                        if (obj != null) onUpdated.Value = obj;
+
+
+                        //callback post back
+                        if (obj == null)
+                        {
+                            object o = null;
+                            var valid = ValidateData(typeof(T), ref o, When.AfterDelete);
+                            if (!valid)
+                            {
+                                //undo the null assignment
+                                objs[index] = data;
+                                continue;
+                            }
+
+                            Pool<T>.RemoveItem((T) objs[index]);
+                        }
+                        else
+                        {
+                            object o = obj;
+                            var valid = ValidateData(typeof(T), ref o, When.AfterUpdate);
+                            if (!valid)
+                            {
+                                //undo the null assignment
+                                objs[index] = data;
+                                continue;
+                            }
+                        }
+
+                        //update the dataBindings
+                        if (DataViewBindings.ContainsKey(objs[index]))
+                        {
+                            var viewLayers = DataViewBindings[objs[index]];
+
+                            foreach (var viewLayer in viewLayers)
+                            {
+                                if (obj == null)
+                                {
+                                    //remove view if data is null
+                                    var viewAsBehaviour = viewLayer as MonoBehaviour;
+                                    if (viewAsBehaviour != null)
+                                    {
+                                        if (Setting.CreateViewFromPool)
+                                        {
+                                            viewAsBehaviour.gameObject.SetActive(false);
+                                        }
+                                        else
+                                        {
+                                            Object.Destroy(viewAsBehaviour.gameObject);
+                                        }
+                                    }
+
+                                    DataViewBindings.Remove(objs[index]);
+                                }
+                                else
+                                {
+                                    var mi = viewLayer.GetType().GetMethod("OnNext");
+                                    mi.Invoke(viewLayer, new object[] {obj});
+                                }
+                            }
+                        }
+
+                        if (obj == null)
+                        {
+                            //remove the old object if data is null
+                            onDisposed.Value = objs[index];
+                            //remove from a shared pool
+                            Pool<T>.RemoveItem((T) objs[index]);
 //                        //remove obj from the interal cache of resolved objects
 //                        ResolvedObjects[type].Remove(objs[index]);
+                        }
                     }
                 }
             }
@@ -2816,6 +2929,17 @@ namespace UnityIoC
                 {
                     //call the delegate
                     var obj = objs[index] as T;
+
+                    var data = obj as object;
+                    if (data != null)
+                    {
+                        var valid = ValidateData(typeof(T), ref data, When.BeforeUpdate);
+                        if (!valid)
+                        {
+                            continue;
+                        }
+                    }
+
                     updateAction(obj);
                     //trigger the observable
                     if (obj != null) onUpdated.Value = obj;
@@ -3135,15 +3259,15 @@ namespace UnityIoC
             return GetDefaultInstance(type).GetObjectFromGameObject(obj, type);
         }
 
-        private static Observable<Exception> _onEventRaised;
+        private static Observable<object> _onEventRaised;
 
-        public static Observable<Exception> onEventRaised
+        public static Observable<object> onEventRaised
         {
             get
             {
                 if (_onEventRaised == null)
                 {
-                    _onEventRaised = new Observable<Exception>();
+                    _onEventRaised = new Observable<object>();
                 }
 
                 return _onEventRaised;
@@ -3213,6 +3337,48 @@ namespace UnityIoC
         }
 
         #endregion
+
+
+        public static IDictionary<Type, ICollection<ValidState>> ValidatorCollection
+        {
+            get
+            {
+                if (validatorlist == null)
+                {
+                    validatorlist = new Dictionary<Type, ICollection<ValidState>>();
+                }
+
+                return validatorlist;
+            }
+        }
+
+        public static void AddConstraint(
+            Type dataType,
+            ValidState.Predicator validator,
+            string msg,
+            When action = When.All
+        )
+        {
+            if (dataType != null)
+            {
+                ValidState vs = new ValidState();
+                vs.predicator = validator;
+                vs.message = msg;
+                vs.when = action;
+
+                if (!ValidatorCollection.ContainsKey(dataType))
+                {
+                    ValidatorCollection[dataType] = new HashSet<ValidState>();
+                }
+
+                ValidatorCollection[dataType].Add(vs);
+            }
+        }
+
+        public static void ClearConstraints()
+        {
+            validatorlist?.Clear();
+        }
 
         public static ICollection<ValidState> GetValidators(Type type)
         {

@@ -320,20 +320,23 @@ namespace UnityIoC
 
         private static IDictionary<Type, ICollection<ValidState>> validatorlist;
 
-        public static bool ValidateData(Type type, ref object data)
+        public static bool ValidateData(Type type, ref object data, When when)
         {
             var result = true;
             var validStates = GetValidators(type);
             foreach (var validState in validStates)
             {
-                var validator = validState.predicator;
-                if (!validator(ref data))
+                if ((validState.when & when) == when || (when & validState.when) == validState.when)
                 {
-                    result = false;
-                    var exception = new InvalidDataException(validState.message);
-                    exception.Data.Add("data", data.Clone());
-                    Context.onEventRaised.Value = exception;
-                    break;
+                    var validator = validState.predicator;
+                    if (!validator(ref data))
+                    {
+                        result = false;
+                        var exception = new InvalidDataException(validState.message);
+                        exception.Data.Add("data", data.Clone());
+                        onEventRaised.Value = exception;
+                        break;
+                    }
                 }
             }
 
