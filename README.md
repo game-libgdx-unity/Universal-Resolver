@@ -3,7 +3,13 @@ Version:     1.0.6
 
 Thanks for trying Universal Resolver!
 
-Unity3d provides you a few ways to resolve your dependencies, however Universal Resolver even make it more easy and reduce your repetitive code. Inspired from Reactive Programming & Redux State Management. Universal Resolver is an advanced & automatic IoC Framework built on Generic & Reflection API, which is a combination of binding settings as scriptable objects, convenient static class-level API,  along with C# Attributes which allow you to resolve any fields, constructors, methods or properties as [Component], [Singleton], [Prefab] or [Transient]. In this docs, we will refer "Dependency Resolver" as "Resolver/IoC" For short.
+Unity3d provides you a few ways to resolve your dependencies, however Universal Resolver even make it more easy and reduce your repetitive code. Inspired from Reactive Programming & Redux State Management. 
+
+
+This framework will help you simplify your data flow from resolving data to displaying data. Also you can write independent- loose coupled classes that easy to modularize & test your systems.
+
+
+Universal Resolver is an advanced & automatic IoC Framework built on Generic & Reflection API, which is a combination of binding settings as scriptable objects, convenient static class-level API,  along with C# Attributes which allow you to resolve any fields, constructors, methods or properties as [Component], [Singleton], [Prefab] or [Transient]. In this docs, we will refer "Dependency Resolver" as "Resolver/IoC" For short.
 
 In the folder "Assets/DependencyResolver/Samples" There are a lot of test scenes. There is a minesweeper game developed with this framework, which looks like below:
 
