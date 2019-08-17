@@ -1,8 +1,4 @@
 # Universal Resolver
-
-Programmer &amp; document writer:  Vinh Vu
-Contact email:     [Mrthanhvinh168@gmail.com](mailto:Mrthanhvinh168@gmail.com)
-My public repositories:    [https://github.com/game-libgdx-unity](https://github.com/game-libgdx-unity)
 Version:     1.0.6
 
 Thanks for trying Universal Resolver!
