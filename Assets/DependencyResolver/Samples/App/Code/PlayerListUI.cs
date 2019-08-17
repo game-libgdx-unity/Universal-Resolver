@@ -23,7 +23,7 @@ public class PlayerListUI : MonoBehaviour
     void ChangeName()
     {
         // check number of cached object
-        var objCount = Context.ResolvedObjects[typeof(PlayerData)].Count;
+        var objCount = Context.CacheOfResolvedObjects[typeof(PlayerData)].Count;
         Debug.Log(objCount);
         Debug.Assert(GetFriendNames().Count() == objCount);
     }

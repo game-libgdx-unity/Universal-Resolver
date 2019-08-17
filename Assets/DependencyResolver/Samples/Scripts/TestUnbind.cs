@@ -15,8 +15,8 @@ public class TestUnbind : MonoBehaviour
         var maxMsg = "Maximun count of IAstract reached";
         Context.AddConstraint(typeof(IAbstract), (ref object o) =>
             {
-                var countAbstract = Pool<IAbstract>.List.Count;
-                if (countAbstract >= 2)
+                var countIAbstract = Context.GetObjects<IAbstract>().Count;
+                if (countIAbstract >= 2)
                 {
                     return false;
                 }
@@ -45,12 +45,12 @@ public class TestUnbind : MonoBehaviour
         var cantDelete = Context.Resolve<IAbstract>();
         cantDelete.DoSomething();
 
-        var count = Pool<IAbstract>.List.Count;
+        var count = Context.GetObjects<IAbstract>().Count;
         Debug.Log("C: " + count); //2
 
         Context.Resolve<IAbstract>();
 
-        count = Pool<IAbstract>.List.Count;
+        count = Context.GetObjects<IAbstract>().Count;
         Debug.Log("C: " + count); //2
 
         var success = Context.RemoveConstraint(typeof(IAbstract), maxMsg);
@@ -59,27 +59,28 @@ public class TestUnbind : MonoBehaviour
         var minMsg = "Minimum count of IAstract reached";
         Context.AddConstraint(typeof(IAbstract), (ref object o) =>
             {
-                var countAbstract = Pool<IAbstract>.List.Count;
+                var countAbstract = Context.GetObjects<IAbstract>().Count;
                 if (countAbstract <= 2)
                 {
                     return false;
                 }
+
                 return true;
             }
             , minMsg, When.BeforeDelete);
 
         var newOne = Context.Resolve<IAbstract>();
         Debug.Log(newOne == null);
-        
-        count = Pool<IAbstract>.List.Count;
+
+        count = Context.GetObjects<IAbstract>().Count;
         Debug.Log("C: " + count); //3
 
         Context.Delete(deleteOne);
-        count = Pool<IAbstract>.List.Count;
+        count = Context.GetObjects<IAbstract>().Count;
         Debug.Log("C: " + count);
 
         Context.Delete(cantDelete);
-        count = Pool<IAbstract>.List.Count;
+        count = Context.GetObjects<IAbstract>().Count;
         Debug.Log("C: " + count);
     }
 }

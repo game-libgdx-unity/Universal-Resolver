@@ -616,7 +616,7 @@ namespace UnityIoC
         {
             if ((inject.LifeCycle == LifeCycle.Cache ||
                  (inject.LifeCycle & LifeCycle.Cache) == LifeCycle.Cache) &&
-                ResolvedObjects.Count > 0)
+                CacheOfResolvedObjects.Count > 0)
             {
                 return GetObjectFromCache(type);
             }
@@ -1121,12 +1121,12 @@ namespace UnityIoC
         /// <returns></returns>
         public static object GetObjectFromCache(Type type)
         {
-            if (!ResolvedObjects.ContainsKey(type))
+            if (!CacheOfResolvedObjects.ContainsKey(type))
             {
                 return null;
             }
 
-            var hashSet = ResolvedObjects[type];
+            var hashSet = CacheOfResolvedObjects[type];
 
             if (hashSet.Count == 0)
             {
@@ -1524,7 +1524,7 @@ namespace UnityIoC
         ///<summary>
         /// cache of resolved objects
         /// </summary>
-        public static Dictionary<Type, HashSet<object>> ResolvedObjects = new Dictionary<Type, HashSet<object>>();
+        public static Dictionary<Type, HashSet<object>> CacheOfResolvedObjects = new Dictionary<Type, HashSet<object>>();
 
         /// <summary>
         /// Cache of data binding of data layer & view layer
@@ -1580,13 +1580,13 @@ namespace UnityIoC
                             if (obj != null)
                             {
                                 Type type = obj.GetType();
-                                if (!ResolvedObjects.ContainsKey(type))
+                                if (!CacheOfResolvedObjects.ContainsKey(type))
                                 {
-                                    ResolvedObjects[type] = new HashSet<object>();
+                                    CacheOfResolvedObjects[type] = new HashSet<object>();
                                 }
 
                                 //add this obj to internal cache
-                                ResolvedObjects[type].Add(obj);
+                                CacheOfResolvedObjects[type].Add(obj);
 
                                 //Create view for this obj (in case it's necessary)
                                 CreateViewFromData(obj);
@@ -1662,9 +1662,9 @@ namespace UnityIoC
                             if (obj != null)
                             {
                                 Type type = obj.GetType();
-                                if (ResolvedObjects.ContainsKey(type))
+                                if (CacheOfResolvedObjects.ContainsKey(type))
                                 {
-                                    ResolvedObjects[type].Remove(obj);
+                                    CacheOfResolvedObjects[type].Remove(obj);
                                     DataViewBindings.Remove(obj);
 //                                    Pool.Remove(obj);
                                 }
@@ -1816,12 +1816,12 @@ namespace UnityIoC
         /// <summary>
         /// Call GET Method to REST api for parsed results from json.
         /// </summary>
-        public static IEnumerator GetObjects<T>(
+        public static IEnumerator GetObjectsFromCache<T>(
             string link,
             Action<T> result = null,
             Action<string> error = null)
         {
-            yield return GetObjects(link, text =>
+            yield return GetObjectsFromCache(link, text =>
             {
                 T t = ResolveFromJson<T>(text);
                 if (result != null)
@@ -1834,7 +1834,7 @@ namespace UnityIoC
         /// <summary>
         /// Call GET Method to REST api for raw string result.
         /// </summary>
-        public static IEnumerator GetObjects(
+        public static IEnumerator GetObjectsFromCache(
             string link,
             Action<string> result = null,
             Action<string> error = null)
@@ -2187,7 +2187,7 @@ namespace UnityIoC
             ClearConstraints();
 
             //remove caches
-            ResolvedObjects.Clear();
+            CacheOfResolvedObjects.Clear();
             DataViewBindings.Clear();
             Pool.Clear();
             ViewPools.Clear();
@@ -2607,7 +2607,7 @@ namespace UnityIoC
             }
 
             var type = typeof(T);
-            if (ResolvedObjects.ContainsKey(type))
+            if (CacheOfResolvedObjects.ContainsKey(type))
             {
                 updateAction?.Invoke(obj);
                 if (obj != null)
@@ -2654,7 +2654,7 @@ namespace UnityIoC
             }
 
             var type = typeof(T);
-            if (ResolvedObjects.ContainsKey(type))
+            if (CacheOfResolvedObjects.ContainsKey(type))
             {
                 updateAction?.Invoke(ref obj);
 
@@ -2811,14 +2811,14 @@ namespace UnityIoC
         {
             var updateType = typeof(T);
 
-            foreach (var type in ResolvedObjects.Keys.Where(
+            foreach (var type in CacheOfResolvedObjects.Keys.Where(
                 t => t == updateType ||
                      t.IsSubclassOf(updateType) ||
                      updateType.IsAssignableFrom(t)))
             {
-                if (ResolvedObjects.ContainsKey(type))
+                if (CacheOfResolvedObjects.ContainsKey(type))
                 {
-                    var objs = ResolvedObjects[type].Where(o => filter((T) o)).ToArray();
+                    var objs = CacheOfResolvedObjects[type].Where(o => filter((T) o)).ToArray();
                     for (var index = 0; index < objs.Length; index++)
                     {
                         //call the delegate
@@ -2922,9 +2922,9 @@ namespace UnityIoC
         public static void Update<T>(Func<T, bool> filter, Action<T> updateAction) where T : class
         {
             var type = typeof(T);
-            if (ResolvedObjects.ContainsKey(type))
+            if (CacheOfResolvedObjects.ContainsKey(type))
             {
-                var objs = ResolvedObjects[type].Where(o => filter(o as T)).ToArray();
+                var objs = CacheOfResolvedObjects[type].Where(o => filter(o as T)).ToArray();
                 for (var index = 0; index < objs.Length; index++)
                 {
                     //call the delegate
@@ -2960,12 +2960,19 @@ namespace UnityIoC
         /// <summary>
         /// Get all resolved objects of a type from resolvedObjects cache
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public static T[] GetObjects<T>() where T : class
+        public static ICollection<T> GetObjects<T>() where T : class
         {
 //            Debug.Log(typeof(T));
-            return ResolvedObjects[typeof(T)].Cast<T>().ToArray();
+            return Pool<T>.List;
+        }
+
+        /// <summary>
+        /// Get all resolved objects of a type from resolvedObjects cache
+        /// </summary>
+        public static T[] GetObjectsFromCache<T>() where T : class
+        {
+//            Debug.Log(typeof(T));
+            return CacheOfResolvedObjects[typeof(T)].Cast<T>().ToArray();
         }
 
         /// <summary>
@@ -2974,9 +2981,9 @@ namespace UnityIoC
         /// <param name="filter"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static T[] GetObjects<T>(Func<T, bool> filter) where T : class
+        public static T[] GetObjectsFromCache<T>(Func<T, bool> filter) where T : class
         {
-            return ResolvedObjects[typeof(T)].Where(p => filter(p as T)).Cast<T>().ToArray();
+            return CacheOfResolvedObjects[typeof(T)].Where(p => filter(p as T)).Cast<T>().ToArray();
         }
 
         /// <summary>
@@ -2987,7 +2994,7 @@ namespace UnityIoC
         /// <returns></returns>
         public static T GetObject<T>(Func<T, bool> filter) where T : class
         {
-            return ResolvedObjects[typeof(T)].FirstOrDefault(p => filter(p as T)) as T;
+            return CacheOfResolvedObjects[typeof(T)].FirstOrDefault(p => filter(p as T)) as T;
         }
 
         public delegate void RefAction<T>(ref T obj);
@@ -3001,9 +3008,9 @@ namespace UnityIoC
             if (obj != null)
             {
                 Type type = obj.GetType();
-                if (!ResolvedObjects.ContainsKey(type))
+                if (!CacheOfResolvedObjects.ContainsKey(type))
                 {
-                    ResolvedObjects[type] = new HashSet<object>();
+                    CacheOfResolvedObjects[type] = new HashSet<object>();
                 }
 
                 DataViewBindings.Remove(obj);
