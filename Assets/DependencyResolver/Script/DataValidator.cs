@@ -6,7 +6,7 @@ using System.Linq;
 namespace UnityIoC
 {
     [Flags]
-    public enum When
+    public enum When : byte
     {
         BeforeResolve = 1 << 0,
         AfterResolve = 1 << 1,

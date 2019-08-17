@@ -51,9 +51,20 @@ public class TestUnbind : MonoBehaviour
         count = Context.GetObjects<IAbstract>().Count;
         Debug.Log("C: " + count); //2
 
-        var success = Context.RemoveConstraint(typeof(IAbstract), maxMsg);
+        var success = Context.RemoveConstraint(typeof(IAbstract), When.AfterResolve);
         Debug.Log("Remove constraint: " + success);
+        
+        Context.Resolve<IAbstract>();
 
+        count = Context.GetObjects<IAbstract>().Count;
+        Debug.Log("C: " + count); //2
+        
+         success = Context.RemoveConstraint(typeof(IAbstract), maxMsg, When.BeforeResolve);
+        Debug.Log("Remove constraint: " + success);
+        
+        var newOne = Context.Resolve<IAbstract>();
+        
+        //Test for new constraint
         var minMsg = "Minimum count of IAstract reached";
         Context.AddConstraint(typeof(IAbstract), (ref object o) =>
             {
@@ -66,9 +77,6 @@ public class TestUnbind : MonoBehaviour
                 return true;
             }
             , minMsg, When.BeforeDelete);
-
-        var newOne = Context.Resolve<IAbstract>();
-        Debug.Log(newOne == null);
 
         count = Context.GetObjects<IAbstract>().Count;
         Debug.Log("C: " + count); //3

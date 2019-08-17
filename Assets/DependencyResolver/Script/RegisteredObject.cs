@@ -326,7 +326,7 @@ namespace UnityIoC
             var validStates = GetValidators(type);
             foreach (var validState in validStates)
             {
-                if ((validState.when & when) == when || (when & validState.when) == validState.when)
+                if (validState.when.IsEqual(when))
                 {
                     var validator = validState.predicator;
                     if (!validator(ref data))

@@ -1524,7 +1524,8 @@ namespace UnityIoC
         ///<summary>
         /// cache of resolved objects
         /// </summary>
-        public static Dictionary<Type, HashSet<object>> CacheOfResolvedObjects = new Dictionary<Type, HashSet<object>>();
+        public static Dictionary<Type, HashSet<object>>
+            CacheOfResolvedObjects = new Dictionary<Type, HashSet<object>>();
 
         /// <summary>
         /// Cache of data binding of data layer & view layer
@@ -2758,7 +2759,7 @@ namespace UnityIoC
         {
             Update(filter, (ref T obj) => obj = default(T), true);
         }
-        
+
         /// <summary>
         /// Delete an object by its Id
         /// </summary>
@@ -3397,28 +3398,32 @@ namespace UnityIoC
             return ValidatorCollection[type];
         }
 
-        public static bool RemoveConstraint(Type dataType, string msg = null)
+        public static bool RemoveConstraint(Type dataType, When when = When.All)
+        {
+            return RemoveConstraint(dataType, string.Empty, when);
+        }
+        
+        public static bool RemoveConstraint(Type dataType, string msg = null, When when = When.All)
         {
             if (ValidatorCollection.ContainsKey(dataType))
             {
-                if (!String.IsNullOrEmpty(msg))
+                var validStates = ValidatorCollection[dataType];
+                foreach (var validState in validStates.ToList())
                 {
-                    var validStates = ValidatorCollection[dataType];
-                    foreach (var validState in validStates.ToList())
+                    if (when.IsEqual(validState.when))
                     {
-                        if (validState.message == msg)
+                        var legalToRemove = string.IsNullOrEmpty(msg) || validState.message.Equals(msg);
+                        if (legalToRemove)
                         {
-                            validStates.Remove(validState);
+                            return validStates.Remove(validState);
                         }
                     }
-
-                    return true;
                 }
 
-                return ValidatorCollection.Remove(dataType);
+                return false;
             }
 
-            return true;
+            return false;
         }
     }
 }

@@ -36,5 +36,12 @@ namespace UnityIoC
 
             return (first & second) == second || firstAsByte.Equals(secondAsByte);
         }
+        public static bool IsEqual(this When when1, When when2)
+        {
+            var first = (byte) when1;
+            var second = (byte) when2;
+            
+            return (first & second) == second || first.Equals(second);
+        }
     }
 }
