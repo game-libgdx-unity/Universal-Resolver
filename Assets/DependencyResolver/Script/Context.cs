@@ -3374,13 +3374,50 @@ namespace UnityIoC
                 vs.message = msg;
                 vs.when = action;
 
-                if (!ValidatorCollection.ContainsKey(dataType))
-                {
-                    ValidatorCollection[dataType] = new HashSet<ValidState>();
-                }
-
-                ValidatorCollection[dataType].Add(vs);
+                AddToValidatorCollection(dataType, vs);
             }
+        }
+
+        private static void AddToValidatorCollection(Type dataType, ValidState vs)
+        {
+            if (!ValidatorCollection.ContainsKey(dataType))
+            {
+                ValidatorCollection[dataType] = new HashSet<ValidState>();
+            }
+
+            ValidatorCollection[dataType].Add(vs);
+        }
+
+        public static bool RemoveConstraint<T>(string msg = null, When when = When.All)
+        {
+            return RemoveConstraint(typeof(T), msg, when);
+        }
+        
+        public static bool RemoveConstraint<T>(When when = When.All)
+        {
+            return RemoveConstraint(typeof(T), string.Empty, when);
+        }
+        
+        
+        public delegate bool RefPredicator<T>(ref T obj);
+        
+        public static void AddConstraint<T>(
+            RefPredicator<T> validator,
+            string msg,
+            When action = When.All
+        )
+        {
+            var dataType = typeof(T);
+            ValidState vs = new ValidState();
+            vs.predicator = (ref object obj) =>
+            {
+                var t = (T)obj;
+                return validator(ref t);
+            };
+            vs.message = msg;
+            vs.when = action;
+
+            AddToValidatorCollection(dataType, vs);
         }
 
         public static void ClearConstraints()
@@ -3402,7 +3439,7 @@ namespace UnityIoC
         {
             return RemoveConstraint(dataType, string.Empty, when);
         }
-        
+
         public static bool RemoveConstraint(Type dataType, string msg = null, When when = When.All)
         {
             if (ValidatorCollection.ContainsKey(dataType))

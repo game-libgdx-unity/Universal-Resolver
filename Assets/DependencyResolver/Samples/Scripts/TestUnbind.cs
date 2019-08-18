@@ -13,7 +13,7 @@ public class TestUnbind : MonoBehaviour
         Context.Setting.EnableLogging = false;
 
         var maxMsg = "Maximun count of IAstract reached";
-        Context.AddConstraint(typeof(IAbstract), (ref object o) =>
+        Context.AddConstraint((ref IAbstract o) =>
             {
                 var countIAbstract = Context.GetObjects<IAbstract>().Count;
                 if (countIAbstract >= 2)
@@ -50,19 +50,15 @@ public class TestUnbind : MonoBehaviour
 
         count = Context.GetObjects<IAbstract>().Count;
         Debug.Log("C: " + count); //2
-
-        var success = Context.RemoveConstraint(typeof(IAbstract), When.AfterResolve);
-        Debug.Log("Remove constraint: " + success);
         
-        Context.Resolve<IAbstract>();
+        Context.Resolve<IAbstract>(); //count should be 3
 
         count = Context.GetObjects<IAbstract>().Count;
-        Debug.Log("C: " + count); //2
+        Debug.Log("C: " + count); //true count is still 2
         
-         success = Context.RemoveConstraint(typeof(IAbstract), maxMsg, When.BeforeResolve);
+        var success = Context.RemoveConstraint<IAbstract>(When.BeforeResolve);
         Debug.Log("Remove constraint: " + success);
-        
-        var newOne = Context.Resolve<IAbstract>();
+        Context.Resolve<IAbstract>(); //now count is true 3
         
         //Test for new constraint
         var minMsg = "Minimum count of IAstract reached";
@@ -83,10 +79,17 @@ public class TestUnbind : MonoBehaviour
 
         Context.Delete(deleteOne);
         count = Context.GetObjects<IAbstract>().Count;
-        Debug.Log("C: " + count);
+        Debug.Log("C: " + count); //2
 
         Context.Delete(cantDelete);
         count = Context.GetObjects<IAbstract>().Count;
-        Debug.Log("C: " + count);
+        Debug.Log("C: " + count); //2
+
+        success = Context.RemoveConstraint<IAbstract>(When.BeforeDelete);
+        Debug.Log("Remove constraint: " + success);
+        
+        Context.Delete(cantDelete);
+        count = Context.GetObjects<IAbstract>().Count;
+        Debug.Log("C: " + count); //1    
     }
 }
