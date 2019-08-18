@@ -3362,7 +3362,7 @@ namespace UnityIoC
 
         public static void AddConstraint(
             Type dataType,
-            ValidState.Predicator validator,
+            ValidState.Predicate validator,
             string msg,
             When action = When.All
         )
@@ -3370,7 +3370,7 @@ namespace UnityIoC
             if (dataType != null)
             {
                 ValidState vs = new ValidState();
-                vs.predicator = validator;
+                vs.predicate = validator;
                 vs.message = msg;
                 vs.when = action;
 
@@ -3399,20 +3399,38 @@ namespace UnityIoC
         }
         
         
-        public delegate bool RefPredicator<T>(ref T obj);
+        public delegate bool RefPredicate<T>(ref T obj);
         
         public static void AddConstraint<T>(
-            RefPredicator<T> validator,
+            RefPredicate<T> validator,
             string msg,
             When action = When.All
         )
         {
             var dataType = typeof(T);
             ValidState vs = new ValidState();
-            vs.predicator = (ref object obj) =>
+            vs.predicate = (ref object obj) =>
             {
                 var t = (T)obj;
                 return validator(ref t);
+            };
+            vs.message = msg;
+            vs.when = action;
+
+            AddToValidatorCollection(dataType, vs);
+        }
+        public static void AddConstraint<T>(
+            Func<T, bool> validator,
+            string msg,
+            When action = When.All
+        )
+        {
+            var dataType = typeof(T);
+            ValidState vs = new ValidState();
+            vs.predicate = (ref object obj) =>
+            {
+                var t = (T)obj;
+                return validator(t);
             };
             vs.message = msg;
             vs.when = action;

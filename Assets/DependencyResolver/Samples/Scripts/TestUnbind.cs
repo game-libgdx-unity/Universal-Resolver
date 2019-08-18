@@ -13,7 +13,7 @@ public class TestUnbind : MonoBehaviour
         Context.Setting.EnableLogging = false;
 
         var maxMsg = "Maximun count of IAstract reached";
-        Context.AddConstraint((ref IAbstract o) =>
+        Context.AddConstraint<IAbstract>(o =>
             {
                 var countIAbstract = Context.GetObjects<IAbstract>().Count;
                 if (countIAbstract >= 2)
@@ -62,7 +62,7 @@ public class TestUnbind : MonoBehaviour
         
         //Test for new constraint
         var minMsg = "Minimum count of IAstract reached";
-        Context.AddConstraint(typeof(IAbstract), (ref object o) =>
+        Context.AddConstraint<IAbstract>(o =>
             {
                 var countAbstract = Context.GetObjects<IAbstract>().Count;
                 if (countAbstract <= 2)

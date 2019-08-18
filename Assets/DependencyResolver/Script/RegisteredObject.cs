@@ -328,7 +328,7 @@ namespace UnityIoC
             {
                 if (validState.when.IsEqual(when))
                 {
-                    var validator = validState.predicator;
+                    var validator = validState.predicate;
                     if (!validator(ref data))
                     {
                         result = false;
@@ -343,7 +343,7 @@ namespace UnityIoC
             return result;
         }
 
-        public static bool RemoveConstraint(ValidState.Predicator validator, string msg = null)
+        public static bool RemoveConstraint(ValidState.Predicate validator, string msg = null)
         {
             var methodInfo = validator.Method;
             var dataType = methodInfo.GetParameters().FirstOrDefault()?.ParameterType;

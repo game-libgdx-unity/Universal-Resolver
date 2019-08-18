@@ -19,9 +19,9 @@ namespace UnityIoC
 
     public class ValidState
     {
-        public delegate bool Predicator(ref object obj);
+        public delegate bool Predicate(ref object obj);
 
-        public Predicator predicator;
+        public Predicate predicate;
         public string message;
         public When when;
     }
