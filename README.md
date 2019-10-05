@@ -11,7 +11,8 @@ This framework will help you simplify your data flow from resolving data to disp
 
 Universal Resolver is an advanced & automatic IoC Framework built on Generic & Reflection API, which is a combination of binding settings as scriptable objects, convenient static class-level API,  along with C# Attributes which allow you to resolve any fields, constructors, methods or properties as [Component], [Singleton], [Prefab] or [Transient]. In this docs, we will refer "Dependency Resolver" as "Resolver/IoC" For short.
 
-In the folder "Assets/DependencyResolver/Samples" There are a lot of test scenes. There is a minesweeper game developed with this framework, which looks like below:
+In the folder "Assets/DependencyResolver/Samples" There are a lot of unit tests or test scenes. You can see some of test scripts which looks like
+https://github.com/game-libgdx-unity/Universal-Resolver/blob/source-only/Assets/DependencyResolver/Samples/Scripts/TestUnbind.cs
 
 You can read this documentation online with latest updates at:
 
