@@ -328,7 +328,17 @@ Inversion of Control (IoC) means to create instances of dependencies first and l
 
 [https://stackoverflow.com/questions/3058/what-is-inversion-of-control](https://stackoverflow.com/questions/3058/what-is-inversion-of-control)
 
-Don't worry if you still don't get it, I'll show you how it works by examples & actions :)
+IoC is a software design principle
+Dependency injection (DI) is a method to implement the IoC Design.
+It Injects dependencies into targeted objects through:
+- Constructors
+- Methods
+- Properties
+- Variables
+- etc
+
+Universal Resolver is a managed automatic dependency resolving & injection. The resolved objects are managed by a state container inside the [Context] object. Allow you to retrieve / seek / update / pooling / destroy them easily.
+
 
 # Why should I need an IoC?
 
