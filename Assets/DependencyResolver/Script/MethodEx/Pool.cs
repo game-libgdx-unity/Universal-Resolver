@@ -35,9 +35,17 @@ public class Pool<T>
         }
     }
 
-    public static ICollection<T> GetCollection()
+    public static IEnumerable<T> GetCollection()
     {
-        return List;
+        //support for IPoolable
+        if (typeof(IPoolable).IsAssignableFrom(typeof(T)))
+        {
+            return List.Where(item => ((IPoolable)item).Alive);
+        }
+        else
+        {
+            return List;
+        }
     }
 
 
@@ -48,14 +56,34 @@ public class Pool<T>
 
     public static void RemoveItem(T item)
     {
-        List.Remove(item);
+        //support for IPoolable
+        if (typeof(IPoolable).IsAssignableFrom(typeof(T)))
+        {
+            //don't remove from Pool<T>, just set alive = false
+            ((IPoolable) item).Alive = false;
+        }
+        else
+        {
+            List.Remove(item);
+        }
     }
 
     public static void Clear()
     {
-        if (list != null)
+        //support for IPoolable
+        if (typeof(IPoolable).IsAssignableFrom(typeof(T)))
         {
-            list.Clear();
+            foreach (IPoolable item in List)
+            {
+                item.Alive = false;       
+            }
+        }
+        else
+        {
+            if (list != null)
+            {
+                list.Clear();
+            }
         }
     }
 }
@@ -81,7 +109,7 @@ public class Pool
         Type constructed = generic.MakeGenericType(type);
         var list = constructed.GetProperty("List", BindingFlags.Public | BindingFlags.Static).GetValue(null);
         GetListCache[type] = list;
-        
+
         return list;
     }
 

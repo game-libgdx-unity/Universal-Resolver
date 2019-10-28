@@ -2865,8 +2865,6 @@ namespace UnityIoC
                         updateAction(ref obj);
                         //trigger the observable
                         if (obj != null) onUpdated.Value = obj;
-
-
                         //callback post back
                         if (obj == null)
                         {
@@ -2878,7 +2876,6 @@ namespace UnityIoC
                                 objs[index] = data;
                                 continue;
                             }
-
                             Pool<T>.RemoveItem((T) objs[index]);
                         }
                         else
@@ -3333,14 +3330,14 @@ namespace UnityIoC
             public const string DefaultAssemblyName = "Assembly-CSharp";
 
             /// <summary>
-            /// This is the  name of the default assembly that Context will looking for
+            /// This is the  name of the default assembly that Context will be looking for
             /// </summary>
             public static string AssemblyName = DefaultAssemblyName;
 
             /// <summary>
-            /// Get views from pools rather than a new object. Default is false.
+            /// Get views from pools rather than a new object. Default is true.
             /// </summary>
-            public static bool CreateViewFromPool;
+            public static bool CreateViewFromPool = true;
 
             /// <summary>
             /// if true, when a new scene is unloaded, call the Dispose method. Default is false.
