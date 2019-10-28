@@ -27,7 +27,7 @@ public class MotherShip : IUpdatable
 
     
     public bool Alive { get; set; }
-    public void Init()
+    public void OnReused()
     {
     }
 }

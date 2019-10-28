@@ -12,6 +12,6 @@ namespace UnityIoC
         /// <summary>
         /// Get called when this object is retrieved from Pool
         /// </summary>
-        void Init();
+        void OnReused();
     }
 }

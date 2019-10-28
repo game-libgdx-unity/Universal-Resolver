@@ -19,7 +19,7 @@ public class DrawableObj : IUpdatable
         mesh = Resources.Load<GameObject>("zako").GetComponent<MeshFilter>().sharedMesh;
     }
 
-    public void Init()
+    public void OnReused()
     {
     }
     

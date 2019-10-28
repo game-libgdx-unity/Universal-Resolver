@@ -21,7 +21,7 @@ namespace UnityIoC
 
         
         public bool Alive { get; set; }
-        public void Init()
+        public void OnReused()
         {
         }
 

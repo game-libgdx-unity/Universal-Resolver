@@ -36,6 +36,8 @@ public class TestUnbind : MonoBehaviour
         Context.Bind<IAbstract, ImplClass>();
 
         var deleteOne = Context.Resolve<IAbstract>();
+        var count = Context.GetObjects<IAbstract>().Count;
+        Debug.Log("C: " + count); //1
         deleteOne.DoSomething();
 
         Context.Bind<IAbstract, ImplClass2>();
@@ -43,7 +45,7 @@ public class TestUnbind : MonoBehaviour
         var cantDelete = Context.Resolve<IAbstract>();
         cantDelete.DoSomething();
 
-        var count = Context.GetObjects<IAbstract>().Count;
+        count = Context.GetObjects<IAbstract>().Count;
         Debug.Log("C: " + count); //2
 
         Context.Resolve<IAbstract>();

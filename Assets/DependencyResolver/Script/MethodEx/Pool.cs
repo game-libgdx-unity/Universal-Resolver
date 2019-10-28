@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityIoC;
 
 /// <summary>
-/// Pool only works for Component or GameObject
+/// Pool only works for IPoolable, Component or GameObject
 /// C# objects haven't been supported yet.
 /// </summary>
 /// <typeparam name="T">Unity Component or GameObject</typeparam>
@@ -35,7 +35,7 @@ public class Pool<T>
         }
     }
 
-    public static ICollection<T> GetList()
+    public static ICollection<T> GetCollection()
     {
         return List;
     }
@@ -177,38 +177,3 @@ public class ViewPool
         pool.Preload(preload, CreateObject);
     }
 }
-
-// obsoleted code 
-///// <summary>
-///// Pool only works for Component or GameObject
-///// C# objects haven't been supported yet.
-///// </summary>
-///// <typeparam name="T">Unity Component or GameObject</typeparam>
-//public class DataBinding<T>
-//{
-//    private static Dictionary<IDataBinding<T>, IObserver<T>> dictionary;
-//
-//    public static Dictionary<IDataBinding<T>, IObserver<T>> Dictionary
-//    {
-//        get
-//        {
-//            if (dictionary == null)
-//            {
-//                keyTypes.Add(typeof(T));
-//                dictionary = new Dictionary<IDataBinding<T>, IObserver<T>>();
-//            }
-//            return dictionary;
-//        }
-//    }
-//
-//    static HashSet<Type> keyTypes = new HashSet<Type>();
-//    public static void Clear()
-//    {
-//        foreach (var type in keyTypes)
-//        {
-//            //try to get DataBinding<type>.List then clear it.
-//        }
-//        
-//        keyTypes.Clear();
-//    }
-//}

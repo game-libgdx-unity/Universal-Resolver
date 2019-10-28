@@ -2448,30 +2448,56 @@ namespace UnityIoC
         {
             T resolveObject = default(T);
             var obj = resolveObject as object;
-            var valid = ValidateData(typeof(T), ref obj, When.BeforeResolve);
+            var typeToResolve = typeof(T);
+            var valid = ValidateData(typeToResolve, ref obj, When.BeforeResolve);
             if (!valid)
             {
                 return default(T);
             }
 
+            var isPoolableType = typeToResolve.GetInterfaces().Contains(typeof(IPoolable));
             if (resolveObject == null)
             {
-                resolveObject = (T) Resolve(typeof(T), LifeCycle.Transient, null, parameters);
+                //try to get instances from a shared pool
+                if (isPoolableType)
+                {
+                    var list = Pool<T>.GetCollection();
+                    foreach (var instance in list)
+                    {
+                        var t = (IPoolable) instance;
+                        if (!t.Alive)
+                        {
+                            t.Alive = true;
+                            t.OnReused();
+                            resolveObject = (T) t;
+                            break;
+                        }
+                    }
+                }
+
+                if (resolveObject == null)
+                {
+                    resolveObject = (T) Resolve(typeToResolve, LifeCycle.Transient, null, parameters);
+                    if (isPoolableType)
+                    {
+                        ((IPoolable) resolveObject).Alive = true;
+                    }
+                }
             }
 
             obj = resolveObject;
             if (obj != null)
             {
-                valid = ValidateData(typeof(T), ref obj, When.AfterResolve);
+                valid = ValidateData(typeToResolve, ref obj, When.AfterResolve);
                 if (!valid)
                 {
                     Delete(resolveObject);
                     return default(T);
                 }
-            }
 
-            //add to a shared pool
-            if (resolveObject != null) Pool<T>.AddItem(resolveObject);
+                //add to a shared pool
+                Pool<T>.AddItem(resolveObject);
+            }
 
             return resolveObject;
         }
@@ -3392,15 +3418,15 @@ namespace UnityIoC
         {
             return RemoveConstraint(typeof(T), msg, when);
         }
-        
+
         public static bool RemoveConstraint<T>(When when = When.All)
         {
             return RemoveConstraint(typeof(T), string.Empty, when);
         }
-        
-        
+
+
         public delegate bool RefPredicate<T>(ref T obj);
-        
+
         public static void AddConstraint<T>(
             RefPredicate<T> validator,
             string msg,
@@ -3411,7 +3437,7 @@ namespace UnityIoC
             ValidState vs = new ValidState();
             vs.predicate = (ref object obj) =>
             {
-                var t = (T)obj;
+                var t = (T) obj;
                 return validator(ref t);
             };
             vs.message = msg;
@@ -3419,6 +3445,7 @@ namespace UnityIoC
 
             AddToValidatorCollection(dataType, vs);
         }
+
         public static void AddConstraint<T>(
             Func<T, bool> validator,
             string msg,
@@ -3429,7 +3456,7 @@ namespace UnityIoC
             ValidState vs = new ValidState();
             vs.predicate = (ref object obj) =>
             {
-                var t = (T)obj;
+                var t = (T) obj;
                 return validator(t);
             };
             vs.message = msg;

@@ -8,7 +8,7 @@ using UnityEngine.TestTools;
 namespace UnityIoC.Editor
 {
     [TestFixture]
-    public class ContainerTests : TestBase
+    public class ContextTests : TestBase
     {
         [Test]
         public void t1_Resolve_As_Singleton()

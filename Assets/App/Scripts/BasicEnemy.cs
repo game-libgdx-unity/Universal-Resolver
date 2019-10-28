@@ -21,7 +21,7 @@ public class BasicEnemy : IUpdatable, IUpdatableItem<BasicEnemy>
 
     public EnemyData Data;
 
-    public void Init()
+    public void OnReused()
     {
         //set the updating routine
         routine = GetRoutine();

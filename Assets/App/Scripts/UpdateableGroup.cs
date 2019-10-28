@@ -66,7 +66,7 @@ namespace UnityIoC
 
                     beforeInit?.Invoke(items[i]);
 
-                    items[i].Init();
+                    items[i].OnReused();
 
                     return items[i];
                 }
@@ -88,7 +88,7 @@ namespace UnityIoC
 
         public bool Alive { get; set; }
 
-        public void Init()
+        public void OnReused()
         {
         }
 
