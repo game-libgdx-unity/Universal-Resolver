@@ -11,7 +11,8 @@ This framework will help you simplify your data flow from resolving data to disp
 
 Universal Resolver is an advanced & automatic IoC Framework built on Generic & Reflection API, which is a combination of binding settings as scriptable objects, convenient static class-level API,  along with C# Attributes which allow you to resolve any fields, constructors, methods or properties as [Component], [Singleton], [Prefab] or [Transient]. In this docs, we will refer "Dependency Resolver" as "Resolver/IoC" For short.
 
-In the folder "Assets/DependencyResolver/Samples" There are a lot of test scenes. There is a minesweeper game developed with this framework, which looks like below:
+In the folder "Assets/DependencyResolver/Samples" There are a lot of unit tests or test scenes. You can see some of test scripts which looks like
+https://github.com/game-libgdx-unity/Universal-Resolver/blob/source-only/Assets/DependencyResolver/Samples/Scripts/TestUnbind.cs
 
 You can read this documentation online with latest updates at:
 
@@ -327,7 +328,17 @@ Inversion of Control (IoC) means to create instances of dependencies first and l
 
 [https://stackoverflow.com/questions/3058/what-is-inversion-of-control](https://stackoverflow.com/questions/3058/what-is-inversion-of-control)
 
-Don't worry if you still don't get it, I'll show you how it works by examples & actions :)
+IoC is a software design principle
+Dependency injection (DI) is a method to implement the IoC Design.
+It Injects dependencies into targeted objects through:
+- Constructors
+- Methods
+- Properties
+- Variables
+- etc
+
+Universal Resolver is a managed automatic dependency resolving & injection. The resolved objects are managed by a state container inside the [Context] object. Allow you to retrieve / seek / update / pooling / destroy them easily.
+
 
 # Why should I need an IoC?
 
