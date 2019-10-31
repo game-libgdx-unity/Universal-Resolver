@@ -10,10 +10,37 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
+using UnityIoC;
 using Object = UnityEngine.Object;
 
 public static class ObjectExtension
 {
+    public static object WithId(this object obj, string id)
+    {
+        var context = Context.GetDefaultInstance(obj.GetType());
+        Context.BindByName(obj, id);
+        return obj;
+    }
+    
+    public static object WithTags(this object obj, params string[] tags)
+    {
+        var context = Context.GetDefaultInstance(obj.GetType());
+        Context.BindByTags(obj, tags);
+        return obj;
+    }
+    
+    public static T ResolveComponent<T>(this GameObject gameObject) where T : MonoBehaviour
+    {
+        var context = Context.GetDefaultInstance(typeof(T));
+        return (T) context.DefaultContainer.ResolveObject(typeof(T), LifeCycle.Transient, gameObject);
+    }
+    
+    public static T ResolveComponent<T>(this Component component) where T : MonoBehaviour
+    {
+        var context = Context.GetDefaultInstance(typeof(T));
+        return (T) context.DefaultContainer.ResolveObject(typeof(T), LifeCycle.Transient, component);
+    }
+
     public static T DefaultValue<T>(this T t)
     {
         return default(T);
@@ -46,7 +73,6 @@ public static class ObjectExtension
         return dst as T;
     }
 
-    
 
     public static T Clone<T>(this Object source) where T : Object
     {
@@ -54,26 +80,25 @@ public static class ObjectExtension
         {
             return default(T);
         }
-        
+
         if (typeof(T).IsSubclassOf(typeof(Object)))
         {
             var clone = Object.Instantiate(source as Object);
             return (T) clone;
         }
-        
+
         var serialized = JsonUtility.ToJson(source);
         return JsonUtility.FromJson<T>(serialized);
     }
-    
+
 
     public static object Clone(this object source)
     {
-        
         if (source == null)
         {
             return null;
         }
-        
+
         if (source.GetType().IsSubclassOf(typeof(Object)))
         {
             return ((Object) source).Clone<Object>();
@@ -81,7 +106,7 @@ public static class ObjectExtension
 
         return JsonClone(source);
     }
-    
+
     public static T BinaryClone<T>(this T objSource)
     {
         if (objSource == null)
@@ -107,7 +132,7 @@ public static class ObjectExtension
         {
             return default(T);
         }
-        
+
         var serialized = JsonUtility.ToJson(source);
         return JsonUtility.FromJson<T>(serialized);
     }
@@ -130,7 +155,7 @@ public static class ObjectExtension
         {
             return default(T);
         }
-        
+
         Type typeSource = objSource.GetType();
 
         object objTarget = null;
@@ -190,6 +215,7 @@ public static class ObjectExtension
     {
         return gameObject.GetComponent<T>() ?? gameObject.AddComponent<T>();
     }
+
     public static T GetOrAddComponent<T>(this Component component) where T : Component
     {
         return component.gameObject.GetOrAddComponent<T>();

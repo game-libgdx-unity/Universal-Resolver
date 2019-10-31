@@ -272,7 +272,7 @@ namespace UnityIoC
                     null,
                     data.LifeCycle,
                     data.InjectInto);
-                item.GameObject = data.Prefab;
+                item.Prefab = data.Prefab;
 
                 registeredObjects.Add(
                     item);
@@ -492,7 +492,7 @@ namespace UnityIoC
                                         context,
                                         preferredLifeCycle);
 
-                                    registeredObject.GameObject = component.gameObject;
+                                    registeredObject.Prefab = component.gameObject;
                                     registeredObjects.Add(registeredObject);
 
                                     registeredTypes.Add(abstractType);
@@ -515,7 +515,7 @@ namespace UnityIoC
                                             context,
                                             preferredLifeCycle);
 
-                                        registeredObject.GameObject = component.gameObject;
+                                        registeredObject.Prefab = component.gameObject;
                                         registeredObjects.Add(registeredObject);
 
                                         registeredTypes.Add(abstractType);
@@ -564,7 +564,7 @@ namespace UnityIoC
                                 if (asComp)
                                 {
                                     //register GameObject as prefab
-                                    registeredObject.GameObject = asComp.gameObject;
+                                    registeredObject.Prefab = asComp.gameObject;
                                     registeredObject.LifeCycle = LifeCycle.Prefab;
                                     //inactive prefab
                                     asComp.gameObject.SetActive(false);
@@ -678,7 +678,7 @@ namespace UnityIoC
                 {
                     //try to look for the component from prefab
                     registeredObject =
-                        registeredObjects.FirstOrDefault(r => r.GameObject && r.AbstractType == abstractType);
+                        registeredObjects.FirstOrDefault(r => r.Prefab && r.AbstractType == abstractType);
                     if (registeredObject != null)
                     {
                         //store as cached
@@ -687,7 +687,7 @@ namespace UnityIoC
                             CachedResolveResults[resolveInput] = registeredObject;
                         }
 
-                        resolveObject = context.CreateInstance(registeredObject.GameObject)
+                        resolveObject = context.CreateInstance(registeredObject.Prefab)
                             .GetComponent(registeredObject.ImplementedType);
                     }
                 }

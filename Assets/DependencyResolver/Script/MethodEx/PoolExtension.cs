@@ -19,7 +19,6 @@ public static class PoolExtension
         {
             if (!comp)
             {
-//                objects.Remove(comp);
                 continue;
             }
 

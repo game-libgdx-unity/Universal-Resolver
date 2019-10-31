@@ -47,10 +47,21 @@ namespace UnityIoC.Editor
         [Test]
         public void t1_automatic_bind_component_attribute()
         {
-            var assemblyContext = new Context(this, true);
+            var assemblyContext = new Context(this);
             var testClass = assemblyContext.ResolveObject<TestInterface>();
             Assert.IsNotNull(testClass);
             Assert.IsInstanceOf<TestClass>(testClass);
+        }
+        [Test]
+        public void t2_gameobject_resolvecomponent()
+        {
+            var gameObject = new GameObject();
+            var c = gameObject.AddComponent<TestComponent>();
+            var c2 = c.ResolveComponent<TestComponent2>();
+            
+            Assert.IsNotNull(c2);
+            Assert.AreSame(c.gameObject, c2.gameObject);
+
         }
         
         //you can enable this test if running on Unity 2018.3 or newer

@@ -2245,6 +2245,12 @@ namespace UnityIoC
                 Array.Clear(_rootgameObjects, 0, _rootgameObjects.Length);
                 _rootgameObjects = null;
             }
+            
+            //remove cache of object names
+            _objectNames.Clear();
+            
+            //remove cache of object tags
+            ObjectTags.Clear();
         }
 
         private static void SceneManagerOnSceneLoaded(Scene arg0, LoadSceneMode loadSceneMode)

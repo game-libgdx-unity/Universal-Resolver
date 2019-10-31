@@ -35,7 +35,7 @@ namespace UnityIoC
             /// <summary>
             /// Prefab can be loaded instead of loading of ImplementType from bindingSetting files
             /// </summary>
-            public GameObject GameObject { get; set; }
+            public GameObject Prefab { get; set; }
 
             public object Instance { get; private set; }
 
@@ -112,7 +112,6 @@ namespace UnityIoC
                 var isTransient = objectLifeCycle.IsEqual(LifeCycle.Transient) ||
                                   (objectLifeCycle & LifeCycle.Transient) == LifeCycle.Transient;
 
-
                 var isSingleton = objectLifeCycle == LifeCycle.Singleton ||
                                   (objectLifeCycle & LifeCycle.Singleton) == LifeCycle.Singleton;
 
@@ -126,10 +125,10 @@ namespace UnityIoC
                     if (ImplementedType.IsSubclassOf(typeof(Component)))
                     {
                         //resolve by registeredObject's prefab
-                        if (GameObject != null)
+                        if (Prefab != null)
                         {
-                            var go = context.CreateInstance(GameObject);
-                            go.transform.SetParent(GameObject.transform.parent);
+                            var go = context.CreateInstance(Prefab);
+                            go.transform.SetParent(Prefab.transform.parent);
                             instance = go.GetComponent(ImplementedType);
                             return instance;
                         }
@@ -230,7 +229,7 @@ namespace UnityIoC
                             d.AbstractType = AbstractType;
                             d.ImplementedType = ImplementedType;
                             d.LifeCycle = LifeCycle.Prefab;
-                            context.container.Bind(d).GameObject = gameObject;
+                            context.container.Bind(d).Prefab = gameObject;
                         }
 
                         Debug.Log("Found {0} component on gameObject {1} as {2} from current scene",
@@ -245,9 +244,9 @@ namespace UnityIoC
                 //search for prefabs of this component type from asset paths
                 GameObject prefab = null;
 
-                if (lifeCycle == LifeCycle.Prefab && GameObject)
+                if (lifeCycle == LifeCycle.Prefab && Prefab)
                 {
-                    prefab = GameObject;
+                    prefab = Prefab;
                 }
                 else
                 {
@@ -270,7 +269,7 @@ namespace UnityIoC
                 if (prefab)
                 {
                     //cache prefab from bundles/resources 
-                    GameObject = prefab;
+                    Prefab = prefab;
 
                     //create an instance from this prefab
                     Debug.Log("Found prefab for {0} .......", TypeName);
@@ -289,17 +288,26 @@ namespace UnityIoC
                 }
                 else
                 {
-                    Debug.Log("Not found prefab for {0} in the prefab, created a new game object",
+                    Debug.Log("Not found prefab for {0} in the prefab, created a new object",
                         TypeName);
 
-                    var monoBehaviour = resolveFrom as Component;
-                    if (monoBehaviour != null && (lifeCycle & LifeCycle.Component) == LifeCycle.Component)
+                    var resolveFromType = resolveFrom.GetType();
+                    var isGameObject = resolveFromType.FullName == "UnityEngine.GameObject";
+                    if (resolveFrom is GameObject)
                     {
-                        instance = monoBehaviour.gameObject.AddComponent(concreteType);
+                        instance = ((GameObject)resolveFrom).AddComponent(concreteType);
                     }
                     else
                     {
-                        instance = new GameObject().AddComponent(concreteType);
+                        var monoBehaviour = resolveFrom as Component;
+                        if (monoBehaviour != null && (lifeCycle & LifeCycle.Component) == LifeCycle.Component)
+                        {
+                            instance = monoBehaviour.gameObject.AddComponent(concreteType);
+                        }
+                        else
+                        {
+                            instance = new GameObject().AddComponent(concreteType);
+                        }
                     }
                 }
 
