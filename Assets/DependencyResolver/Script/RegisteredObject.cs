@@ -17,6 +17,8 @@ namespace UnityIoC
 {
     public partial class Context
     {
+        public static GameObject TempGameObject = null;
+
         public string[] assetPaths =
         {
             "{type}",
@@ -291,22 +293,29 @@ namespace UnityIoC
                     Debug.Log("Not found prefab for {0} in the prefab, created a new object",
                         TypeName);
 
-                    var resolveFromType = resolveFrom.GetType();
-                    var isGameObject = resolveFromType.FullName == "UnityEngine.GameObject";
-                    if (resolveFrom is GameObject)
+                    var gameObject = resolveFrom as GameObject;
+                    if (gameObject != null)
                     {
-                        instance = ((GameObject)resolveFrom).AddComponent(concreteType);
+                        instance = gameObject.AddComponent(concreteType);
                     }
                     else
                     {
-                        var monoBehaviour = resolveFrom as Component;
-                        if (monoBehaviour != null && (lifeCycle & LifeCycle.Component) == LifeCycle.Component)
+                        var monoBehaviour = resolveFrom is Component;
+                        if (monoBehaviour && (lifeCycle & LifeCycle.Component) == LifeCycle.Component)
                         {
-                            instance = monoBehaviour.gameObject.AddComponent(concreteType);
+                            instance = ((Component) resolveFrom).gameObject.AddComponent(concreteType);
                         }
                         else
                         {
-                            instance = new GameObject().AddComponent(concreteType);
+                            if (TempGameObject)
+                            {
+                                instance = TempGameObject.AddComponent(concreteType);
+                                TempGameObject = null;
+                            }
+                            else
+                            {
+                                instance = new GameObject().AddComponent(concreteType);
+                            }
                         }
                     }
                 }

@@ -17,14 +17,14 @@ public static class ObjectExtension
 {
     public static object WithId(this object obj, string id)
     {
-        var context = Context.GetDefaultInstance(obj.GetType());
+        Context.GetDefaultInstance(obj.GetType());
         Context.BindByName(obj, id);
         return obj;
     }
     
     public static object WithTags(this object obj, params string[] tags)
     {
-        var context = Context.GetDefaultInstance(obj.GetType());
+        Context.GetDefaultInstance(obj.GetType());
         Context.BindByTags(obj, tags);
         return obj;
     }
@@ -32,13 +32,15 @@ public static class ObjectExtension
     public static T ResolveComponent<T>(this GameObject gameObject) where T : MonoBehaviour
     {
         var context = Context.GetDefaultInstance(typeof(T));
-        return (T) context.DefaultContainer.ResolveObject(typeof(T), LifeCycle.Transient, gameObject);
+        Context.TempGameObject = gameObject;
+        return (T) context.DefaultContainer.ResolveObject(typeof(T), LifeCycle.Component, gameObject);
     }
     
     public static T ResolveComponent<T>(this Component component) where T : MonoBehaviour
     {
         var context = Context.GetDefaultInstance(typeof(T));
-        return (T) context.DefaultContainer.ResolveObject(typeof(T), LifeCycle.Transient, component);
+        Context.TempGameObject = component.gameObject;
+        return (T) context.DefaultContainer.ResolveObject(typeof(T), LifeCycle.Component, component);
     }
 
     public static T DefaultValue<T>(this T t)

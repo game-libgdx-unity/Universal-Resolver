@@ -56,6 +56,16 @@ namespace UnityIoC.Editor
         public void t2_gameobject_resolvecomponent()
         {
             var gameObject = new GameObject();
+            var c = gameObject.ResolveComponent<TestComponent>();
+            
+            Assert.IsNotNull(c);
+            Assert.AreSame(c.gameObject, gameObject);
+
+        }
+        [Test]
+        public void t3_gameobject_resolvecomponent()
+        {
+            var gameObject = new GameObject();
             var c = gameObject.AddComponent<TestComponent>();
             var c2 = c.ResolveComponent<TestComponent2>();
             

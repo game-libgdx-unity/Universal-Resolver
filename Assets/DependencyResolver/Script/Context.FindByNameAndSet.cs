@@ -63,5 +63,21 @@ namespace UnityIoC
             }
             return default(T);
         }
+        
+        public static IEnumerable<T> ResolveManyByTags<T>(params string[] tags)
+        {
+            List<T> t = new List<T>();
+            for (var i = tags.Length - 1; i >= 0; i--)
+            {
+                foreach (var o in ObjectTags[tags[i]])
+                {
+                    if (o is T)
+                    {
+                        t.Add((T) o);
+                    }
+                }
+            }
+            return t;
+        }
     }
 }
