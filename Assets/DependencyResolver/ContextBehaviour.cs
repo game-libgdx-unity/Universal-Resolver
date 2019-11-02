@@ -22,11 +22,11 @@ public class ContextBehaviourInspector : Editor
 
         if (cb.customSetting != null)
         {
-            string[] propertyToExclude = {nameof(cb.AutoLoadSetting)};
+            string[] propertyToExclude = {nameof(cb.AutoFindBindingSetting)};
             
             if (cb.customSetting.autoProcessSceneObjects)
             {
-                propertyToExclude = new[] { nameof(cb.bindingsInScene), nameof(cb.AutoLoadSetting)};
+                propertyToExclude = new[] { nameof(cb.bindingsInScene), nameof(cb.AutoFindBindingSetting)};
                
             }
             
@@ -55,11 +55,6 @@ public class ContextBehaviour : MonoBehaviour
     /// This is the default name of the default assembly that unity generated to compile your code
     /// </summary>
     public string DefaultBundleName = "resources";
-
-    /// <summary>
-    /// if true, when the default instance get initialized, it will process all mono-behaviours in current active scenes. Default is true.
-    /// </summary>
-    public bool AutoLoadSetting = true;
 
     /// <summary>
     /// Allow Context to log its actions when it registers or resolves objects.
@@ -97,6 +92,11 @@ public class ContextBehaviour : MonoBehaviour
     public bool SearchPrefabFromScene = false;
 
     /// <summary>
+    /// Allow to search for default binding setting files
+    /// </summary>
+    public bool AutoFindBindingSetting = true;
+
+    /// <summary>
     /// Path to load a resource locally. You can use {type}, {scene}, {id} to modify the path 
     /// </summary>
     public string[] assetPaths =
@@ -119,7 +119,7 @@ public class ContextBehaviour : MonoBehaviour
         }
 
         Context.Setting.CreateViewFromPool = CreateViewsFromPools;
-        Context.Setting.AutoBindDefaultSetting = AutoLoadSetting;
+        Context.Setting.AutoFindBindingSetting = AutoFindBindingSetting;
         Context.Setting.AutoDisposeWhenSceneChanged = AutoDisposeOnDestroy;
         Context.Setting.UseSetForCollection = UseSetForPoolCollection;
         Context.Setting.EditorLoadFromResource = EditorLoadFromResource;
@@ -132,7 +132,7 @@ public class ContextBehaviour : MonoBehaviour
 
             if (!customSetting)
             {
-                context = new Context(this, AutoLoadSetting, SearchPrefabFromScene, DisableProcessAllBehaviour,
+                context = new Context(this, AutoFindBindingSetting, SearchPrefabFromScene, DisableProcessAllBehaviour,
                     assetPaths);
             }
             else
@@ -164,7 +164,7 @@ public class ContextBehaviour : MonoBehaviour
             //force auto process if settings require it to run.
             if (customSetting && !customSetting.autoProcessSceneObjects || !customSetting)
             {
-                if (AutoLoadSetting && !DisableProcessAllBehaviour)
+                if (!DisableProcessAllBehaviour)
                 {
                     context.ProcessInjectAttributeForMonoBehaviours();
                 }

@@ -35,8 +35,6 @@ namespace UnityIoC.Editor
             var context = new ObjectContext(obj);
             
             var testObj = context.Resolve<TestInterface>();
-            testObj.DoSomething();
-            
             Assert.IsNotNull(testObj);
         }
         

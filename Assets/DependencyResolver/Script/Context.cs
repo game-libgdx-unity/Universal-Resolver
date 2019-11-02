@@ -147,19 +147,22 @@ namespace UnityIoC
             }
 
             //try to load a default InjectIntoBindingSetting setting for context
+            var assemblyName = CurrentAssembly.GetName().Name;
             var injectIntoBindingSetting =
-                Resources.Load<InjectIntoBindingSetting>(CurrentAssembly.GetName().Name);
+                Resources.Load<InjectIntoBindingSetting>(assemblyName);
 
+            debug.Log("Looking for assembly {0} 's BindingSetting ", assemblyName);
+            
             if (injectIntoBindingSetting)
             {
-                debug.Log("Found InjectIntoBindingSetting for assembly");
+                debug.Log("Found BindingSetting for assembly {0}", assemblyName);
                 LoadBindingSetting(injectIntoBindingSetting);
                 return;
             }
 
             //try to get the default InjectIntoBindingSetting setting for current scene
             var sceneInjectIntoBindingSetting = Resources.Load<InjectIntoBindingSetting>(
-                String.Format("{0}_{1}", CurrentAssembly.GetName().Name, SceneManager.GetActiveScene().name)
+                String.Format("{0}_{1}", assemblyName, SceneManager.GetActiveScene().name)
             );
 
             if (sceneInjectIntoBindingSetting)
@@ -171,7 +174,7 @@ namespace UnityIoC
 
             //try to load a default BindingSetting setting for context
             var bindingSetting =
-                Resources.Load<BindingSetting>(CurrentAssembly.GetName().Name);
+                Resources.Load<BindingSetting>(assemblyName);
 
             if (bindingSetting)
             {
@@ -182,7 +185,7 @@ namespace UnityIoC
 
             //try to get the default BindingSetting setting for current scene
             var sceneBindingSetting = Resources.Load<BindingSetting>(
-                String.Format("{0}_{1}", CurrentAssembly.GetName().Name, SceneManager.GetActiveScene().name)
+                String.Format("{0}_{1}", assemblyName, SceneManager.GetActiveScene().name)
             );
 
             if (sceneBindingSetting)
@@ -999,7 +1002,7 @@ namespace UnityIoC
         }
 
 
-        private void Initialize(Type target = null, bool automaticBinding = false,
+        private void Initialize(Type target = null, bool autoFindSetting = false,
             bool disableProcessAllBehaviours = false, string[] assetPaths = null)
         {
             if (!Initialized)
@@ -1008,7 +1011,7 @@ namespace UnityIoC
             }
 
             DisableProcessAllBehaviour = disableProcessAllBehaviours;
-            autoFindSetting = automaticBinding;
+            this.autoFindSetting = autoFindSetting;
             if (assetPaths != null && assetPaths.Length > 0)
             {
                 assetPaths.CopyTo(this.assetPaths, 0);
@@ -2146,7 +2149,7 @@ namespace UnityIoC
             bool recreate = false
         )
         {
-            return GetDefaultInstance(context.GetType(), Setting.AutoBindDefaultSetting, recreate);
+            return GetDefaultInstance(context.GetType(), Setting.AutoFindBindingSetting, recreate);
         }
 
         /// <summary>
@@ -2162,7 +2165,7 @@ namespace UnityIoC
                     SceneManager.sceneLoaded += SceneManagerOnSceneLoaded;
                 }
 
-                defaultInstance = new Context(type, false, false, false);
+                defaultInstance = new Context(type, Setting.AutoFindBindingSetting, false, false);
             }
 
             return defaultInstance;
@@ -3106,7 +3109,7 @@ namespace UnityIoC
         /// <param name="lifeCycle"></param>
         /// <typeparam name="TAbstract"></typeparam>
         /// <typeparam name="TConcrete"></typeparam>
-        public static void Bind<TAbstract, TConcrete>(LifeCycle lifeCycle = LifeCycle.Default)
+        public static void Bind<TAbstract, TConcrete>(LifeCycle lifeCycle = LifeCycle.Default) where TConcrete : TAbstract
         {
             GetDefaultInstance(typeof(TAbstract)).container.Bind<TAbstract, TConcrete>(lifeCycle);
         }
@@ -3349,12 +3352,10 @@ namespace UnityIoC
             /// if true, when a new scene is unloaded, call the Dispose method. Default is false.
             /// </summary>
             public static bool AutoDisposeWhenSceneChanged;
-
             /// <summary>
-            /// if true, when the default instance get initialized, it will process all mono-behaviours in current active scenes. Default is true.
+            /// if true, when a new scene is loaded, context auto find the default binding setting files
             /// </summary>
-            public static bool AutoBindDefaultSetting = false;
-
+            public static bool AutoFindBindingSetting = true;
             /// <summary>
             /// Pool's collection will be constructed by Set, instead of List. Default is false.
             /// </summary>

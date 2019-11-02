@@ -1,6 +1,7 @@
 using System.Reflection;
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 
 namespace UnityIoC.Editor
@@ -14,10 +15,15 @@ namespace UnityIoC.Editor
         {
             if (stop)
             {
-                Assert.Inconclusive("Previous test failed");
+//                Assert.Inconclusive("Previous test failed");
             }
 
             ClearConsole();
+            EditorSceneManager.NewScene(NewSceneSetup.EmptyScene);
+            Context.Reset();
+            Context.Setting.AutoFindBindingSetting = true;
+            Pool.Clear();
+
         }
 
         public static void ClearConsole()
@@ -36,13 +42,13 @@ namespace UnityIoC.Editor
             method.Invoke(new object(), null);
         }
 
-//        [TearDown]
-//        public void TearDown()
-//        {
-////            if (TestContext.CurrentContext.Result.Outcome.Status == TestStatus.Failed)
-////            {
-////                stop = true;
-////            }
-//        }
+        [TearDown]
+        public void TearDown()
+        {
+            if (TestContext.CurrentContext.Result.Outcome.Status == TestStatus.Failed)
+            {
+                stop = true;
+            }
+        }
     }
 }

@@ -11,7 +11,7 @@ public class MineSweeperSettingLoader : MonoBehaviour
     {
         if (!Context.Initialized)
         {
-            Context.Setting.AutoBindDefaultSetting = false;
+            Context.Setting.AutoFindBindingSetting = false;
             Context.GetDefaultInstance(this, false).LoadBindingSetting(gameSetting);
         }
     }
