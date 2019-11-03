@@ -44,11 +44,13 @@ namespace UnityIoC
             public LifeCycle LifeCycle { get; set; }
 
             public Type InjectInto { get; private set; }
+            
+            public Func<ResolveInput, bool> SelfFilter { get; set; }
 
             public RegisteredObject(
                 Type abstractType,
                 Type concreteType,
-                Context context,
+                    Context context,
                 LifeCycle lifeCycle = LifeCycle.Default) :
                 this(abstractType, concreteType, null, lifeCycle, null)
             {

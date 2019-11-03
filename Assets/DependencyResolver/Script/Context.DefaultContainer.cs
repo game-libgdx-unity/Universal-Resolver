@@ -16,41 +16,6 @@ using Unity.Linq;
 
 namespace UnityIoC
 {
-    /*
-    
-    [InitializeOnLoad]
-    static class Test
-    {
-        static Test()
-        {
-            Debug.Log("Test......");
-            object o = new object();
-
-            var resolveInput = new AssemblyContext.ResolveInput()
-            {
-                abstractType = typeof(Debug),
-                lifeCycle = LifeCycle.Default,
-                resolveFrom = o,
-            };
-
-            Dictionary<AssemblyContext.ResolveInput, object> CachedResolveResults =
-                new Dictionary<AssemblyContext.ResolveInput, object>(new AssemblyContext.CacheEqualityComparer());
-
-            CachedResolveResults[resolveInput] = 10;
-            
-            
-            var resolveInput2 = new AssemblyContext.ResolveInput()
-            {
-                abstractType = typeof(Debug),
-                lifeCycle = LifeCycle.Default,
-                resolveFrom = o,
-            };
-            
-            Debug.Log("cache: "+CachedResolveResults[resolveInput2]);
-        }
-    }
-    */
-
     public partial class Context
     {
         protected class CacheEqualityComparer : IEqualityComparer<ResolveInput>
@@ -77,7 +42,7 @@ namespace UnityIoC
             }
         }
 
-        protected struct ResolveInput
+        public struct ResolveInput
         {
             public Type abstractType { get; set; }
             public LifeCycle lifeCycle { get; set; }
@@ -469,8 +434,13 @@ namespace UnityIoC
                         return instance;
                     }
 
-                    filter = o => abstractType.IsAssignableFrom(o.AbstractType) && o.InjectInto == null;
 
+                    filter = o =>
+                        o.SelfFilter == null
+                            ? abstractType.IsAssignableFrom(o.AbstractType) && o.InjectInto == null
+                            : abstractType.IsAssignableFrom(o.AbstractType) && o.InjectInto == null &&
+                              o.SelfFilter(resolveInput);
+                    
                     registeredObject = registeredObjects.FirstOrDefault(filter);
                     if (registeredObject == null)
                     {
