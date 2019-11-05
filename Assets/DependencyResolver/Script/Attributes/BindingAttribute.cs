@@ -11,7 +11,7 @@ namespace UnityIoC
 {
     [Serializable]
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property | AttributeTargets.Constructor |
-                    AttributeTargets.Field, AllowMultiple = true, Inherited = true)]
+                    AttributeTargets.Field, AllowMultiple = true)]
     public class BindingAttribute : Attribute
     {
         public Type ConcreteType { get; set; }
@@ -22,14 +22,23 @@ namespace UnityIoC
         public string[] Tags { get; set; }
     
         public int[] Layers { get; set; }
-    
-        internal BindingAttribute(Type typeToResolve, 
+
+        public BindingAttribute(){}
+        
+        public BindingAttribute(Type typeToResolve = null, 
+            IBindingCondition condition = null,
             LifeCycle lifeCycle = LifeCycle.Default, 
-            params Type[] injectInto)
+            params Type[] injectInto
+            )
         {
             TypeToResolve = typeToResolve;
             LifeCycle = lifeCycle;
             InjectInto = injectInto;
         }    
+    }
+
+    public interface IBindingCondition
+    {
+        bool ShouldResolveByThisImplement(Context.ResolveInput input);
     }
 }

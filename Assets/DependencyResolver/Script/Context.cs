@@ -1861,10 +1861,10 @@ namespace UnityIoC
             /// </summary>
             public static bool CreateViewFromPool = true;
             
-            /// <summary>
-            /// If Context should get results from its cache
-            /// </summary>
-            public static bool EnableCacheResult = false;
+//            /// <summary>
+//            /// If Context should get results from its cache
+//            /// </summary>
+//            public static bool EnableCacheResult = false;
 
             /// <summary>
             /// if true, when a new scene is unloaded, call the Dispose method. Default is false.

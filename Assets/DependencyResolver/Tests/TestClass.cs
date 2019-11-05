@@ -4,8 +4,8 @@ using UnityEngine;
 
 namespace UnityIoC.Editor
 {
-	
-	public class TestClass : TestInterface {
+	[Binding]
+	public class TestClass : TestInterface, IBindingCondition {
 		public string JustAProperty { get; set; }
 
 		private TestStruct testStruct;
@@ -14,6 +14,11 @@ namespace UnityIoC.Editor
 		{
 			UniversalResolverDebug.Log(testStruct.aField.ToString());
 			UniversalResolverDebug.Log("TestClass"); 
+		}
+
+		public bool ShouldResolveByThisImplement(Context.ResolveInput input)
+		{
+			return true;
 		}
 	}
 

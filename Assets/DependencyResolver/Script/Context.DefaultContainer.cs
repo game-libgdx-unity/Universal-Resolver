@@ -244,7 +244,7 @@ namespace UnityIoC
 
                 return item;
             }
-            
+
             public void Unbind(Type abstractType)
             {
                 for (var i = 0; i < registeredObjects.Count; i++)
@@ -256,7 +256,7 @@ namespace UnityIoC
 
                     debug.Log("Unbind {0} registered for {1}", registeredObject.ImplementedType,
                         registeredObject.AbstractType);
-                    
+
                     RemoveRegisteredObjectsFromCache(registeredObject);
                     registeredObjects.RemoveAt(i);
                     registeredTypes.Remove(abstractType);
@@ -299,7 +299,7 @@ namespace UnityIoC
                         debug.Log("Already registered type of " + typeToResolve + " will unbind them first");
 
 //                        RemoveRegisteredObjectFromCache(registeredObject);
-                        
+
                         registeredTypes.Remove(typeToResolve);
                         registeredObjects.RemoveAll(r =>
                             r.ImplementedType == typeConcrete && r.AbstractType == typeToResolve);
@@ -370,7 +370,7 @@ namespace UnityIoC
                 Type resolveFrom = null,
                 params object[] parameters
             )
-            {                
+            {
                 ResolveInput resolveInput = new ResolveInput();
 
                 //quick return for some particular types & cases.
@@ -435,13 +435,17 @@ namespace UnityIoC
                     }
 
 
-                    filter = o =>
-                        o.SelfFilter == null
-                            ? abstractType.IsAssignableFrom(o.AbstractType) && o.InjectInto == null
-                            : abstractType.IsAssignableFrom(o.AbstractType) && o.InjectInto == null &&
-                              o.SelfFilter(resolveInput);
-                    
+                    filter = o => abstractType.IsAssignableFrom(o.AbstractType) && o.InjectInto != null &&
+                                  o.SelfFilter(resolveInput);
+
                     registeredObject = registeredObjects.FirstOrDefault(filter);
+
+                    if (registeredObject == null)
+                    {
+                        filter = o => abstractType.IsAssignableFrom(o.AbstractType) && o.InjectInto == null;
+                        registeredObject = registeredObjects.FirstOrDefault(filter);
+                    }
+                    
                     if (registeredObject == null)
                     {
                         debug.Log(

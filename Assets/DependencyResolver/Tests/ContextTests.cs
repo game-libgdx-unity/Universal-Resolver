@@ -199,6 +199,23 @@ namespace UnityIoC.Editor
         }
 
         [Test]
+        public void t10_binding_attributes()
+        {
+            Context.Bind<TestInterface, TestClass>();
+            var obj = Context.Resolve<TestInterface>(LifeCycle.Singleton);
+            obj.JustAProperty = "Hello";
+
+            Func<TestInterface, string> func = t =>
+            {
+                Assert.IsNotNull(t);
+                return t.JustAProperty;
+            };
+
+            var func_output = Context.GetDefaultInstance(this).ResolveFunc(func, LifeCycle.Singleton);
+            Assert.AreEqual(func_output, "Hello");
+        }
+
+        [Test]
         public void t14_Preload_From_Pools()
         {
             var gameObjects = new List<GameObject>();

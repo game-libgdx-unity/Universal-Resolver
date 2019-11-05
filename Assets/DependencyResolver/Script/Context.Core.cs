@@ -146,7 +146,6 @@ namespace UnityIoC
             {
                 debug.Log("Found BindingSetting for assembly {0}", assemblyName);
                 LoadBindingSetting(injectIntoBindingSetting);
-                return;
             }
 
             //try to get the default InjectIntoBindingSetting setting for current scene
@@ -158,7 +157,6 @@ namespace UnityIoC
             {
                 debug.Log("Found InjectIntoBindingSetting for scene");
                 LoadBindingSetting(sceneInjectIntoBindingSetting);
-                return;
             }
 
             //try to load a default BindingSetting setting for context
@@ -169,7 +167,6 @@ namespace UnityIoC
             {
                 debug.Log("Found binding setting for assembly");
                 LoadBindingSetting(bindingSetting);
-                return;
             }
 
             //try to get the default BindingSetting setting for current scene
@@ -181,16 +178,59 @@ namespace UnityIoC
             {
                 debug.Log("Found binding setting for scene");
                 LoadBindingSetting(sceneBindingSetting);
-                return;
             }
 
-
-            if (DisableProcessAllBehaviour)
-            {
-                return;
-            }
-
+            
+            ProcessBindingAttribute();
+                
             ProcessInjectAttributeForMonoBehaviours();
+            
+        }
+
+        private List<BindingAttribute> bindingAttributes = new List<BindingAttribute>(); 
+        /// <summary>
+        /// Process the current assembly to create RegisterObjects from BindingAttributes
+        /// </summary>
+        private void ProcessBindingAttribute()
+        {
+            debug.Log("Finding binding attributes from assembly {0}", CurrentAssembly);
+
+            var myAssembly = CurrentAssembly;
+            foreach (Type concreteType in myAssembly.GetTypes())
+            {
+                var bindingAttributes = concreteType.GetCustomAttributes(
+                    typeof(BindingAttribute), true
+                ).Cast<BindingAttribute>();
+
+                foreach (var bindingAttribute in bindingAttributes)
+                {
+                    if (bindingAttribute != null)
+                    {
+                        var typeToResolve = bindingAttribute.TypeToResolve;
+                        var lifeCycle = bindingAttribute.LifeCycle;
+
+                        //set the conrete type back to BindingAttribute
+                        bindingAttribute.ConcreteType = concreteType;
+
+                        //add to binding cache
+                        this.bindingAttributes.Add(bindingAttribute);
+
+                        Debug.Log("Found binding " + concreteType + " for " +
+                                  (typeToResolve == null ? "itself" : typeToResolve.ToString()) + " with lifeCycle " +
+                                  lifeCycle);
+
+                        //bind
+                        if (typeToResolve != null)
+                        {
+                            Bind(typeToResolve, concreteType, lifeCycle);
+                        }
+                        else
+                        {
+                            Bind(concreteType, concreteType, lifeCycle);
+                        }
+                    }
+                }
+            }
         }
 
         /// <summary>
