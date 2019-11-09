@@ -30,6 +30,7 @@ namespace UnityIoC
         public class RegisteredObject : IDisposable
         {
             private static Logger Debug = new Logger(typeof(RegisteredObject));
+            
             public Type AbstractType { get; private set; }
 
             public Type ImplementedType { get; private set; }
@@ -45,8 +46,8 @@ namespace UnityIoC
 
             public Type InjectInto { get; private set; }
             
-            public Func<ResolveInput, bool> SelfFilter { get; set; }
-
+            public object InjectObject { get; private set; }
+            
             public RegisteredObject(
                 Type abstractType,
                 Type concreteType,
@@ -58,37 +59,32 @@ namespace UnityIoC
 
             public RegisteredObject(
                 Type abstractType,
-                object instance) :
-                this(abstractType, instance.GetType(), instance, LifeCycle.Singleton)
-            {
-            }
-
-            public RegisteredObject(
-                Type abstractType,
                 Type concreteType,
                 object instance,
                 LifeCycle lifeCycle = LifeCycle.Default,
-                Type injectInto = null
+                Type injectInto = null,
+                object injectOject = null
             )
             {
                 Instance = instance;
                 AbstractType = abstractType;
 
                 LifeCycle = lifeCycle;
-                InjectInto = injectInto;
-
-                if (InjectInto != null)
+                
+                if (injectInto != null)
                 {
                     Debug.Log("Inject into: " + InjectInto.Name);
+                    InjectInto = injectInto;
+                }
+
+                if (InjectObject != null)
+                {
+                    Debug.Log("Inject into: " + injectOject);
+                    InjectObject = injectOject;
                 }
 
                 if (instance != null)
                 {
-                    if (abstractType == null)
-                    {
-                        abstractType = instance.GetType();
-                    }
-
                     LifeCycle = LifeCycle.Singleton;
                     ImplementedType = instance.GetType();
                 }

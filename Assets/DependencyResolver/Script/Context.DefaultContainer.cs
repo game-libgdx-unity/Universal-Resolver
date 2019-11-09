@@ -24,7 +24,8 @@ namespace UnityIoC
             {
                 return x.abstractType == y.abstractType &&
                        x.lifeCycle.IsEqual(y.lifeCycle) &&
-                       x.resolveFrom == y.resolveFrom;
+                       x.resolveFromType == y.resolveFromType &&
+                       x.injectIntoObject == y.injectIntoObject;
             }
 
             public int GetHashCode(ResolveInput obj)
@@ -33,9 +34,14 @@ namespace UnityIoC
                 hash = (17 * hash) + obj.lifeCycle.GetHashCode();
                 hash = (17 * hash) + obj.abstractType.GetHashCode();
 
-                if (obj.resolveFrom != null)
+                if (obj.resolveFromType != null)
                 {
-                    hash = (17 * hash) + obj.resolveFrom.GetHashCode();
+                    hash = (17 * hash) + obj.resolveFromType.GetHashCode();
+                }
+
+                if (obj.injectIntoObject != null)
+                {
+                    hash = (17 * hash) + obj.injectIntoObject.GetHashCode();
                 }
 
                 return hash;
@@ -46,7 +52,8 @@ namespace UnityIoC
         {
             public Type abstractType { get; set; }
             public LifeCycle lifeCycle { get; set; }
-            public Type resolveFrom { get; set; }
+            public Type resolveFromType { get; set; }
+            public object injectIntoObject { get; set; }
             public object[] parameters { get; set; }
         }
 
@@ -310,7 +317,7 @@ namespace UnityIoC
                         registeredTypes.Add(typeToResolve);
                     }
 
-                    registeredObjects.Add(new RegisteredObject(typeToResolve, instance));
+                    registeredObjects.Add(new RegisteredObject(typeToResolve, typeConcrete, instance, LifeCycle.Singleton));
                 }
                 catch (Exception ex)
                 {
@@ -352,25 +359,17 @@ namespace UnityIoC
                 return ResolveObject(typeToResolve, lifeCycle, null, parameters);
             }
 
-
             public virtual object ResolveObject(
                 Type abstractType,
                 LifeCycle preferredLifeCycle = LifeCycle.Default,
-                object resolveFrom = null,
+                object resolveFromObjectParam = null,
                 params object[] parameters
             )
             {
-                return ResolveObject(abstractType, preferredLifeCycle,
-                    resolveFrom != null ? resolveFrom.GetType() : null, parameters);
-            }
+                Type resolveFromType = resolveFromObjectParam as Type;
 
-            public virtual object ResolveObject(
-                Type abstractType,
-                LifeCycle preferredLifeCycle = LifeCycle.Default,
-                Type resolveFrom = null,
-                params object[] parameters
-            )
-            {
+                object resolveFromObject = resolveFromType == null ? resolveFromObjectParam : null;
+                
                 ResolveInput resolveInput = new ResolveInput();
 
                 //quick return for some particular types & cases.
@@ -402,14 +401,15 @@ namespace UnityIoC
                 {
                     resolveInput.abstractType = abstractType;
                     resolveInput.lifeCycle = preferredLifeCycle;
-                    resolveInput.resolveFrom = resolveFrom;
-
+                    resolveInput.resolveFromType = resolveFromType;
+                    resolveInput.injectIntoObject = resolveFromObject;
+                    
                     //try to get the result from internal cache
                     if (CachedResolveResults.ContainsKey(resolveInput))
                     {
                         debug.Log("Resolved from internal cache for type {0} as {1}", abstractType, preferredLifeCycle);
                         var cacheResult = CachedResolveResults[resolveInput];
-                        var obj = GetInstance(cacheResult, preferredLifeCycle, resolveFrom, parameters);
+                        var obj = GetInstance(cacheResult, preferredLifeCycle, resolveFromType, parameters);
                         return obj;
                     }
                 }
@@ -417,15 +417,15 @@ namespace UnityIoC
                 //start resolving without load from internal cache
                 debug.Log("Start Resolve type: " + abstractType);
                 debug.Log("preferredLifeCycle: " + preferredLifeCycle);
-                if (resolveFrom != null)
+                if (resolveFromType != null)
                 {
-                    debug.Log("Resolve from: " + resolveFrom.Name);
+                    debug.Log("Resolve from: " + resolveFromType.Name);
                 }
 
                 Func<RegisteredObject, bool> filter = null;
                 RegisteredObject registeredObject = null;
 
-                if (resolveFrom == null)
+                if (resolveFromType == null && resolveFromObject == null)
                 {
                     debug.Log("Try default process to resolve");
                     var instance = CreateInstanceFromPrefab(abstractType, preferredLifeCycle, resolveInput);
@@ -433,16 +433,10 @@ namespace UnityIoC
                     {
                         return instance;
                     }
-
-
-                    filter = o => abstractType.IsAssignableFrom(o.AbstractType) && o.InjectInto != null &&
-                                  o.SelfFilter(resolveInput);
-
-                    registeredObject = registeredObjects.FirstOrDefault(filter);
-
+                    
                     if (registeredObject == null)
                     {
-                        filter = o => abstractType.IsAssignableFrom(o.AbstractType) && o.InjectInto == null;
+                        filter = o => abstractType.IsAssignableFrom(o.AbstractType) && o.InjectInto == null && o.InjectObject == null; 
                         registeredObject = registeredObjects.FirstOrDefault(filter);
                     }
                     
@@ -552,7 +546,7 @@ namespace UnityIoC
                     }
 
                     debug.Log("resolved with default approach");
-                    var obj = GetInstance(registeredObject, preferredLifeCycle, resolveFrom, parameters);
+                    var obj = GetInstance(registeredObject, preferredLifeCycle, resolveFromType, parameters);
                     //store as cached
                     if (!abstractType.IsArray)
                     {
@@ -565,8 +559,12 @@ namespace UnityIoC
                 ////////////////////////////////////////////////
                 debug.Log("Try high priority process for notnull InjectInto registeredObject");
 
-                filter = o =>
-                    o.AbstractType == abstractType && o.InjectInto != null && resolveFrom == o.InjectInto;
+                if (resolveFromType != null)
+                    filter = o =>
+                        o.AbstractType == abstractType && o.InjectInto != null && resolveFromType == o.InjectInto;
+                else
+                    filter = o =>
+                        o.AbstractType == abstractType && o.InjectObject != null && resolveFromObject == o.InjectObject;
 
                 registeredObject = registeredObjects.FirstOrDefault(filter);
                 if (registeredObject != null)
@@ -577,7 +575,7 @@ namespace UnityIoC
                     debug.Log("resolve from: " + registeredObject.InjectInto +
                               " by inject into from RegisteredObject");
                     debug.Log("resolved by high priority approach");
-                    var obj = GetInstance(registeredObject, preferredLifeCycle, resolveFrom, parameters);
+                    var obj = GetInstance(registeredObject, preferredLifeCycle, resolveFromType, parameters);
 
                     //store as cached
                     //only cache for non-array types
@@ -598,7 +596,7 @@ namespace UnityIoC
                 if (registeredObject != null)
                 {
                     debug.Log("resolved with lower priority approach");
-                    var obj = GetInstance(registeredObject, preferredLifeCycle, resolveFrom, parameters);
+                    var obj = GetInstance(registeredObject, preferredLifeCycle, resolveFromType, parameters);
 
                     //store as cached
                     //only cache for non-array types
@@ -614,14 +612,6 @@ namespace UnityIoC
                 //Here is the recursive method, so can't cache from this part
                 debug.Log("Lower priority process is failed");
                 debug.Log("Lowest priority process: Create a new registeredObject to resolve");
-
-//                if (abstractType.IsAbstract)
-//                {
-//                    throw new InvalidOperationException(
-//                        "Cannot resolve the abstract type " + abstractType.Name +
-//                        " with no respective registeredObject!");
-//                }
-
                 debug.Log("trying to register {0} ", abstractType);
 
                 registeredObject = new RegisteredObject(
@@ -632,7 +622,7 @@ namespace UnityIoC
 
                 registeredObjects.Add(registeredObject);
 
-                var resolveObject = GetInstance(registeredObject, preferredLifeCycle, resolveFrom, parameters);
+                var resolveObject = GetInstance(registeredObject, preferredLifeCycle, resolveFromType, parameters);
                 //store as cached
                 if (!abstractType.IsArray)
                 {

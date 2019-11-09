@@ -1845,7 +1845,6 @@ namespace UnityIoC
 
         public class Setting
         {
-            
             /// <summary>
             /// This is the default name of the default assembly that unity generated to compile your code
             /// </summary>
@@ -1873,7 +1872,7 @@ namespace UnityIoC
             /// <summary>
             /// if true, when a new scene is loaded, context auto find the default binding setting files
             /// </summary>
-            public static bool AutoFindBindingSetting = true;
+            public static bool AutoFindBindingSetting = false;
             /// <summary>
             /// Pool's collection will be constructed by Set, instead of List. Default is false.
             /// </summary>

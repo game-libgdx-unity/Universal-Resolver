@@ -39,6 +39,7 @@ namespace UnityIoC.Editor
         [Test]
         public void t3_Binding_instance()
         {
+            Context.Setting.AutoFindBindingSetting = false;
             TestInterface obj = new TestClass();
             var context = new Context(this);
 

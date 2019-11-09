@@ -67,7 +67,7 @@ namespace UnityIoC
         /// <param name="target">the object</param>
         /// <param name="autoFindBindSetting">if true, will load bindingsetting and process all game object for inject attribute</param>
         public Context(object target,
-            bool autoFindBindSetting = true,
+            bool autoFindBindSetting = false,
             bool searchPrefabFromScene = false,
             bool disableProcessAllBehaviours = false,
             string[] assetPaths = null)

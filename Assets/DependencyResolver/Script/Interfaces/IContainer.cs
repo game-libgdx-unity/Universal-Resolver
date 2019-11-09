@@ -18,7 +18,7 @@ namespace UnityIoC
         object ResolveObject(
             Type abstractType,
             LifeCycle preferredLifeCycle = LifeCycle.Default,
-            Type resolveFrom = null,
+            object resolveFrom = null,
             params object[] parameters
             );
     }
