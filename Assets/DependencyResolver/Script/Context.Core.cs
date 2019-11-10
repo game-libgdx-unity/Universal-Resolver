@@ -606,7 +606,7 @@ namespace UnityIoC
                     {
                         if (!DataViewBindings.ContainsKey(component))
                         {
-                            DataViewBindings[component] = new HashSet<object>();
+                            DataViewBindings[component] = new List<object>();
                         }
 
                         DataViewBindings[component].Add(mono);
@@ -809,7 +809,7 @@ namespace UnityIoC
                 {
                     if (!DataViewBindings.ContainsKey(component))
                     {
-                        DataViewBindings[component] = new HashSet<object>();
+                        DataViewBindings[component] = new List<object>();
                     }
 
                     DataViewBindings[component].Add(mono);

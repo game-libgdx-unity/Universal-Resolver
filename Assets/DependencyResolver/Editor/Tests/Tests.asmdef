@@ -1,9 +1,7 @@
 {
     "name": "TestRunner",
     "references": [
-        "UnityIoC",
-        "DREditor",
-        "SceneTest"
+        "UnityIoC"
     ],
     "optionalUnityReferences": [
         "TestAssemblies"
@@ -14,6 +12,5 @@
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": [],
-    "versionDefines": []
+    "defineConstraints": []
 }

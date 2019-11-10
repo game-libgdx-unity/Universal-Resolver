@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 namespace UnityIoC
 {
@@ -13,8 +14,9 @@ namespace UnityIoC
     /// Use to Bind a Data layer with a View Layer
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public interface IViewBinding<T>
+    public interface IViewBinding<T> where T : MonoBehaviour
     {
+        T View { get; set; }
     }
     /// <summary>
     /// Use to Bind a Data layer with multiple View Layers

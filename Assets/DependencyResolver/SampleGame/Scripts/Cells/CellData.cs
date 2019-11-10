@@ -18,4 +18,6 @@ public class CellData : IViewBinding<CellView>
         X = x;
         Y = y;
     }
+
+    public CellView View { get; set; }
 }

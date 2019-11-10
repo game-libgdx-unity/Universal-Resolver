@@ -7,6 +7,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
@@ -15,6 +16,11 @@ using Object = UnityEngine.Object;
 
 public static class ObjectExtension
 {
+    
+    public static bool IsImplementedGenericInterface(this Type type, Type interfaceType)
+    {
+        return type.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == interfaceType);
+    }
     public static object WithId(this object obj, string id)
     {
         Context.GetDefaultInstance(obj.GetType());
