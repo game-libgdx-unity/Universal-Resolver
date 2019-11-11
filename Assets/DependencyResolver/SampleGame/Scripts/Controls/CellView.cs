@@ -27,8 +27,7 @@ public class CellView : MonoBehaviour, IDataBinding<CellData>
     {
         var cellData = data;
 
-        Context.Delete<CellData>(data);
-
+//        Context.Delete<CellData>(data);
 
         Debug.Assert(cellData != null);
         outline.effectColor = Color.black;
