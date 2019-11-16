@@ -39,13 +39,13 @@ namespace UnityIoC
         ///<summary>
         /// cache of resolved objects
         /// </summary>
-        public static Dictionary<Type, HashSet<object>>
-            CacheOfResolvedObjects = new Dictionary<Type, HashSet<object>>();
+        public static Dictionary<Type, List<object>>
+            CacheOfResolvedObjects = new Dictionary<Type, List<object>>();
 
         /// <summary>
         /// Cache of data binding of data layer & view layer
         /// </summary>
-        public static Dictionary<object, HashSet<object>> DataViewBindings = new Dictionary<object, HashSet<object>>();
+        public static Dictionary<object, List<object>> DataViewBindings = new Dictionary<object, List<object>>();
 
         /// <summary>
         /// General pools for mono-behaviour-based Views for view recyclable purposes. 
@@ -98,7 +98,7 @@ namespace UnityIoC
                                 Type type = obj.GetType();
                                 if (!CacheOfResolvedObjects.ContainsKey(type))
                                 {
-                                    CacheOfResolvedObjects[type] = new HashSet<object>();
+                                    CacheOfResolvedObjects[type] = new List<object>();
                                 }
 
                                 //add this obj to internal cache
@@ -896,6 +896,8 @@ namespace UnityIoC
             object dataObject,
             object viewObject)
         {
+            SetPropertyValue(dataObject, "View", viewObject);
+            
             var observerTypes = viewObject.GetType().GetInterfaces()
                 .Where(i => i.IsGenericType)
                 .Where(i => i.GetGenericTypeDefinition() == typeof(IDataBinding<>));
@@ -952,7 +954,7 @@ namespace UnityIoC
         {
             if (!DataViewBindings.ContainsKey(dataObject))
             {
-                DataViewBindings[dataObject] = new HashSet<object>();
+                DataViewBindings[dataObject] = new List<object>();
             }
 
             DataViewBindings[dataObject].Add(viewObject);
@@ -1231,17 +1233,17 @@ namespace UnityIoC
         /// </summary>
         /// <param name="obj">view object</param>
         /// <typeparam name="T"></typeparam>
-        public static HashSet<object> GetView<T>(T obj)
+        public static List<object> GetView<T>(T obj)
         {
             Type type = typeof(T);
-            HashSet<object> viewLayers = null;
+            List<object> viewLayers = null;
 
             if (DataViewBindings.ContainsKey(obj))
             {
                 viewLayers = DataViewBindings[obj];
             }
 
-            return viewLayers ?? new HashSet<object>();
+            return viewLayers ?? new List<object>();
         }
 
         /// <summary>
@@ -1249,10 +1251,10 @@ namespace UnityIoC
         /// </summary>
         /// <param name="obj">view object</param>
         /// <typeparam name="T"></typeparam>
-        private static HashSet<object> UpdateView<T>(ref T obj)
+        private static List<object> UpdateView<T>(ref T obj)
         {
             Type type = typeof(T);
-            HashSet<object> viewLayers = null;
+            List<object> viewLayers = null;
 
 //update the dataBindings
             if (DataViewBindings.ContainsKey(obj))
@@ -1322,20 +1324,23 @@ namespace UnityIoC
         /// </summary>
         /// <param name="filter"></param>
         /// <param name="updateAction"></param>
-        /// <typeparam name="T"></typeparam>
-        public static void Delete<T>(T @object)
+        /// <typeparam name="TData"></typeparam>
+        public static void Delete<TData>(TData @object)
         {
-            var data = @object as object;
-            if (data != null)
+            if(typeof(TData).IsImplementedGenericInterface(typeof(IViewBinding<>)))
             {
-                var valid = ValidateData(typeof(T), ref data, When.BeforeDelete);
-                if (!valid)
+                var view = Context.GetPropertyValue(@object, "View") as MonoBehaviour;
+                if (Setting.CreateViewFromPool)
                 {
-                    return;
+                    view.gameObject.SetActive(false);
+                }
+                else
+                {
+                    Object.Destroy(view);
                 }
             }
 
-            Update(o => ReferenceEquals(o, @object), (ref T obj) => obj = default(T), true);
+            Update(o => ReferenceEquals(o, @object), (ref TData obj) => obj = default(TData), true);
         }
 
         /// <summary>
@@ -1346,7 +1351,11 @@ namespace UnityIoC
         /// <typeparam name="T"></typeparam>
         public static void DeleteAll<T>()
         {
-            Update(o => true, (ref T obj) => obj = default(T), true);
+            var objPool = Pool<T>.List;
+            foreach (var obj in objPool.ToArray())
+            {
+                Delete(obj);
+            }
         }
 
         /// <summary>
@@ -1359,7 +1368,7 @@ namespace UnityIoC
         {
             var updateType = typeof(T);
 
-            foreach (var type in CacheOfResolvedObjects.Keys.Where(
+            foreach (var type  in CacheOfResolvedObjects.Keys.Where(
                 t => t == updateType ||
                      t.IsSubclassOf(updateType) ||
                      updateType.IsAssignableFrom(t)))
@@ -1553,10 +1562,6 @@ namespace UnityIoC
             if (obj != null)
             {
                 Type type = obj.GetType();
-                if (!CacheOfResolvedObjects.ContainsKey(type))
-                {
-                    CacheOfResolvedObjects[type] = new HashSet<object>();
-                }
 
                 DataViewBindings.Remove(obj);
                 onDisposed.Value = obj;
@@ -1590,6 +1595,15 @@ namespace UnityIoC
 
             value = Convert.ChangeType(value, targetType);
             propertyInfo.SetValue(inputObject, value, null);
+        }
+        /// <summary>
+        /// Get value from a property by its name
+        /// </summary>
+        private static object GetPropertyValue(object inputObject, string propertyName)
+        {
+            Type type = inputObject.GetType();
+            PropertyInfo propertyInfo = type.GetProperty(propertyName);
+            return propertyInfo == null ? null : propertyInfo.GetValue(inputObject);
         }
 
         /// <summary>

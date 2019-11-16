@@ -16,6 +16,8 @@ public class FakeCellData : IViewBinding<FakeCellView>, IBindByID
     {
         return id;
     }
+
+    public FakeCellView View { get; set; }
 }
 
 public class FakeCellDataRx : IViewBinding<ScriptableDataCellView>, IBindByID
@@ -31,4 +33,6 @@ public class FakeCellDataRx : IViewBinding<ScriptableDataCellView>, IBindByID
     {
         return id.Value;
     }
+
+    public ScriptableDataCellView View { get; set; }
 }

@@ -26,12 +26,7 @@ public class CellView : MonoBehaviour, IDataBinding<CellData>
     public void OnNext(CellData data)
     {
         var cellData = data;
-
-//        Context.Delete<CellData>(data);
-
-        Debug.Assert(cellData != null);
         outline.effectColor = Color.black;
-
         //when number of adjacent mines get changed
         cellData.AdjacentMines.Subscribe(this, mines =>
         {

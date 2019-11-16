@@ -13,4 +13,6 @@ public class FakeCellScriptableObject : ScriptableObject, IViewBinding<Scriptabl
     {
         return id;
     }
+
+    public ScriptableDataCellView View { get; set; }
 }
