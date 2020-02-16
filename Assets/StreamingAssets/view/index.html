@@ -15,18 +15,30 @@
 
     <title>Chess</title>
     <script>
-
-        function onGameLoaded() {
-        // window.location.href = "uniwebview://game-over?score=" + 100;
+        function setCookie(name,value,days) {
+            var expires = "";
+            if (days) {
+                var date = new Date();
+                date.setTime(date.getTime() + (days*24*60*60*1000));
+                expires = "; expires=" + date.toUTCString();
+            }
+            document.cookie = name + "=" + (value || "")  + expires + "; url=file:///Users/macbookpro/Unity-IoC/Assets/StreamingAssets/view/index.html";
         }
 
-        document.cookie = "ksession=1520d34b564082a4:congacum:e84b; kt=cckn; ku=32036d99; expires=Thu, 18 Dec 2020 12:00:00 UTC;"
+        // document.cookie = "kguess=0 ku=32036d99; kt=cckn; ksession=aff0bd01a52f367e:vinhvu3:deae" +
+        //     "expires=Fri, 19 Feb 2021 20:47:11 UTC"
     </script>
     <script src="Xiangqi/xq.js"></script>
 
     <script>
         if (/Windows NT|X11/.test(navigator.userAgent))
             document.documentElement.className += " win";
+
+        let days = 365;
+        setCookie('kguess', '0', days);
+        setCookie('kt', 'cckn', days);
+        setCookie('ku', 'fc824fe2', days);
+        setCookie('ksession', '6e25ec381dd407c8:vinhvu3:b54f', days);
 
         window.k2mobile = true;
         window.k2spectm = "";
@@ -51,7 +63,6 @@
 </head>
 
 <body>
-Hello
 <div id="appcont">
 </div>
 </body>

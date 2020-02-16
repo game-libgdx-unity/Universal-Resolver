@@ -257,7 +257,7 @@
                 return {
                     K: [b.o.Tf],
                     O: [sa(b) + d, b.me, window.k2beta ? "b" : b.mb ? "m" : "", b.Ib, window.navigator.userAgent || "", "/" + c + "/" + a, b.J ? "" : "w", (b.ce && g <= f ? g + "x" + f : f + "x" + g) + " " +
-                    Math.round(100 * ta()) / 100, "ref:" + window.location.href, "ver:" + window.k2ver + (b.J ? "/app" : "")
+                    Math.round(100 * ta()) / 100, "ref:https://www.playok.com/vi/cotuong/", "ver:" + window.k2ver + (b.J ? "/app" : "")
                     ]
                 }
             },
@@ -4820,7 +4820,7 @@
         f.onopen = function() {
             f.onmessage = function(c) {
                 Pe(a, b) ? (a.v = f, a.v.onmessage = function(b) {
-                    window.location.href = "uniwebview://in?data=" + JSON.stringify(b.data);
+                    // window.location.href = "uniwebview://in?data=" + JSON.stringify(b.data);
                     Re(a, b.data)
                 }, a.v.onclose = function() {
                     a.v = null;
@@ -4829,8 +4829,8 @@
             };
             var c = a.o.ye(b, a.P);
             f.send(Te(c.K, c.O))
-            window.location.href = "uniwebview://out?data=" + JSON.stringify(Te(c.K, c.O));
-            window.location.href = "uniwebview://out2?data=" + JSON.stringify(c);
+            // window.location.href = "uniwebview://out?data=" + JSON.stringify(Te(c.K, c.O));
+            // window.location.href = "uniwebview://out2?data=" + JSON.stringify(c);
         }
     }
 

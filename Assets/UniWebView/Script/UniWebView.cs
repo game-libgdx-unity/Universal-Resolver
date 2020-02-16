@@ -325,7 +325,10 @@ public class UniWebView : MonoBehaviour
     {
         if (showOnStart)
         {
-            Show();
+            Show(completionHandler: () =>
+            {
+                GetHTMLContent(html => { Debug.Log(html); });
+            });
         }
 
         if (!string.IsNullOrEmpty(urlOnStart))
@@ -401,6 +404,11 @@ public class UniWebView : MonoBehaviour
         else
         {
             url = UniWebViewHelper.StreamingAssetURLForPath(url);
+            Debug.Log("url "+url);
+            UniWebViewInterface.CleanCache(listener.name);
+            UniWebViewInterface.SetCookie(url,
+                "",
+                skipEncoding);
             UniWebViewInterface.Load(listener.Name, url, skipEncoding, readAccessURL);
         }
     }
@@ -1119,7 +1127,7 @@ public class UniWebView : MonoBehaviour
     /// from page.</param>
     public void GetHTMLContent(Action<string> handler)
     {
-        EvaluateJavaScript("document.documentElement.outerHTML", payload =>
+        EvaluateJavaScript("document.documentElement.innerHTML;", payload =>
         {
             if (handler != null)
             {
